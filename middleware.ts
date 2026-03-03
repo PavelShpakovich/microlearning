@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { locales, defaultLocale } from '@/i18n/config';
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -15,25 +14,6 @@ const PUBLIC_API_ROUTES = [
   '/api/auth', // NextAuth routes
   '/api/auth/telegram', // Telegram auth endpoint
 ];
-
-function getLocaleFromRequest(request: NextRequest): string {
-  // Check for locale in cookie
-  const localeCookie = request.cookies.get('NEXT_LOCALE')?.value;
-  if (localeCookie && (locales as readonly string[]).includes(localeCookie)) {
-    return localeCookie;
-  }
-
-  // Check for locale in Accept-Language header
-  const acceptLanguage = request.headers.get('accept-language');
-  if (acceptLanguage) {
-    const preferred = acceptLanguage.split(',')[0].split('-')[0].toLowerCase();
-    if ((locales as readonly string[]).includes(preferred)) {
-      return preferred;
-    }
-  }
-
-  return defaultLocale;
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -3,8 +3,6 @@
  * Provides functions to set appropriate cache headers and manage data caching
  */
 
-import { NextResponse } from 'next/server';
-
 export interface CacheConfig {
   maxAge?: number; // Browser cache (Cache-Control: max-age)
   sMaxAge?: number; // CDN/Server cache (Cache-Control: s-maxage)
@@ -26,26 +24,6 @@ export function getCacheHeaders(config: CacheConfig = {}): Record<string, string
   return {
     'Cache-Control': `public, max-age=${maxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`,
   };
-}
-
-/**
- * Create a cached API response
- */
-export function createCachedResponse<T>(data: T, config: CacheConfig = {}) {
-  const { tags = [], ...cacheConfig } = config;
-  const headers = getCacheHeaders(cacheConfig);
-
-  const response = NextResponse.json(data);
-  Object.entries(headers).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-
-  // Add revalidation tags if provided
-  if (tags.length > 0) {
-    response.headers.set('X-Tags', tags.join(','));
-  }
-
-  return response;
 }
 
 /**

@@ -17,19 +17,20 @@ Telegram needs to know where to send messages (like `/start`).
 
 1.  Deploy your application (or use a tool like `ngrok` for local development).
 2.  Set the webhook URL by opening this link in your browser:
-    `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://<YOUR_DOMAIN>/api/telegram/webhook`
+    `https://api.telegram.org/bot8661617727:AAEHCzkVZNaMWDB2zxIb6YQ4PtkFD3y3HSU/setWebhook?url=https://microlearning-nu.vercel.app/api/telegram/webhook`
 3.  You should see a JSON response: `{"ok":true,"result":true,"description":"Webhook was set"}`.
 
 ## 3. Configure the Mini App (BotFather Settings)
 
-1.  In **@BotFather**, send `/setwebapp`.
-2.  Select your bot.
-3.  Set the URL to your production domain: `https://your-domain.com`.
-4.  Set the **Menu Button**:
-    - Send `/setmenubutton`.
-    - Select your bot.
-    - Send the URL for the entry point: `https://your-domain.com/tg`.
-    - Set the button title (e.g., "Launch App").
+1.  In **@BotFather**, send `/mybots`.
+2.  Select your bot and click **Bot Settings** -> **Menu Button**.
+3.  Set the URL to your production domain: `https://your-domain.com/tg`.
+4.  Set the button title (e.g., "Launch App").
+
+Alternatively, you can create a direct Web App link:
+
+1.  Send `/newapp` to **@BotFather**.
+2.  Follow the instructions to set the URL and Short Name.
 
 ## 4. Environment Variables
 
