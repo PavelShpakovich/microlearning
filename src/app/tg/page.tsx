@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
-import { createSupabaseClient } from '@/lib/supabase/client';
+import { signIn } from 'next-auth/react';
 import { authApi } from '@/services/auth-api';
 
 type Phase = 'detecting' | 'authenticating' | 'error';
@@ -51,20 +51,17 @@ export default function TelegramEntryPage() {
       setPhase('authenticating');
 
       try {
-        // 1. Validate initData on the server and get a hashed magic-link token.
-        const { hashedToken } = await authApi.exchangeTelegramInitData(initData);
+        // 1. Validate initData on the server — server verifies the Telegram
+        //    HMAC and returns a short-lived signed token.
+        const { sessionToken } = await authApi.exchangeTelegramInitData(initData);
 
-        // 2. Exchange the token for a live Supabase session.
-        const supabase = createSupabaseClient();
-        const { error: authError } = await supabase.auth.verifyOtp({
-          token_hash: hashedToken,
-          type: 'magiclink',
-        });
+        // 2. Exchange for a NextAuth session (same cookie as email users).
+        //    This eliminates the Supabase browser-client race condition.
+        const result = await signIn('telegram', { sessionToken, redirect: false });
+        if (!result?.ok) throw new Error(result?.error ?? 'Sign-in failed');
 
-        if (authError) throw authError;
-
-        // 3. Authenticated — hard navigate so cookies are committed before
-        //    the middleware processes the next request.
+        // 3. Hard navigate — NextAuth has already set the session cookie so
+        //    the middleware will see it on the very next request.
         window.location.href = callbackUrl;
       } catch (err) {
         const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');

@@ -65,7 +65,7 @@ export const POST = withApiHandler(async (req) => {
   const telegramId = String(telegramUser.id);
 
   // Look up existing user by telegram_id in profiles table
-  const { data: profile } = await supabaseAdmin
+  const { data: existingProfile } = await supabaseAdmin
     .from('profiles')
     .select('id')
     .eq('telegram_id', telegramId)
@@ -73,8 +73,8 @@ export const POST = withApiHandler(async (req) => {
 
   let userId: string;
 
-  if (profile) {
-    userId = profile.id;
+  if (existingProfile) {
+    userId = existingProfile.id;
   } else {
     // Create a new Supabase Auth user for this Telegram account
     const email = `telegram_${telegramId}@noreply.microlearning.app`;
@@ -97,24 +97,25 @@ export const POST = withApiHandler(async (req) => {
     });
   }
 
-  const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
-  if (getUserError ?? !authUser.user?.email) {
-    throw new AuthError({ message: 'Failed to retrieve user account', cause: getUserError });
-  }
+  // Fetch display name for the NextAuth session
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('display_name')
+    .eq('id', userId)
+    .single();
 
-  // Generate a magic link for the user — extract the access/refresh tokens from the URL
-  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: authUser.user.email,
-    options: { redirectTo: `${process.env['NEXTAUTH_URL'] ?? 'http://localhost:3000'}/auth/callback` },
-  });
+  const displayName =
+    profile?.display_name ||
+    [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' ') ||
+    'Telegram User';
 
-  if (linkError ?? !linkData?.properties?.hashed_token) {
-    throw new AuthError({ message: 'Failed to create login session', cause: linkError });
-  }
+  // Issue a short-lived signed handoff token so the browser can open a
+  // NextAuth session without ever touching the Supabase browser client.
+  // Valid for 2 minutes — enough to survive any network latency.
+  const exp = Date.now() + 2 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ userId, displayName, exp })).toString('base64url');
+  const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+  const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
-  return NextResponse.json({
-    hashedToken: linkData.properties.hashed_token,
-    email: authUser.user.email,
-  });
+  return NextResponse.json({ sessionToken: `${payload}.${sig}` });
 });

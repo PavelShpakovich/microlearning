@@ -1,6 +1,7 @@
 import type { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { decode as nextAuthJwtDecode, encode as nextAuthJwtEncode } from 'next-auth/jwt';
+import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 
@@ -48,6 +49,43 @@ export const authOptions: NextAuthOptions = {
     },
   },
   providers: [
+    Credentials({
+      id: 'telegram',
+      name: 'Telegram',
+      credentials: {
+        sessionToken: { label: 'Session Token', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.sessionToken) throw new Error('Session token required');
+
+        const parts = credentials.sessionToken.split('.');
+        if (parts.length !== 2) throw new Error('Malformed session token');
+        const [payload, sig] = parts as [string, string];
+
+        // Verify HMAC signature
+        const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+        const expectedSig = createHmac('sha256', secret).update(payload).digest('base64url');
+        if (sig !== expectedSig) throw new Error('Invalid session token signature');
+
+        // Verify expiry
+        const { userId, displayName, exp } = JSON.parse(
+          Buffer.from(payload, 'base64url').toString(),
+        ) as { userId: string; displayName: string; exp: number };
+        if (Date.now() > exp) throw new Error('Session token expired');
+
+        // Fetch latest display name
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('display_name')
+          .eq('id', userId)
+          .single();
+
+        return {
+          id: userId,
+          name: profile?.display_name || displayName,
+        };
+      },
+    }),
     Credentials({
       id: 'credentials',
       name: 'Email/Password',

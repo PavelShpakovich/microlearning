@@ -6,61 +6,41 @@ const PUBLIC_ROUTES = [
   '/login',
   '/register',
   '/auth',
-  '/tg', // Telegram callback
+  '/tg', // Telegram Mini App entry point
 ];
 
 // API routes that don't require authentication
 const PUBLIC_API_ROUTES = [
-  '/api/auth', // NextAuth routes
-  '/api/auth/telegram', // Telegram auth endpoint
+  '/api/auth', // NextAuth + Telegram auth endpoints
 ];
-
-/**
- * Returns true if the request carries a Supabase session cookie.
- * Telegram users authenticate via Supabase (not NextAuth), so their session
- * is stored in an `sb-*-auth-token` cookie rather than `next-auth.session-token`.
- * We only check for the cookie's existence here — the API routes independently
- * validate the token via supabase.auth.getUser().
- */
-function hasSupabaseSession(request: NextRequest): boolean {
-  return request.cookies
-    .getAll()
-    .some((cookie) => /^sb-.+-auth-token/.test(cookie.name) && !!cookie.value);
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow all API public routes
+  // Allow all public API routes
   if (PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
-  // Allow all public routes (exact match or sub-path, e.g. /auth/callback)
+  // Allow all public page routes (exact match or sub-path, e.g. /auth/callback)
   if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'))) {
     return NextResponse.next();
   }
 
-  // Check for NextAuth JWT (email/password users — Edge-compatible).
+  // Single auth check: NextAuth JWT covers both email and Telegram users.
+  // Both flows produce a next-auth.session-token cookie — no dual-system needed.
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET ?? process.env.SUPABASE_SERVICE_KEY,
   });
 
-  // Check for Supabase session cookie (Telegram Mini App users).
-  const supabaseSession = hasSupabaseSession(request);
-
-  // If user is not authenticated and trying to access protected route
-  if (!token && !supabaseSession) {
-    // If it's an API route, return 401
+  if (!token) {
     if (pathname.startsWith('/api')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Redirect to /tg — it auto-authenticates Telegram users via initData,
-    // and falls back to /login for regular web users. This handles the case
-    // where the Telegram Mini App "Launch App" button opens the root URL
-    // instead of /tg directly.
+    // Redirect unauthenticated users to /tg which auto-authenticates inside
+    // Telegram and falls back to /login for regular web users.
     const tgUrl = new URL('/tg', request.url);
     tgUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(tgUrl);
