@@ -41,7 +41,7 @@ export function Header() {
       <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/globe.svg" alt="Logo" width={64} height={64} />
+            <Image src="/globe.svg" alt="Logo" width={32} height={32} />
           </Link>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -60,7 +60,7 @@ export function Header() {
     <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Image src="/globe.svg" alt="Logo" width={64} height={64} />
+          <Image src="/globe.svg" alt="Logo" width={32} height={32} />
         </Link>
 
         {isAuthenticated && (
