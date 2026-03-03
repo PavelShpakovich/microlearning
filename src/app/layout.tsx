@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import { Suspense } from 'react';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
@@ -37,10 +36,7 @@ async function RootProvidersWrapper({ children }: { children: React.ReactNode })
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Must load before any JS so window.Telegram is available immediately */}
-        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
-      </head>
+      <head />
       <body className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
         <Suspense fallback={<div />}>
           <RootProvidersWrapper>

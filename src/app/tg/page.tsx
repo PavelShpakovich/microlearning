@@ -35,23 +35,18 @@ export default function TelegramEntryPage() {
       // Wait one tick so the Telegram SDK (loaded beforeInteractive) is ready.
       await new Promise((r) => setTimeout(r, 50));
 
-      if (!window.Telegram?.WebApp) {
-        // Not inside Telegram — send to regular login, preserving destination.
+      const initData = window.Telegram?.WebApp?.initData;
+
+      if (!initData) {
+        // Not inside Telegram (or SDK not ready) — send to regular login.
         const loginUrl = `/login${callbackUrl !== '/dashboard' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`;
         router.replace(loginUrl);
         return;
       }
 
-      const tg = window.Telegram.WebApp;
+      const tg = window.Telegram!.WebApp;
       tg.ready();
       tg.expand();
-
-      const initData = tg.initData;
-      if (!initData) {
-        setErrorMsg(t('telegram.noInitData'));
-        setPhase('error');
-        return;
-      }
 
       setPhase('authenticating');
 
