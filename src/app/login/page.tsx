@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { signIn } from 'next-auth/react';
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/hooks/use-auth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -31,9 +32,22 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const t = useTranslations();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated, isLoading: sessionLoading } = useAuth();
+
+  // Normalise callbackUrl: treat bare "/" as "/dashboard" to avoid the
+  // root-redirect loop, and decode the value just once.
+  const rawCallback = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = rawCallback === '/' ? '/dashboard' : rawCallback;
+
+  // If the user is already authenticated, send them to the destination
+  // immediately — prevents the login form flashing for logged-in users.
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = callbackUrl;
+    }
+  }, [isAuthenticated, callbackUrl]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -58,13 +72,23 @@ export default function LoginPage() {
       }
 
       toast.success(t('auth.loginSuccess'));
-      const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-      router.push(callbackUrl);
+      // Hard-navigate so the session cookie is fully committed before the
+      // middleware processes the next request (soft navigation races with it).
+      window.location.href = callbackUrl;
     } catch {
       toast.error(t('auth.error'));
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Don't render the form while we're checking the session or redirecting.
+  if (sessionLoading || isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      </div>
+    );
   }
 
   return (
