@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Suspense } from 'react';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
@@ -36,7 +37,16 @@ async function RootProvidersWrapper({ children }: { children: React.ReactNode })
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        {/*
+         * Load the Telegram Mini App SDK before hydration so that
+         * window.Telegram.WebApp.initData is available when /tg mounts.
+         * beforeInteractive only works in the root layout — not nested layouts.
+         * On non-Telegram pages initData is an empty string, which /tg treats
+         * as "not inside Telegram" and redirects to /login.
+         */}
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+      </head>
       <body className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
         <Suspense fallback={<div />}>
           <RootProvidersWrapper>
