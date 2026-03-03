@@ -42,7 +42,7 @@ export async function fetchTheme(themeId: string) {
     .from('themes')
     .select('*')
     .eq('id', themeId)
-    .eq('user_id', session.user.id)
+    .or(`user_id.eq.${session.user.id},is_public.eq.true`)
     .limit(1);
   return themes?.[0] || null;
 }

@@ -65,7 +65,11 @@
     "public": "Публичная",
     "private": "Приватная",
     "cards": "Карточки",
-    "sources": "Источники"
+    "sources": "Источники",
+    "myThemesTab": "Мои темы",
+    "communityTab": "Сообщество",
+    "noCommunityThemes": "Публичные темы не найдены",
+    "communityEmptyDescription": "Загляните позже, чтобы найти темы от сообщества."
   },
   "study": {
     "heading": "Учиться",
@@ -96,7 +100,8 @@
     "generatingMore": "Генерирование еще карточек…",
     "finished": "Вы достигли конца!",
     "completedSession": "Вы завершили все карточки для этой сессии.",
-    "backToDashboard": "Вернуться на панель управления"
+    "backToDashboard": "Вернуться на панель управления",
+    "readOnly": "Только чтение"
   },
   "themes": {
     "heading": "Темы",

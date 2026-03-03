@@ -20,21 +20,30 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  // Fetch themes and card counts in parallel
-  const [themesResult, cardCountsResult] = await Promise.all([
+  // Fetch private themes and public shared themes
+  const [themesResult, publicThemesResult, cardCountsResult] = await Promise.all([
+    // My Themes (owned by me)
     supabaseAdmin
       .from('themes')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false }),
+    // Community Themes (public & not owned by me)
+    supabaseAdmin
+      .from('themes')
+      .select('*')
+      .eq('is_public', true)
+      .neq('user_id', session.user.id)
+      .limit(50),
+    // Card counts (owned only for now, can expand later)
     supabaseAdmin
       .from('cards')
-      .select('theme_id')
-      .eq('user_id', session.user.id)
+      .select('theme_id, user_id')
+      .or(`user_id.eq.${session.user.id},is_public.eq.true`)
       .not('theme_id', 'is', null),
   ]);
 
-  if (themesResult.error) {
+  if (themesResult.error || publicThemesResult.error) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="rounded-lg bg-red-50 dark:bg-red-950 p-4 text-red-600 dark:text-red-400">
@@ -45,6 +54,8 @@ export default async function DashboardPage() {
   }
 
   const themes = (themesResult.data ?? []) as Theme[];
+  const publicThemes = (publicThemesResult.data ?? []) as Theme[];
+
   const cardCountMap = (cardCountsResult.data ?? []).reduce<Record<string, number>>((acc, c) => {
     if (c.theme_id) acc[c.theme_id] = (acc[c.theme_id] ?? 0) + 1;
     return acc;
@@ -52,7 +63,11 @@ export default async function DashboardPage() {
 
   return (
     <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardClient initialThemes={themes} cardCounts={cardCountMap} />
+      <DashboardClient
+        initialThemes={themes}
+        publicThemes={publicThemes}
+        cardCounts={cardCountMap}
+      />
     </Suspense>
   );
 }

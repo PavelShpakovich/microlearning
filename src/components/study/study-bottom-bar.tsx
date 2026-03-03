@@ -17,6 +17,7 @@ interface StudyBottomBarProps {
   onToggleInfiniteMode: () => void;
   onGenerateMore: (count: number) => void;
   onSetCardCount: (count: number) => void;
+  canGenerate?: boolean;
 }
 
 export function StudyBottomBar({
@@ -25,11 +26,12 @@ export function StudyBottomBar({
   isGenerating,
   isManualGenerating,
   infiniteMode,
-  hasCards: _hasCards,
+  hasCards: _hasCards, // eslint-disable-line @typescript-eslint/no-unused-vars
   cardCount,
   onToggleInfiniteMode,
   onGenerateMore,
   onSetCardCount,
+  canGenerate = true,
 }: StudyBottomBarProps) {
   const t = useTranslations();
   const anyGenerating = isGenerating || isManualGenerating;
@@ -55,7 +57,7 @@ export function StudyBottomBar({
       )}
 
       {/* Manual mode: generate popover — hidden while generating */}
-      {!infiniteMode && !anyGenerating && (
+      {canGenerate && !infiniteMode && !anyGenerating && (
         <>
           <Popover>
             <PopoverTrigger asChild>
@@ -96,20 +98,27 @@ export function StudyBottomBar({
       )}
 
       {/* Auto / Manual toggle */}
-      <button
-        onClick={onToggleInfiniteMode}
-        title={infiniteMode ? t('study.disableAutoGenerate') : t('study.enableAutoGenerate')}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer ${
-          infiniteMode
-            ? 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
-            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-        }`}
-      >
-        {infiniteMode ? <Infinity className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
-        <span className="hidden sm:inline">
-          {infiniteMode ? t('study.auto') : t('study.manual')}
-        </span>
-      </button>
+      {canGenerate ? (
+        <button
+          onClick={onToggleInfiniteMode}
+          title={infiniteMode ? t('study.disableAutoGenerate') : t('study.enableAutoGenerate')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer ${
+            infiniteMode
+              ? 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+          }`}
+        >
+          {infiniteMode ? <Infinity className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
+          <span className="hidden sm:inline">
+            {infiniteMode ? t('study.auto') : t('study.manual')}
+          </span>
+        </button>
+      ) : (
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700">
+          <span className="hidden sm:inline">{t('study.readOnly')}</span>
+          <span className="sm:hidden">RO</span>
+        </div>
+      )}
 
       <a
         href="/dashboard"

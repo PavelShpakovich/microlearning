@@ -12,15 +12,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
 interface DashboardClientProps {
   initialThemes: Theme[];
+  publicThemes?: Theme[];
   cardCounts?: Record<string, number>;
 }
 
-export function DashboardClient({ initialThemes, cardCounts = {} }: DashboardClientProps) {
+export function DashboardClient({
+  initialThemes,
+  publicThemes = [],
+  cardCounts = {},
+}: DashboardClientProps) {
   const t = useTranslations();
   const [themes, setThemes] = useState(initialThemes);
   const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
@@ -58,65 +64,60 @@ export function DashboardClient({ initialThemes, cardCounts = {} }: DashboardCli
     }
   };
 
-  return (
-    <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {t('dashboard.heading')}
-          </h1>
-          <p className="mt-1 text-sm md:text-base text-gray-600 dark:text-gray-400">
-            {t('dashboard.description', { count: themes.length })}
-          </p>
-        </div>
-        <Link href="/themes/new" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('buttons.addTheme')}
-          </Button>
-        </Link>
-      </div>
-
-      {themes.length === 0 ? (
+  const renderThemeList = (currentThemes: Theme[], isOwner: boolean) => {
+    if (currentThemes.length === 0) {
+      return (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <BookOpen className="mb-4 h-12 w-12 text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.emptyTitle')}</h3>
-            <p className="mt-2 text-gray-600">{t('dashboard.emptyDescription')}</p>
-            <Link href="/themes/new" className="mt-4">
-              <Button>{t('buttons.addTheme')}</Button>
-            </Link>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {isOwner ? t('dashboard.emptyTitle') : t('dashboard.noCommunityThemes')}
+            </h3>
+            <p className="mt-2 text-gray-600">
+              {isOwner ? t('dashboard.emptyDescription') : t('dashboard.communityEmptyDescription')}
+            </p>
+            {isOwner && (
+              <Link href="/themes/new" className="mt-4">
+                <Button>{t('buttons.addTheme')}</Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {themes.map((theme) => (
-            <Card key={theme.id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="line-clamp-2">{theme.name}</CardTitle>
-                  <span className="shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400">
-                    {cardCounts[theme.id] ?? 0} {t('dashboard.cards')}
-                  </span>
-                </div>
-                {theme.description && (
-                  <CardDescription className="line-clamp-2">{theme.description}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="mt-auto space-y-3">
-                <div className="flex gap-2">
-                  <Link href={`/study/${theme.id}`} className="flex-1">
-                    <Button className="w-full" variant="default" size="sm">
-                      {t('buttons.study')}
-                    </Button>
-                  </Link>
+      );
+    }
+
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {currentThemes.map((theme) => (
+          <Card key={theme.id} className="flex flex-col">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="line-clamp-2">{theme.name}</CardTitle>
+                <span className="shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {cardCounts[theme.id] ?? 0} {t('dashboard.cards')}
+                </span>
+              </div>
+              {theme.description && (
+                <CardDescription className="line-clamp-2">{theme.description}</CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="mt-auto space-y-3">
+              <div className="flex gap-2">
+                <Link href={`/study/${theme.id}`} className="flex-1">
+                  <Button className="w-full" variant="default" size="sm">
+                    {t('buttons.study')}
+                  </Button>
+                </Link>
+                {isOwner && (
                   <Link href={`/themes/${theme.id}/edit`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       {t('buttons.edit')}
                     </Button>
                   </Link>
-                </div>
+                )}
+              </div>
 
+              {isOwner && (
                 <div className="flex items-center justify-between border-t pt-3">
                   <div className="flex items-center gap-2">
                     {theme.is_public ? (
@@ -136,7 +137,9 @@ export function DashboardClient({ initialThemes, cardCounts = {} }: DashboardCli
                     disabled={togglingPrivacy === theme.id}
                   />
                 </div>
+              )}
 
+              {isOwner && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -146,11 +149,41 @@ export function DashboardClient({ initialThemes, cardCounts = {} }: DashboardCli
                   <Trash2 className="h-4 w-4 mr-2" />
                   {t('buttons.delete')}
                 </Button>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            {t('dashboard.heading')}
+          </h1>
+          <p className="mt-1 text-sm md:text-base text-gray-600 dark:text-gray-400">
+            {t('dashboard.description', { count: themes.length })}
+          </p>
         </div>
-      )}
+        <Link href="/themes/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            {t('buttons.addTheme')}
+          </Button>
+        </Link>
+      </div>
+
+      <Tabs defaultValue="my-themes" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsTrigger value="my-themes">{t('dashboard.myThemesTab')}</TabsTrigger>
+          <TabsTrigger value="community">{t('dashboard.communityTab')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="my-themes">{renderThemeList(themes, true)}</TabsContent>
+        <TabsContent value="community">{renderThemeList(publicThemes, false)}</TabsContent>
+      </Tabs>
 
       <ConfirmationDialog
         open={!!themeToDelete}

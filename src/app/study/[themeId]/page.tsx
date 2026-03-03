@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { auth } from '@/auth';
-import { fetchTheme, fetchStudySession, fetchStudyCards } from '@/lib/data-fetchers';
+import { fetchTheme, fetchStudySession } from '@/lib/data-fetchers';
 import { StudyClient } from '@/components/study/study-client';
 import { StudySkeleton } from '@/components/skeletons';
 
@@ -30,9 +30,11 @@ export default async function StudyPage({ params }: StudyPageProps) {
     redirect('/dashboard');
   }
 
+  const isOwner = theme.user_id === session.user.id;
+
   return (
     <Suspense fallback={<StudySkeleton />}>
-      <StudyClient themeId={themeId} />
+      <StudyClient themeId={themeId} isOwner={isOwner} />
     </Suspense>
   );
 }

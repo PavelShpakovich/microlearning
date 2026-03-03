@@ -65,7 +65,11 @@
     "public": "Public",
     "private": "Private",
     "cards": "Cards",
-    "sources": "Sources"
+    "sources": "Sources",
+    "myThemesTab": "My Themes",
+    "communityTab": "Community",
+    "noCommunityThemes": "No community themes found",
+    "communityEmptyDescription": "Check back later for public themes from the community."
   },
   "study": {
     "heading": "Study",
@@ -96,7 +100,8 @@
     "generatingMore": "Generating more cards…",
     "finished": "All caught up!",
     "completedSession": "You've completed all cards for this session.",
-    "backToDashboard": "Back to Dashboard"
+    "backToDashboard": "Back to Dashboard",
+    "readOnly": "Read-only view"
   },
   "themes": {
     "heading": "Themes",

@@ -15,9 +15,10 @@ import { useTranslations } from 'next-intl';
 
 interface StudyClientProps {
   themeId: string;
+  isOwner?: boolean;
 }
 
-export function StudyClient({ themeId }: StudyClientProps) {
+export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const t = useTranslations();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const seenIdsRef = useRef<Set<string>>(new Set());
@@ -38,6 +39,13 @@ export function StudyClient({ themeId }: StudyClientProps) {
     setInfiniteMode,
     setCardCount,
   } = useStudySession(themeId);
+
+  // Disable infinite mode for non-owners (they can't generate)
+  useEffect(() => {
+    if (!isOwner && infiniteMode) {
+      setInfiniteMode(false);
+    }
+  }, [isOwner, infiniteMode, setInfiniteMode]);
 
   const done = !infiniteMode && cards.length > 0 && !isGenerating && session?.id;
 
@@ -176,6 +184,7 @@ export function StudyClient({ themeId }: StudyClientProps) {
         onToggleInfiniteMode={() => setInfiniteMode((prev) => !prev)}
         onGenerateMore={(count) => void generateMore(count)}
         onSetCardCount={setCardCount}
+        canGenerate={isOwner}
       />
 
       {cards.length === 0 && isInitialLoading && <StudyInitialLoadingScreen />}
