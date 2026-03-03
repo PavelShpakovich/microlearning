@@ -57,10 +57,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Otherwise redirect to login
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+    // Redirect to /tg — it auto-authenticates Telegram users via initData,
+    // and falls back to /login for regular web users. This handles the case
+    // where the Telegram Mini App "Launch App" button opens the root URL
+    // instead of /tg directly.
+    const tgUrl = new URL('/tg', request.url);
+    tgUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(tgUrl);
   }
 
   return NextResponse.next();

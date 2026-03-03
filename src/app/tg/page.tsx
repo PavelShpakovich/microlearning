@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
 import { createSupabaseClient } from '@/lib/supabase/client';
@@ -16,24 +16,29 @@ type Phase = 'detecting' | 'authenticating' | 'error';
  *  1. Detect window.Telegram.WebApp (SDK must be loaded via layout Script tag).
  *  2. POST initData to /api/auth/telegram → validate HMAC server-side.
  *  3. Exchange the returned hashed_token for a Supabase session.
- *  4. Redirect to /dashboard.
+ *  4. Redirect to callbackUrl (default: /dashboard).
  *
- * If the page is opened outside Telegram, redirect to the regular /login page.
+ * If the page is opened outside Telegram, redirect to the regular /login page
+ * (preserving callbackUrl so the user lands on the right page after login).
  */
 export default function TelegramEntryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations();
   const [phase, setPhase] = useState<Phase>('detecting');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
     async function authenticate() {
       // Wait one tick so the Telegram SDK (loaded beforeInteractive) is ready.
       await new Promise((r) => setTimeout(r, 50));
 
       if (!window.Telegram?.WebApp) {
-        // Not inside Telegram — send to regular login.
-        router.replace('/login');
+        // Not inside Telegram — send to regular login, preserving destination.
+        const loginUrl = `/login${callbackUrl !== '/dashboard' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`;
+        router.replace(loginUrl);
         return;
       }
 
@@ -63,8 +68,8 @@ export default function TelegramEntryPage() {
 
         if (authError) throw authError;
 
-        // 3. Authenticated — go to the app.
-        router.replace('/dashboard');
+        // 3. Authenticated — go to the intended destination.
+        router.replace(callbackUrl);
       } catch (err) {
         const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');
         setErrorMsg(msg);
@@ -73,7 +78,7 @@ export default function TelegramEntryPage() {
     }
 
     void authenticate();
-  }, [router]);
+  }, [router, searchParams, t]);
 
   if (phase === 'error') {
     return (
