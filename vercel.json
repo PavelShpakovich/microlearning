@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/generate/**": {
+      "maxDuration": 60
+    },
+    "src/app/api/sources/**": {
+      "maxDuration": 30
+    }
+  }
+}
