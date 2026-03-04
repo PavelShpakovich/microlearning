@@ -188,10 +188,11 @@ export const GENERATION_FAILURE_COOLDOWN_MS = 60_000; // 1 minute
 
 export class GenerationService {
   /**
-   * Trigger card generation for a theme (background task)
+   * Generate cards for a theme. Assumes generation_started_at has already been
+   * written to the DB (so polls from other instances see generating=true).
+   * Clears the DB flag on success or failure.
    */
-  static async triggerGeneration(userId: string, themeId: string): Promise<void> {
-    generatingThemes.add(themeId);
+  static async doGenerate(userId: string, themeId: string): Promise<void> {
     logger.info({ themeId }, 'Starting card generation');
     try {
       const { data: theme } = await supabaseAdmin
@@ -258,75 +259,113 @@ export class GenerationService {
         },
       );
 
-      logger.info({ themeId, totalCount: cards.length }, 'All batches complete');
+      logger.info({ themeId, totalCount: cards.length }, 'Card generation complete');
 
-      // Removed bulk insert since cards are inserted incrementally via callback
-
-      logger.info({ themeId }, 'Card generation complete');
-
-      // Clear failure cooldown on success
-      failedThemes.delete(themeId);
+      // Clear generating flag on success
+      await supabaseAdmin
+        .from('themes')
+        .update({ generation_started_at: null, generation_failed_at: null })
+        .eq('id', themeId);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       logger.error({ themeId, errMsg }, 'Card generation failed');
 
-      // Start cooldown to avoid rapid retries
-      failedThemes.set(themeId, Date.now());
+      // Record failure timestamp and clear generating flag
+      await supabaseAdmin
+        .from('themes')
+        .update({
+          generation_started_at: null,
+          generation_failed_at: new Date().toISOString(),
+        })
+        .eq('id', themeId);
 
       throw err;
-    } finally {
-      generatingThemes.delete(themeId);
     }
   }
 
   /**
-   * Check if generation should be triggered and do it in background
+   * Full entry point: marks generation started in DB, then generates.
+   * Used for fire-and-forget callers that manage their own after() scope.
    */
-  static maybeStartGeneration(
-    userId: string,
+  static async triggerGeneration(userId: string, themeId: string): Promise<void> {
+    await this.markGenerationStarted(themeId);
+    await this.doGenerate(userId, themeId);
+  }
+
+  /**
+   * Write generation_started_at to DB so all instances see generating=true
+   * immediately, before the actual LLM work begins.
+   */
+  static async markGenerationStarted(themeId: string): Promise<void> {
+    await supabaseAdmin
+      .from('themes')
+      .update({ generation_started_at: new Date().toISOString(), generation_failed_at: null })
+      .eq('id', themeId);
+  }
+
+  /**
+   * Returns true if this theme is currently generating.
+   * Uses DB state — works correctly across serverless instances.
+   * Treats locks older than 10 min as stale (self-healing).
+   */
+  static async isGenerating(themeId: string): Promise<boolean> {
+    const { data } = await supabaseAdmin
+      .from('themes')
+      .select('generation_started_at')
+      .eq('id', themeId)
+      .maybeSingle();
+
+    if (!data?.generation_started_at) return false;
+    const ageMs = Date.now() - new Date(data.generation_started_at).getTime();
+    return ageMs < 10 * 60 * 1000; // stale lock protection after 10 min
+  }
+
+  /**
+   * Returns true if generation failed recently (within the cooldown window).
+   * Uses DB state — works correctly across serverless instances.
+   */
+  static async isGenerationFailed(themeId: string): Promise<boolean> {
+    const { data } = await supabaseAdmin
+      .from('themes')
+      .select('generation_failed_at')
+      .eq('id', themeId)
+      .maybeSingle();
+
+    if (!data?.generation_failed_at) return false;
+    const ageMs = Date.now() - new Date(data.generation_failed_at).getTime();
+    return ageMs < GENERATION_FAILURE_COOLDOWN_MS;
+  }
+
+  /**
+   * Checks whether generation should be started for this theme.
+   * Returns whether the caller should trigger generation and the current state.
+   * Does NOT start generation — caller must call markGenerationStarted + doGenerate.
+   */
+  static async checkShouldGenerate(
     themeId: string,
     unseenCount: number,
     threshold: number,
-  ): boolean {
-    const isGenerating = generatingThemes.has(themeId);
-    const lastFailureAt = failedThemes.get(themeId);
-    const inCooldown =
-      lastFailureAt !== undefined && Date.now() - lastFailureAt < GENERATION_FAILURE_COOLDOWN_MS;
+  ): Promise<{ shouldGenerate: boolean; isGenerating: boolean }> {
+    const [isGenerating, isFailed] = await Promise.all([
+      this.isGenerating(themeId),
+      this.isGenerationFailed(themeId),
+    ]);
 
-    // Only trigger if: below threshold, not already running, not in failure cooldown
-    if (unseenCount < threshold && !isGenerating && !inCooldown) {
-      logger.info({ themeId }, 'Triggering card generation in background');
-      this.triggerGeneration(userId, themeId).catch(() => {
-        // Silently fail background generation
-      });
-      return true;
-    }
-
-    return isGenerating;
-  }
-
-  /**
-   * Check if currently generating
-   */
-  static isGenerating(themeId: string): boolean {
-    return generatingThemes.has(themeId);
-  }
-
-  /**
-   * Check if generation failed recently
-   */
-  static isGenerationFailed(themeId: string): boolean {
-    const lastFailureAt = failedThemes.get(themeId);
-    return (
-      lastFailureAt !== undefined && Date.now() - lastFailureAt < GENERATION_FAILURE_COOLDOWN_MS
-    );
+    const shouldGenerate = unseenCount < threshold && !isGenerating && !isFailed;
+    return { shouldGenerate, isGenerating: isGenerating || shouldGenerate };
   }
 
   /**
    * Clear state (testing only)
    */
-  static clearState(): void {
+  static async clearState(themeId?: string): Promise<void> {
     generatingThemes.clear();
     failedThemes.clear();
+    if (themeId) {
+      await supabaseAdmin
+        .from('themes')
+        .update({ generation_started_at: null, generation_failed_at: null })
+        .eq('id', themeId);
+    }
   }
 }

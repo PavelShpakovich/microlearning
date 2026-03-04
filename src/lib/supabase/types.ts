@@ -52,6 +52,8 @@ export type Database = {
           is_public?: boolean;
           language: string;
           created_at: string;
+          generation_started_at: string | null;
+          generation_failed_at: string | null;
         };
         Insert: {
           id?: string;
@@ -61,6 +63,8 @@ export type Database = {
           is_public?: boolean;
           language?: string;
           created_at?: string;
+          generation_started_at?: string | null;
+          generation_failed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -70,6 +74,8 @@ export type Database = {
           is_public?: boolean;
           language?: string;
           created_at?: string;
+          generation_started_at?: string | null;
+          generation_failed_at?: string | null;
         };
         Relationships: [];
       };

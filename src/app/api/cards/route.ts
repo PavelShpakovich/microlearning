@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
@@ -102,11 +102,41 @@ export const GET = withApiHandler(async (req) => {
 
   // Trigger generation only when client explicitly requests it
   const shouldTriggerGeneration = triggerGeneration === '1';
-  const isGenerating = shouldTriggerGeneration
-    ? GenerationService.maybeStartGeneration(user.id, themeId, remaining, CARD_GENERATION_THRESHOLD)
-    : GenerationService.isGenerating(themeId);
 
-  const generationFailed = GenerationService.isGenerationFailed(themeId);
+  let isGenerating: boolean;
+  let generationFailed: boolean;
+
+  if (shouldTriggerGeneration) {
+    const [checkResult, isFailed] = await Promise.all([
+      GenerationService.checkShouldGenerate(themeId, remaining, CARD_GENERATION_THRESHOLD),
+      GenerationService.isGenerationFailed(themeId),
+    ]);
+
+    generationFailed = isFailed;
+    isGenerating = checkResult.isGenerating;
+
+    if (checkResult.shouldGenerate) {
+      // Write generation_started_at to DB NOW (before response) so every instance
+      // sees generating=true on the very next poll.
+      await GenerationService.markGenerationStarted(themeId);
+      isGenerating = true;
+
+      // Use next/server after() so Vercel keeps the lambda alive for the full
+      // generation run even after the HTTP response has been sent.
+      after(async () => {
+        await GenerationService.doGenerate(user.id, themeId).catch((err: unknown) => {
+          logger.error({ themeId, err }, 'Background generation failed');
+        });
+      });
+
+      logger.info({ themeId }, 'Triggering card generation in background');
+    }
+  } else {
+    [isGenerating, generationFailed] = await Promise.all([
+      GenerationService.isGenerating(themeId),
+      GenerationService.isGenerationFailed(themeId),
+    ]);
+  }
 
   logger.info(
     {
