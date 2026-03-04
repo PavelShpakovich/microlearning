@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -77,6 +77,7 @@ export function StudyLoadingMoreScreen() {
 
 export function StudyDoneScreen() {
   const t = useTranslations();
+  const router = useRouter();
   return (
     <ScreenShell>
       <div className="w-full max-w-xs text-center space-y-8">
@@ -92,12 +93,15 @@ export function StudyDoneScreen() {
           </div>
         </div>
 
-        <Link
-          href="/dashboard"
+        <button
+          onClick={() => {
+            router.refresh();
+            router.push('/dashboard');
+          }}
           className="inline-flex items-center justify-center w-full rounded-xl bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80"
         >
           {t('study.backToDashboard')}
-        </Link>
+        </button>
       </div>
     </ScreenShell>
   );

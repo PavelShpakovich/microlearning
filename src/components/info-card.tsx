@@ -17,7 +17,7 @@ export function InfoCard({ card }: InfoCardProps) {
       data-card-id={card.id}
     >
       {/* Scrollable body — title inline with content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pt-16 md:px-10 md:py-8 md:pt-12 touch-pan-y">
+      <div className="flex-1 overflow-y-auto px-5 py-6 pt-6 md:px-10 md:py-8 md:pt-10 touch-pan-y">
         <div className="max-w-3xl mx-auto pb-28 md:pb-28">
           {/* Title */}
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4 md:mb-6 leading-snug">

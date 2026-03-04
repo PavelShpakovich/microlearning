@@ -76,18 +76,9 @@ export default function NewThemePage() {
       }
 
       if (values.autoGenerate) {
-        const toastId = toast.loading(t('themes.generating'));
-        try {
-          await themeApi.generateCards(theme.id, values.cardCount);
-          toast.success(t('themes.success'), { id: toastId });
-          router.push(`/study/${theme.id}`);
-        } catch {
-          toast.error(t('themes.error'), {
-            id: toastId,
-          });
-          // Redirect to edit page if generation fails so user can try again
-          router.push(`/themes/${theme.id}/edit`);
-        }
+        // Navigate immediately — study hook auto-triggers generation on mount
+        // when infiniteMode=true and there are 0 cards
+        router.push(`/study/${theme.id}`);
       } else {
         toast.success(t('messages.success'));
         router.push(`/themes/${theme.id}/edit`);

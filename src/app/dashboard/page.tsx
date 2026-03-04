@@ -9,6 +9,8 @@ import { DashboardSkeleton } from '@/components/skeletons';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Dashboard | Microlearning',
   description: 'Manage your learning themes',
