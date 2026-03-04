@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-/** Revalidates the dashboard server cache so newly created/updated themes appear immediately. */
+/** Revalidate the dashboard page after theme mutations so changes appear immediately. */
 export async function revalidateDashboard() {
   revalidatePath('/dashboard');
 }
