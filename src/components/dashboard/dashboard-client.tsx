@@ -57,7 +57,7 @@ export function DashboardClient({
         ),
       );
       const status = updated.is_public ? t('dashboard.public') : t('dashboard.private');
-      toast.success(`Theme is now ${status}`);
+      toast.success(t('messages.privacyUpdated', { status }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('messages.failedUpdate'));
     } finally {

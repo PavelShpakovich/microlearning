@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { Database } from '@/lib/supabase/types';
@@ -15,6 +16,7 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const session = await auth();
+  const t = await getTranslations();
 
   if (!session?.user?.id) {
     redirect('/login');
@@ -54,7 +56,7 @@ export default async function DashboardPage() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="rounded-lg bg-red-50 dark:bg-red-950 p-4 text-red-600 dark:text-red-400">
-          Failed to load themes. Please try again.
+          {t('messages.failedLoadThemes')}
         </div>
       </div>
     );

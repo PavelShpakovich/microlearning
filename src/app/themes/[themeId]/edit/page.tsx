@@ -606,7 +606,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                         <FormLabel>{t('themes.name')} *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g. TypeScript Generics"
+                            placeholder={t('themes.namePlaceholder')}
                             disabled={isSubmitting}
                             {...field}
                           />
@@ -624,7 +624,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                         <FormLabel>{t('themes.description')}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="What should the flashcards cover?"
+                            placeholder={t('themes.descriptionPlaceholder')}
                             rows={3}
                             disabled={isSubmitting}
                             {...field}
@@ -640,7 +640,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                       <strong>{t('themes.language')}:</strong>{' '}
                       {theme.language === 'en' ? t('common.english') : t('common.russian')}
                     </p>
-                    <p className="text-xs">(Language cannot be changed after theme creation)</p>
+                    <p className="text-xs text-muted-foreground">{t('themes.languageLocked')}</p>
                   </div>
 
                   <div className="flex justify-end pt-4">

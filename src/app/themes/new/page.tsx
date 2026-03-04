@@ -122,7 +122,7 @@ export default function NewThemePage() {
                     <FormLabel>{t('themes.name')} *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g. TypeScript Generics"
+                        placeholder={t('themes.namePlaceholder')}
                         disabled={isSubmitting}
                         {...field}
                       />
@@ -258,7 +258,7 @@ export default function NewThemePage() {
                     <FormLabel>{t('themes.description')}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="What should the flashcards cover?"
+                        placeholder={t('themes.descriptionPlaceholder')}
                         rows={3}
                         disabled={isSubmitting}
                         {...field}
