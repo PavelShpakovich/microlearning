@@ -49,6 +49,20 @@ export default function TelegramEntryPage() {
       tg.ready();
       tg.expand();
 
+      // Auto-set UI language based on Telegram user's language_code
+      const telegramLanguage = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+      if (telegramLanguage) {
+        // Map Telegram language codes to our supported locales
+        const supportedLocales: Record<string, string> = {
+          ru: 'ru',
+          en: 'en',
+          // Add other language codes that map to 'ru' or 'en' as needed
+        };
+        const locale = supportedLocales[telegramLanguage] || 'en';
+        // Set cookie for language preference
+        document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      }
+
       setPhase('authenticating');
 
       try {

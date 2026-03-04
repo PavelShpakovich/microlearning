@@ -15,7 +15,13 @@ declare global {
         expand: () => void;
         MainButton: { text: string; show: () => void; onClick: (fn: () => void) => void };
         initData: string;
-        initDataUnsafe: { user?: { id: number; first_name: string } };
+        initDataUnsafe: {
+          user?: {
+            id: number;
+            first_name: string;
+            language_code?: string;
+          };
+        };
         HapticFeedback: { impactOccurred: (style: string) => void };
       };
     };
