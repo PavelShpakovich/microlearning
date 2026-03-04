@@ -106,6 +106,8 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   }, []);
 
   useEffect(() => {
+    if (!session?.id) return;
+
     const main = document.querySelector('main');
     if (!main) return;
 
@@ -116,7 +118,7 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
 
     main.addEventListener('scroll', handleScroll);
     return () => main.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [session?.id]);
 
   // Auto-scroll to newly generated cards if the user is at the bottom (viewing the loader)
   const prevCardCountRef = useRef(cards.length);
