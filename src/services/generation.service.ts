@@ -178,6 +178,11 @@ export class GenerationService {
     return { shouldGenerate, isGenerating: isGenerating || shouldGenerate };
   }
 
+  /** Clear only the failure flag (used when user explicitly retries). */
+  static async clearFailureFlag(themeId: string): Promise<void> {
+    await supabaseAdmin.from('themes').update({ generation_failed_at: null }).eq('id', themeId);
+  }
+
   /** @internal Reset DB generation flags (for tests only). */
   static async clearState(themeId: string): Promise<void> {
     await supabaseAdmin

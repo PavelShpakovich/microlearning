@@ -194,7 +194,9 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
               {t('study.cancel')}
             </Button>
-            <Button onClick={() => void fetchCards()}>{t('study.retry')}</Button>
+            <Button onClick={() => void fetchCards({ triggerGeneration: true })}>
+              {t('study.retry')}
+            </Button>
           </div>
         </div>
       </main>

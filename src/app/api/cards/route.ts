@@ -86,10 +86,18 @@ export const GET = withApiHandler(async (req) => {
       GenerationService.isGenerationFailed(themeId),
     ]);
 
-    generationFailed = isFailed;
+    // For explicit retry attempts, clear the failure cooldown so user can retry
+    // immediately without waiting for the 60-second recovery window
+    if (isFailed) {
+      await GenerationService.clearFailureFlag(themeId);
+      generationFailed = false;
+    } else {
+      generationFailed = isFailed;
+    }
+
     isGenerating = checkResult.isGenerating;
 
-    if (checkResult.shouldGenerate) {
+    if (checkResult.shouldGenerate || isFailed) {
       // Write generation_started_at to DB NOW (before response) so every instance
       // sees generating=true on the very next poll.
       await GenerationService.markGenerationStarted(themeId);
