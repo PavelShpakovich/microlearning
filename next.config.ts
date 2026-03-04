@@ -52,8 +52,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // Enable cache components for better server-side caching
     cacheComponents: true,
-    // Required to use `after()` from next/server for background tasks
-    after: true,
+    // Note: after() from next/server is stable in Next.js 15+ and does not need
+    // an experimental flag.
   },
 
   // Compression settings
