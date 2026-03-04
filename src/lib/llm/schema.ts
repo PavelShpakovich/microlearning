@@ -2,18 +2,14 @@ import { z } from 'zod';
 
 /** A single microlearning info card as validated from LLM output. */
 const normalizedCardSchema = z.object({
-  title: z.string().trim().min(1, 'title is empty').max(60, 'title too long'),
-  body: z.string().trim().min(100, 'body too short (≥100 chars)').max(5000, 'body too long'),
+  title: z.string().trim().min(1, 'title is empty').max(100, 'title too long'),
+  body: z.string().trim().min(20, 'body too short (≥20 chars)').max(5000, 'body too long'),
 });
 
 const legacyCardSchema = z
   .object({
-    question: z.string().trim().min(1, 'question is empty').max(60, 'question too long'),
-    answer: z
-      .string()
-      .trim()
-      .min(100, 'answer too short (≥100 chars)')
-      .max(5000, 'answer too long'),
+    question: z.string().trim().min(1, 'question is empty').max(100, 'question too long'),
+    answer: z.string().trim().min(20, 'answer too short (≥20 chars)').max(5000, 'answer too long'),
   })
   .transform((legacy) => ({
     title: legacy.question,
