@@ -144,14 +144,14 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
 
   if (error) {
     return (
-      <main className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-900">
+      <main className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="text-center px-6">
-          <p role="alert" className="mb-4 text-red-600 dark:text-red-400 font-semibold">
+          <p role="alert" className="mb-4 text-destructive font-semibold">
             {error}
           </p>
           <button
             onClick={() => void fetchCards()}
-            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
             {t('study.retry')}
           </button>
@@ -162,17 +162,17 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
 
   if (!session) {
     return (
-      <main className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-900">
+      <main className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{t('study.loadingSession')}</p>
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">{t('study.loadingSession')}</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="fixed inset-0 z-50 overflow-y-scroll snap-y snap-mandatory bg-white dark:bg-gray-900">
+    <main className="fixed inset-0 z-50 overflow-y-scroll snap-y snap-mandatory bg-background">
       <StudyBottomBar
         totalCards={cards.length}
         currentCardIndex={currentCardIndex}

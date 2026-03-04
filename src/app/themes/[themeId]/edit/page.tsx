@@ -278,14 +278,14 @@ export default function EditThemePage({ params }: EditThemePageProps) {
       <div className="mb-6 md:mb-8">
         <Link
           href="/dashboard"
-          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-4 transition-colors"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           {t('sources.backToDashboard')}
         </Link>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold break-words">{theme.name}</h1>
-            <p className="mt-2 text-sm md:text-base text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">
               {theme.description || t('sources.description')}
             </p>
           </div>
@@ -348,7 +348,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                     </TabsList>
 
                     <TabsContent value="text" className="space-y-4">
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">
+                      <div className="p-3 bg-muted rounded-lg border border-border text-sm text-muted-foreground">
                         {t('sourceLanguage.textLanguageHint', {
                           language:
                             theme.language === 'en' ? t('common.english') : t('common.russian'),
@@ -392,7 +392,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                     </TabsContent>
 
                     <TabsContent value="url" className="space-y-4">
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">
+                      <div className="p-3 bg-muted rounded-lg border border-border text-sm text-muted-foreground">
                         {urlType === 'youtube'
                           ? t('sourceLanguage.youtubeLanguageHint', {
                               language:
@@ -441,7 +441,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                           onChange={(e) => setUrlInput(e.target.value)}
                           disabled={isUploading}
                         />
-                        <p className="mt-2 text-xs text-gray-500">
+                        <p className="mt-2 text-xs text-muted-foreground">
                           {urlType === 'youtube' ? t('sources.youtubeHelp') : t('sources.webHelp')}
                         </p>
                       </div>
@@ -462,7 +462,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                     </TabsContent>
 
                     <TabsContent value="file" className="space-y-4">
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">
+                      <div className="p-3 bg-muted rounded-lg border border-border text-sm text-muted-foreground">
                         {t('sourceLanguage.noteText', {
                           language:
                             theme.language === 'en' ? t('common.english') : t('common.russian'),
@@ -470,7 +470,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                       </div>
                       <div>
                         <Label htmlFor="file">{t('sources.selectFile')}</Label>
-                        <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition">
+                        <div className="mt-2 border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-foreground/30 hover:bg-muted transition">
                           <input
                             id="file"
                             type="file"
@@ -480,11 +480,13 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                             className="hidden"
                           />
                           <label htmlFor="file" className="cursor-pointer block">
-                            <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                            <p className="font-medium text-gray-900">
+                            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="font-medium text-foreground">
                               {selectedFile ? selectedFile.name : t('sources.dragDrop')}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">{t('sources.fileHelp')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {t('sources.fileHelp')}
+                            </p>
                           </label>
                         </div>
                       </div>
@@ -518,7 +520,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                 </CardHeader>
                 <CardContent>
                   {sources.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                    <p className="text-sm text-muted-foreground text-center py-4">
                       {t('sources.noSources')}
                     </p>
                   ) : (
@@ -526,11 +528,11 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                       {sources.map((source) => (
                         <div
                           key={source.id}
-                          className="flex items-start justify-between gap-2 p-2 rounded border border-gray-200"
+                          className="flex items-start justify-between gap-2 p-2 rounded border border-border"
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{source.name}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               {new Date(source.created_at).toLocaleDateString()}
                             </p>
                           </div>
@@ -543,7 +545,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
               </Card>
 
               {/* Card Generation */}
-              <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+              <Card className="border-border bg-muted/50">
                 <CardHeader>
                   <CardTitle className="text-base">{t('themes.generateMore')}</CardTitle>
                 </CardHeader>
@@ -558,8 +560,8 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                           disabled={isGenerating}
                           className={`flex-1 rounded-lg border-2 py-2 text-sm font-semibold transition-all cursor-pointer ${
                             cardCount === n
-                              ? 'border-blue-600 bg-blue-600 text-white'
-                              : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground'
                           }`}
                         >
                           {n}
@@ -570,14 +572,14 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                   <Button
                     onClick={() => void handleGenerateCards()}
                     disabled={isGenerating || sources.length === 0}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-full"
                   >
                     {isGenerating
                       ? `${t('buttons.generating')} ${cardCount}...`
                       : `${t('buttons.createAndGenerate', { count: cardCount })}`}
                   </Button>
                   {sources.length === 0 && (
-                    <p className="text-xs text-center text-blue-600 dark:text-blue-400 mt-2">
+                    <p className="text-xs text-center text-muted-foreground mt-2">
                       {t('sources.noSources')}
                     </p>
                   )}
@@ -657,14 +659,14 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                 <h3 className="text-lg font-semibold text-red-600 mb-4">
                   {t('dialog.deleteTheme')}
                 </h3>
-                <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border border-red-200 dark:border-red-900 flex items-center justify-between">
+                <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border border-red-200 dark:border-red-900 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm text-red-800 dark:text-red-300">
                     {t('dialog.deleteThemeDescription')}
                   </p>
                   <Button
                     variant="destructive"
                     onClick={() => setThemeToDelete(theme)}
-                    className="ml-4"
+                    className="shrink-0"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     {t('buttons.delete')}

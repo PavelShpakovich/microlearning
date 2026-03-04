@@ -38,6 +38,7 @@
     "manual": "Manual",
     "creating": "Creating…",
     "generating": "Generating…",
+    "saving": "Saving…",
     "createTheme": "Create Theme",
     "createAndGenerate": "Create & Generate {count} Cards"
   },

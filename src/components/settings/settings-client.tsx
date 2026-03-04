@@ -106,7 +106,7 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="streak">{t('settings.currentStreak')}</Label>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   {t('settings.streakDescription')}
                 </span>
               </div>

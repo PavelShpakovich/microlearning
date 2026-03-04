@@ -38,6 +38,7 @@
     "manual": "Ручное",
     "creating": "Создание…",
     "generating": "Генерирование…",
+    "saving": "Сохранение…",
     "createTheme": "Создать тему",
     "createAndGenerate": "Создать и сгенерировать {count} карточек"
   },

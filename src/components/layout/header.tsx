@@ -38,7 +38,7 @@ export function Header() {
 
   if (!isAuthenticated) {
     return (
-      <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-40">
+      <header className="border-b bg-background sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image src="/globe.svg" alt="Logo" width={32} height={32} />
@@ -57,7 +57,7 @@ export function Header() {
   }
 
   return (
-    <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-40">
+    <header className="border-b bg-background sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image src="/globe.svg" alt="Logo" width={32} height={32} />
@@ -86,13 +86,13 @@ export function Header() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => void setLanguage('en')}
-                  className={locale === 'en' ? 'bg-blue-50' : ''}
+                  className={locale === 'en' ? 'bg-muted' : ''}
                 >
                   {t('common.english')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => void setLanguage('ru')}
-                  className={locale === 'ru' ? 'bg-blue-50' : ''}
+                  className={locale === 'ru' ? 'bg-muted' : ''}
                 >
                   {t('common.russian')}
                 </DropdownMenuItem>
@@ -121,7 +121,7 @@ export function Header() {
                 <DropdownMenuLabel>
                   <div className="flex flex-col gap-1">
                     <p className="font-semibold text-sm">{displayName}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

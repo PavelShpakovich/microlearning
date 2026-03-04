@@ -33,11 +33,11 @@ export function ThemeList({
     return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <BookOpen className="mb-4 h-12 w-12 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900">
+          <BookOpen className="mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="text-lg font-semibold text-foreground">
             {isOwner ? t('dashboard.emptyTitle') : t('dashboard.noCommunityThemes')}
           </h3>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             {isOwner ? t('dashboard.emptyDescription') : t('dashboard.communityEmptyDescription')}
           </p>
           {isOwner && (

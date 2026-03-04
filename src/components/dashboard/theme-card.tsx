@@ -34,7 +34,7 @@ export function ThemeCard({
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="line-clamp-2">{theme.name}</CardTitle>
-          <span className="shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {cardCount} {t('dashboard.cards')}
           </span>
         </div>
@@ -62,11 +62,11 @@ export function ThemeCard({
           <div className="flex items-center justify-between border-t pt-3">
             <div className="flex items-center gap-2">
               {theme.is_public ? (
-                <Globe className="h-4 w-4 text-blue-600" />
+                <Globe className="h-4 w-4 text-primary" />
               ) : (
-                <Lock className="h-4 w-4 text-gray-400" />
+                <Lock className="h-4 w-4 text-muted-foreground" />
               )}
-              <span className="text-xs text-gray-600 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {theme.is_public ? t('dashboard.public') : t('dashboard.private')}
               </span>
             </div>

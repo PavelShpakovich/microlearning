@@ -82,10 +82,10 @@ export function DashboardClient({
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             {t('dashboard.heading')}
           </h1>
-          <p className="mt-1 text-sm md:text-base text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-sm md:text-base text-muted-foreground">
             {t('dashboard.description', { count: themes.length })}
           </p>
         </div>

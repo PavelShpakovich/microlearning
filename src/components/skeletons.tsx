@@ -4,7 +4,7 @@ export function SettingsSkeleton() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 space-y-6">
       {/* Profile Card */}
-      <div className="rounded-lg border bg-white dark:bg-gray-800 p-6 space-y-6">
+      <div className="rounded-lg border bg-card p-6 space-y-6">
         <div>
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-48 mt-2" />
@@ -31,7 +31,7 @@ export function SettingsSkeleton() {
       </div>
 
       {/* Security Card */}
-      <div className="rounded-lg border bg-white dark:bg-gray-800 p-6 space-y-6">
+      <div className="rounded-lg border bg-card p-6 space-y-6">
         <div>
           <Skeleton className="h-6 w-20" />
           <Skeleton className="h-4 w-40 mt-2" />
@@ -60,7 +60,7 @@ export function DashboardSkeleton() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-white dark:bg-gray-800 p-4 h-32">
+          <div key={i} className="rounded-lg border bg-card p-4 h-32">
             <Skeleton className="h-6 w-full mb-2" />
             <Skeleton className="h-4 w-3/4 mb-4" />
             <div className="flex gap-2">
