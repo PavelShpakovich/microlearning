@@ -269,7 +269,7 @@ export default function NewThemePage() {
                 )}
               />
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                 <Button
                   type="button"
                   variant="outline"
@@ -281,7 +281,7 @@ export default function NewThemePage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1"
+                  className="flex-1 h-auto whitespace-normal py-2 leading-snug"
                   disabled={isSubmitting || form.formState.isSubmitting}
                 >
                   {isSubmitting

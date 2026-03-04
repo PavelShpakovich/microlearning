@@ -572,7 +572,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                   <Button
                     onClick={() => void handleGenerateCards()}
                     disabled={isGenerating || sources.length === 0}
-                    className="w-full"
+                    className="w-full h-auto whitespace-normal py-2 leading-snug"
                   >
                     {isGenerating
                       ? `${t('buttons.generating')} ${cardCount}...`
