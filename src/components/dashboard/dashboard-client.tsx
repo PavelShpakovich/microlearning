@@ -145,23 +145,14 @@ export function DashboardClient({
       </Tabs>
 
       {themes.length > 0 && (
-        <div className="mt-10 pt-10 border-t border-border">
-          <h3 className="text-lg font-semibold text-destructive mb-4">
-            {t('dialog.deleteAllThemes')}
-          </h3>
-          <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border border-red-200 dark:border-red-900 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-red-800 dark:text-red-100">
-              {t('dialog.deleteAllThemesDescription')}
-            </p>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteAllThemes(true)}
-              disabled={isDeletingAll}
-              className="shrink-0"
-            >
-              {isDeletingAll ? t('buttons.deleting') : t('buttons.deleteAll')}
-            </Button>
-          </div>
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setShowDeleteAllThemes(true)}
+            disabled={isDeletingAll}
+            className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors disabled:pointer-events-none"
+          >
+            {isDeletingAll ? t('buttons.deleting') : t('buttons.deleteAll')}
+          </button>
         </div>
       )}
 

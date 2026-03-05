@@ -7,7 +7,6 @@ import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
-import { useStreak } from '@/hooks/use-streak';
 import { useDisplayName } from '@/hooks/use-display-name';
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { Button } from '@/components/ui/button';
@@ -20,13 +19,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, User, Moon, Sun, Flame, Globe } from 'lucide-react';
+import { LogOut, Settings, User, Moon, Sun, Globe } from 'lucide-react';
 
 export function Header() {
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { streak } = useStreak();
   const displayName = useDisplayName();
   const { locale, setLanguage } = useUiLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -75,16 +73,6 @@ export function Header() {
 
         {isAuthenticated && (
           <div className="flex items-center gap-2">
-            {/* Streak Counter */}
-            {streak !== null && streak > 0 && (
-              <div className="flex items-center gap-1 px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-950">
-                <Flame className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
-                  {streak}
-                </span>
-              </div>
-            )}
-
             {/* Language Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
