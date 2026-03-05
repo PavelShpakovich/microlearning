@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { fetchTheme } from '@/lib/data-fetchers';
 import { StudyClient } from '@/components/study/study-client';
-import { StudySkeleton } from '@/components/skeletons';
 
 interface StudyPageProps {
   params: Promise<{ themeId: string }>;
@@ -31,9 +29,5 @@ export default async function StudyPage({ params }: StudyPageProps) {
 
   const isOwner = theme.user_id === session.user.id;
 
-  return (
-    <Suspense fallback={<StudySkeleton />}>
-      <StudyClient themeId={themeId} isOwner={isOwner} />
-    </Suspense>
-  );
+  return <StudyClient themeId={themeId} isOwner={isOwner} />;
 }

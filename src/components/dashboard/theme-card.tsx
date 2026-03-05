@@ -188,13 +188,11 @@ export function ThemeCard({
             <div className="flex items-center gap-2">
               <Link href={`/study/${theme.id}`} className="flex-1">
                 <Button className="w-full" variant="default" size="sm">
-                  <BookOpen className="h-4 w-4 mr-2" />
                   {t('buttons.study')}
                 </Button>
               </Link>
               <Link href={`/themes/${theme.id}/edit`} className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
-                  <Pencil className="h-4 w-4 mr-2" />
                   {t('buttons.edit')}
                 </Button>
               </Link>

@@ -35,6 +35,7 @@ export function DashboardClient({
   const [togglingPrivacy, setTogglingPrivacy] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeTab, setActiveTab] = useState('my-themes');
   const isTg = isTelegramWebApp();
 
   useEffect(() => {
@@ -132,7 +133,7 @@ export function DashboardClient({
         </Link>
       </div>
 
-      <Tabs defaultValue="my-themes" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-8">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="my-themes">{t('dashboard.myThemesTab')}</TabsTrigger>
@@ -144,15 +145,17 @@ export function DashboardClient({
         <TabsContent value="community">{renderThemeList(publicThemes, false)}</TabsContent>
       </Tabs>
 
-      {themes.length > 0 && (
+      {themes.length > 0 && activeTab === 'my-themes' && (
         <div className="mt-12 flex justify-center">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowDeleteAllThemes(true)}
             disabled={isDeletingAll}
-            className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors disabled:pointer-events-none"
+            className="text-xs text-muted-foreground/50 hover:text-destructive hover:bg-transparent"
           >
             {isDeletingAll ? t('buttons.deleting') : t('buttons.deleteAll')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -161,7 +164,7 @@ export function DashboardClient({
         onOpenChange={(open) => {
           if (!open) setThemeToDelete(null);
         }}
-        onConfirm={() => void handleDelete()}
+        onConfirm={handleDelete}
         title={t('dialog.deleteTheme')}
         description={t('dialog.deleteThemeDescription')}
         confirmLabel={t('dialog.delete')}
@@ -173,7 +176,7 @@ export function DashboardClient({
         onOpenChange={(open) => {
           if (!open) setShowDeleteAllThemes(false);
         }}
-        onConfirm={() => void handleDeleteAllThemes()}
+        onConfirm={handleDeleteAllThemes}
         title={t('dialog.deleteAllThemes')}
         description={t('dialog.deleteAllThemesDescription')}
         confirmLabel={t('dialog.delete')}
