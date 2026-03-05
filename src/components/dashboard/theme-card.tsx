@@ -103,7 +103,9 @@ export function ThemeCard({
           </div>
 
           {/* Actions - Privacy left, buttons right */}
-          <div className="flex items-center justify-between">
+          <div
+            className={`flex items-center gap-1 ${!isOwner ? 'justify-end' : 'justify-between'}`}
+          >
             {/* Privacy Toggle - Left */}
             {isOwner && (
               <div className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1">
@@ -126,7 +128,8 @@ export function ThemeCard({
               {/* Study Button */}
               <Link href={`/study/${theme.id}`}>
                 <Button variant="default" size="sm" className="h-7 px-2">
-                  <BookOpen className="h-3.5 w-3.5" />
+                  <BookOpen className={`h-3.5 w-3.5 ${!isOwner ? 'mr-1' : ''}`} />
+                  {!isOwner && t('buttons.study')}
                 </Button>
               </Link>
 
@@ -179,24 +182,35 @@ export function ThemeCard({
 
       {/* Actions Footer */}
       <div className="border-t px-4 py-3 space-y-2">
-        {/* Primary Action */}
-        <Link href={`/study/${theme.id}`} className="block">
-          <Button className="w-full" variant="default" size="sm">
-            <BookOpen className="h-4 w-4 mr-2" />
-            {t('buttons.study')}
-          </Button>
-        </Link>
-
-        {isOwner && (
+        {isOwner ? (
           <div className="space-y-2">
-            {/* Edit and Privacy Row */}
+            {/* First Row: Study and Edit */}
             <div className="flex items-center gap-2">
+              <Link href={`/study/${theme.id}`} className="flex-1">
+                <Button className="w-full" variant="default" size="sm">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  {t('buttons.study')}
+                </Button>
+              </Link>
               <Link href={`/themes/${theme.id}/edit`} className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
                   <Pencil className="h-4 w-4 mr-2" />
                   {t('buttons.edit')}
                 </Button>
               </Link>
+            </div>
+
+            {/* Second Row: Delete and Privacy Row */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={() => onDelete(theme)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t('buttons.delete')}
+              </Button>
 
               {/* Privacy Toggle - Compact */}
               <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1.5">
@@ -213,18 +227,15 @@ export function ThemeCard({
                 />
               </div>
             </div>
-
-            {/* Delete Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-              onClick={() => onDelete(theme)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {t('buttons.delete')}
-            </Button>
           </div>
+        ) : (
+          /* For non-owners, just the Study button */
+          <Link href={`/study/${theme.id}`} className="block">
+            <Button className="w-full" variant="default" size="sm">
+              <BookOpen className="h-4 w-4 mr-2" />
+              {t('buttons.study')}
+            </Button>
+          </Link>
         )}
       </div>
     </Card>
