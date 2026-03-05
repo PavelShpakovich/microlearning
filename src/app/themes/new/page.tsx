@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { Wand2, PenLine } from 'lucide-react';
 import { CARD_COUNT_OPTIONS } from '@/lib/constants';
 
-import { useAuth } from '@/hooks/use-auth';
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { themeApi } from '@/services/theme-api';
 import { Button } from '@/components/ui/button';
@@ -40,7 +39,6 @@ type ThemeFormValues = z.infer<typeof themeSchema>;
 export default function NewThemePage() {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { locale } = useUiLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,12 +60,6 @@ export default function NewThemePage() {
   useEffect(() => {
     form.setValue('language', locale);
   }, [locale, form]);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   async function onSubmit(values: ThemeFormValues) {
     try {
@@ -98,10 +90,6 @@ export default function NewThemePage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (authLoading) {
-    return <div className="px-4 py-10">{t('buttons.loading')}</div>;
   }
 
   return (

@@ -21,7 +21,6 @@ import {
   X,
 } from 'lucide-react';
 
-import { useAuth } from '@/hooks/use-auth';
 import { useSourceUpload } from '@/hooks/use-source-upload';
 import { themeApi } from '@/services/theme-api';
 import type { Database } from '@/lib/supabase/types';
@@ -61,7 +60,6 @@ export default function EditThemePage({ params }: EditThemePageProps) {
   const t = useTranslations();
   const { themeId } = use(params);
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { sources, isUploading, error, uploadText, uploadUrl, uploadFile, deleteSource } =
     useSourceUpload(themeId);
 
@@ -88,12 +86,6 @@ export default function EditThemePage({ params }: EditThemePageProps) {
       description: '',
     },
   });
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   // Fetch theme data
   useEffect(() => {
@@ -248,7 +240,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
     }
   };
 
-  if (authLoading || !theme) {
+  if (!theme) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
         <div className="mb-6 md:mb-8">
