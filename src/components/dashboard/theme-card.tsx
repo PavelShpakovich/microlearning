@@ -50,7 +50,7 @@ export function ThemeCard({
         {/* Right: actions */}
         <div className="flex items-center gap-1 shrink-0 md:gap-2">
           {isOwner && (
-            <div className="hidden items-center gap-1 md:flex">
+            <div className="flex items-center gap-1">
               {theme.is_public ? (
                 <Globe className="h-3.5 w-3.5 text-primary" />
               ) : (
@@ -109,15 +109,13 @@ export function ThemeCard({
         <div className="flex gap-2">
           <Link href={`/study/${theme.id}`} className="flex-1">
             <Button className="w-full" variant="default" size="sm">
-              <BookOpen className="h-4 w-4" />
-              <span className="ml-2 hidden md:inline">{t('buttons.study')}</span>
+              {t('buttons.study')}
             </Button>
           </Link>
           {isOwner && (
             <Link href={`/themes/${theme.id}/edit`} className="flex-1">
               <Button variant="outline" size="sm" className="w-full">
-                <Pencil className="h-4 w-4" />
-                <span className="ml-2 hidden md:inline">{t('buttons.edit')}</span>
+                {t('buttons.edit')}
               </Button>
             </Link>
           )}
@@ -150,8 +148,8 @@ export function ThemeCard({
             className="w-full text-destructive dark:text-destructive-foreground hover:text-destructive dark:hover:text-destructive-foreground"
             onClick={() => onDelete(theme)}
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="ml-2 hidden md:inline">{t('buttons.delete')}</span>
+            <Trash2 className="h-4 w-4 mr-2" />
+            {t('buttons.delete')}
           </Button>
         )}
       </CardContent>
