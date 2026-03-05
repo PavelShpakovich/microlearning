@@ -158,66 +158,75 @@ export function ThemeCard({
   }
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="px-4 py-3 md:px-6 md:py-6">
+    <Card className="flex flex-col h-full">
+      {/* Header */}
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="line-clamp-2">{theme.name}</CardTitle>
-          <span className="hidden shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground md:inline-flex">
-            {cardCount} {t('dashboard.cards')}
+          <div className="min-w-0 flex-1">
+            <CardTitle className="line-clamp-2 text-base">{theme.name}</CardTitle>
+          </div>
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+            {cardCount}
           </span>
         </div>
         {theme.description && (
-          <CardDescription className="line-clamp-2">{theme.description}</CardDescription>
+          <CardDescription className="line-clamp-2 mt-1">{theme.description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="mt-auto space-y-3 px-4 py-3 md:px-6 md:py-6">
-        <div className="flex gap-2">
-          <Link href={`/study/${theme.id}`} className="flex-1">
-            <Button className="w-full" variant="default" size="sm">
-              {t('buttons.study')}
-            </Button>
-          </Link>
-          {isOwner && (
-            <Link href={`/themes/${theme.id}/edit`} className="flex-1">
-              <Button variant="outline" size="sm" className="w-full">
-                {t('buttons.edit')}
-              </Button>
-            </Link>
-          )}
-        </div>
+
+      {/* Content - spacing for bottom alignment */}
+      <CardContent className="flex-1 pb-3" />
+
+      {/* Actions Footer */}
+      <div className="border-t px-4 py-3 space-y-2">
+        {/* Primary Action */}
+        <Link href={`/study/${theme.id}`} className="block">
+          <Button className="w-full" variant="default" size="sm">
+            <BookOpen className="h-4 w-4 mr-2" />
+            {t('buttons.study')}
+          </Button>
+        </Link>
 
         {isOwner && (
-          <div className="flex items-center justify-between border-t pt-3">
+          <div className="space-y-2">
+            {/* Edit and Privacy Row */}
             <div className="flex items-center gap-2">
-              {theme.is_public ? (
-                <Globe className="h-4 w-4 text-primary" />
-              ) : (
-                <Lock className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="text-xs text-muted-foreground">
-                {theme.is_public ? t('dashboard.public') : t('dashboard.private')}
-              </span>
+              <Link href={`/themes/${theme.id}/edit`} className="flex-1">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  {t('buttons.edit')}
+                </Button>
+              </Link>
+
+              {/* Privacy Toggle - Compact */}
+              <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1.5">
+                {theme.is_public ? (
+                  <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                )}
+                <Switch
+                  checked={theme.is_public ?? false}
+                  onCheckedChange={() => onPrivacyToggle(theme.id, theme.is_public ?? false)}
+                  disabled={togglingPrivacy === theme.id}
+                  className="scale-90"
+                />
+              </div>
             </div>
-            <Switch
-              checked={theme.is_public ?? false}
-              onCheckedChange={() => onPrivacyToggle(theme.id, theme.is_public ?? false)}
-              disabled={togglingPrivacy === theme.id}
-            />
+
+            {/* Delete Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              onClick={() => onDelete(theme)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {t('buttons.delete')}
+            </Button>
           </div>
         )}
-
-        {isOwner && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-destructive dark:text-destructive-foreground hover:text-destructive dark:hover:text-destructive-foreground"
-            onClick={() => onDelete(theme)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            {t('buttons.delete')}
-          </Button>
-        )}
-      </CardContent>
+      </div>
     </Card>
   );
 }
