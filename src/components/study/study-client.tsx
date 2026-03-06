@@ -156,16 +156,16 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     const main = document.querySelector('main');
     if (!main) return;
 
-    const handleScroll = () => {
-      const index = Math.floor((main.scrollTop + window.innerHeight / 2) / window.innerHeight);
-      // Clamp to [0, cards.length - 1] so that snap-items appended for loading/done
-      // screens never push currentCardIndex past the real card count.
+    const handleScrollEnd = () => {
+      // scrollend fires once the snap animation has settled, so scrollTop is
+      // exactly at the snapped position — Math.round gives the precise card index.
+      const index = Math.round(main.scrollTop / window.innerHeight);
       const maxIndex = Math.max(0, cardCountRef.current - 1);
       setCurrentCardIndex(Math.max(0, Math.min(index, maxIndex)));
     };
 
-    main.addEventListener('scroll', handleScroll);
-    return () => main.removeEventListener('scroll', handleScroll);
+    main.addEventListener('scrollend', handleScrollEnd);
+    return () => main.removeEventListener('scrollend', handleScrollEnd);
   }, [session?.id]);
 
   // Auto-scroll to newly generated cards if the user is at the bottom (viewing the loader)
