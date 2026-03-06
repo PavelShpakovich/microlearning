@@ -36,6 +36,28 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
   const [newPassword, setNewPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
+  const telegramId = initialProfile?.telegram_id ?? null;
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const onConnectTelegram = async () => {
+    if (!BOT_URL) return;
+    try {
+      setIsConnecting(true);
+      const { token } = await profileApi.generateTelegramLinkToken();
+      // Deep-link opens the Mini App with start_param=link_<token>
+      const deepLink = `${BOT_URL}?startapp=link_${token}`;
+      window.open(deepLink, '_blank', 'noopener,noreferrer');
+      toast.success(t('settings.telegramConnectOpened'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('settings.telegramConnectFailed'));
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Reflect connection after user returns from the bot (storage event or poll not needed —
+  // a page refresh is the natural UX after linking inside Telegram).
+
   const onSave = async () => {
     const normalizedName = displayName.trim();
     if (!normalizedName) {
@@ -103,17 +125,21 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Send className="h-4 w-4" />
-              {t('settings.telegramBotTitle')}
+              {t('settings.telegramCardTitle')}
             </CardTitle>
-            <CardDescription>{t('settings.telegramBotDescription')}</CardDescription>
+            <CardDescription>{t('settings.telegramCardDescription')}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline">
-              <a href={BOT_URL} target="_blank" rel="noopener noreferrer">
+          <CardContent className="flex items-center justify-between gap-4">
+            {telegramId ? (
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                ✓ {t('settings.telegramConnected')}
+              </span>
+            ) : (
+              <Button onClick={() => void onConnectTelegram()} disabled={isConnecting}>
                 <Send className="h-4 w-4 mr-2" />
-                {t('settings.telegramBotCta')}
-              </a>
-            </Button>
+                {isConnecting ? t('settings.telegramConnecting') : t('settings.telegramConnectCta')}
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}

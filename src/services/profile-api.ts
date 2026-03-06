@@ -71,6 +71,16 @@ class ProfileApi {
     return (await response.json()) as SubscriptionResponse;
   }
 
+  /** Generates a short-lived link token so the user can connect their Telegram account. */
+  async generateTelegramLinkToken(): Promise<{ token: string }> {
+    const response = await fetch('/api/profile/telegram-link-token', { method: 'POST' });
+    if (!response.ok) {
+      const data = (await response.json()) as { error?: string; message?: string };
+      throw new Error(data.error || data.message || 'Failed to generate link token');
+    }
+    return (await response.json()) as { token: string };
+  }
+
   async requestUpgrade(planId: string): Promise<{ supportEmail: string }> {
     const response = await fetch('/api/subscription/checkout', {
       method: 'POST',

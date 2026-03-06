@@ -232,7 +232,9 @@
     "authenticationFailed": "Authentication failed",
     "useEmailLogin": "Use email login instead",
     "starting": "Starting…",
-    "signingYouIn": "Signing you in…"
+    "signingYouIn": "Signing you in…",
+    "linking": "Linking accounts…",
+    "linkFailed": "Account linking failed"
   },
   "plans": {
     "title": "Plans",
@@ -271,6 +273,13 @@
     "telegramBotTitle": "Telegram Bot",
     "telegramBotDescription": "Study your flashcards directly inside Telegram — no extra app required.",
     "telegramBotCta": "Open Bot",
+    "telegramCardTitle": "Connect Telegram",
+    "telegramCardDescription": "Link your Telegram account to sign in with one tap from the bot.",
+    "telegramConnected": "Telegram connected",
+    "telegramConnectCta": "Connect Telegram",
+    "telegramConnecting": "Connecting…",
+    "telegramConnectOpened": "Telegram opened — approve the link inside the bot",
+    "telegramConnectFailed": "Could not start account linking",
     "planCardTitle": "Plan & Billing",
     "planCardDescription": "View your usage and manage your subscription plan.",
     "planCardCta": "Manage Plan",

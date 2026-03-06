@@ -21,6 +21,8 @@ declare global {
             first_name: string;
             language_code?: string;
           };
+          /** Passed via ?startapp= deep-link parameter */
+          start_param?: string;
         };
         HapticFeedback: { impactOccurred: (style: string) => void };
       };

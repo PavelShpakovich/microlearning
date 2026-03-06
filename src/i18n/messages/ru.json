@@ -229,7 +229,9 @@
     "authenticationFailed": "Ошибка аутентификации",
     "useEmailLogin": "Использовать вход по электронной почте",
     "starting": "Запуск…",
-    "signingYouIn": "Вход…"
+    "signingYouIn": "Вход…",
+    "linking": "Привязка аккаунтов…",
+    "linkFailed": "Не удалось привязать аккаунт"
   },
   "validation": {
     "passwordTooShort": "Пароль должен быть не менее 6 символов"
@@ -295,6 +297,13 @@
     "telegramBotTitle": "Телеграм-бот",
     "telegramBotDescription": "Учите карточки прямо в Telegram — без установки приложений.",
     "telegramBotCta": "Открыть бот",
+    "telegramCardTitle": "Подключить Telegram",
+    "telegramCardDescription": "Привяжите аккаунт Telegram, чтобы входить одним нажатием через бота.",
+    "telegramConnected": "Telegram подключён",
+    "telegramConnectCta": "Подключить Telegram",
+    "telegramConnecting": "Подключение…",
+    "telegramConnectOpened": "Telegram открыт — подтвердите привязку внутри бота",
+    "telegramConnectFailed": "Не удалось начать привязку аккаунта",
     "planCardTitle": "Тариф и оплата",
     "planCardDescription": "Просмотрите использование и управляйте подпиской.",
     "planCardCta": "Управлять тарифом",
