@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
 import { UsageCard } from '@/components/common/usage-card';
 import { PlansCard } from '@/components/common/plans-card';
+import { BackLink } from '@/components/common/back-link';
 
 interface SettingsClientProps {
   userEmail: string;
@@ -81,6 +82,7 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 space-y-6">
+      <BackLink />
       <UsageCard />
       <PlansCard />
       <Card>

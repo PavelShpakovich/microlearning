@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Loader2, RotateCcw } from 'lucide-react';
+import { BackLink } from '@/components/common/back-link';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { AdminTableSkeleton } from '@/components/skeletons';
@@ -419,6 +420,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
+          <BackLink />
           <h1 className="text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground mt-2">{t('description')}</p>
         </div>

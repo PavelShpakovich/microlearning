@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Wand2, PenLine } from 'lucide-react';
 import { CARD_COUNT_OPTIONS } from '@/lib/constants';
+import { BackLink } from '@/components/common/back-link';
 
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { themeApi } from '@/services/theme-api';
@@ -94,6 +95,7 @@ export default function NewThemePage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 md:py-10">
+      <BackLink />
       <Card>
         <CardHeader>
           <CardTitle>{t('themes.createNew')}</CardTitle>

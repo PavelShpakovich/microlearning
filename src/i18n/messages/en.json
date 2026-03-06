@@ -11,7 +11,8 @@
     "logout": "Logout",
     "login": "Login",
     "register": "Sign Up",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "back": "Back"
   },
   "buttons": {
     "save": "Save",
