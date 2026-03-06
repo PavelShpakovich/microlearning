@@ -27,6 +27,7 @@ export const POST = withApiHandler(async () => {
   const payload = Buffer.from(JSON.stringify({ userId: user.id, exp })).toString('base64url');
   const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
-
-  return NextResponse.json({ token: `${payload}.${sig}` });
+  // No separator — HMAC-SHA256 base64url is always exactly 43 chars, so we split
+  // by fixed length on the receiving end. Telegram's startapp only allows [A-Za-z0-9_-].
+  return NextResponse.json({ token: `${payload}${sig}` });
 });

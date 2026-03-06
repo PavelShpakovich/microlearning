@@ -58,11 +58,13 @@ function validateTelegramInitData(initData: string, botToken: string): TelegramU
  * Returns the userId embedded in the token, or throws on tampered / expired tokens.
  */
 function verifyLinkToken(token: string): string {
-  const dotIndex = token.lastIndexOf('.');
-  if (dotIndex === -1) throw new AuthError({ message: 'Malformed link token' });
+  // HMAC-SHA256 base64url is always exactly 43 characters.
+  // The token is payload + sig with no separator (Telegram startapp forbids dots).
+  const SIG_LEN = 43;
+  if (token.length <= SIG_LEN) throw new AuthError({ message: 'Malformed link token' });
 
-  const payload = token.slice(0, dotIndex);
-  const sig = token.slice(dotIndex + 1);
+  const payload = token.slice(0, -SIG_LEN);
+  const sig = token.slice(-SIG_LEN);
 
   const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
   const expectedSig = createHmac('sha256', secret).update(payload).digest('base64url');
