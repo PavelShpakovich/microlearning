@@ -65,7 +65,7 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
             variant={isThemesExhausted ? 'destructive' : 'outline'}
             className="shrink-0 h-7 text-xs"
           >
-            <Link href="/settings#plan">
+            <Link href="/settings/plan">
               <ArrowUpRight className="h-3 w-3 mr-1" />
               {t('usage.upgradeCta')}
             </Link>

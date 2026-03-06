@@ -167,7 +167,7 @@ export function StudyLimitReachedScreen() {
       description={t('study.limitReachedDescription')}
     >
       <Button asChild className="w-full">
-        <Link href="/settings#plan">{t('study.limitReachedCta')}</Link>
+        <Link href="/settings/plan">{t('study.limitReachedCta')}</Link>
       </Button>
       <BackToDashboardButton />
     </StudyScreenLayout>

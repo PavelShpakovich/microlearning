@@ -182,7 +182,7 @@ export function DashboardClient({
                 </p>
               </div>
               <Button asChild size="sm">
-                <Link href="/settings#plan">
+                <Link href="/settings/plan">
                   <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
                   {t('dashboard.communityLockedCta')}
                 </Link>

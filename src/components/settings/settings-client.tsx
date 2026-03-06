@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { profileApi } from '@/services/profile-api';
 import { revalidateProfileData } from '@/app/api/actions/profile';
@@ -10,9 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
-import { Send } from 'lucide-react';
-import { UsageCard } from '@/components/common/usage-card';
-import { PlansCard } from '@/components/common/plans-card';
+import { ChevronRight, Send } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
@@ -86,8 +85,19 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
   return (
     <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       <BackLink />
-      <UsageCard />
-      <PlansCard />
+
+      {/* ── Plan & Billing ── */}
+      <Link href="/settings/plan" className="block group">
+        <Card className="transition-colors hover:border-foreground/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div>
+              <CardTitle className="text-base">{t('settings.planCardTitle')}</CardTitle>
+              <CardDescription>{t('settings.planCardDescription')}</CardDescription>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+          </CardHeader>
+        </Card>
+      </Link>
       {BOT_URL && (
         <Card>
           <CardHeader>
