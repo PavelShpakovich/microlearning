@@ -54,8 +54,10 @@ export async function generateWithSourceChunking(
     // If request is small, do it in one go
     if (input.count <= MINI_BATCH_SIZE) {
       const cards = await generateWithRetry(input, 3);
-      if (onProgress) await onProgress(cards);
-      return cards;
+      // LLMs can return more than requested — slice strictly to the requested count.
+      const capped = cards.slice(0, input.count);
+      if (onProgress) await onProgress(capped);
+      return capped;
     }
 
     // Split into mini-batches
@@ -69,6 +71,8 @@ export async function generateWithSourceChunking(
 
     for (const batchSize of counts) {
       if (batchSize === 0) continue;
+      // Stop early if we've already hit the requested count (can happen after dedup)
+      if (allCards.length >= input.count) break;
 
       try {
         const batchCards = await generateWithRetry(
@@ -82,6 +86,8 @@ export async function generateWithSourceChunking(
 
         const newCards: CardsOutput = [];
         for (const card of batchCards) {
+          // Never exceed the total requested count across all batches.
+          if (allCards.length >= input.count) break;
           const normalizedTitle = card.title.toLowerCase();
           if (!seenTitles.has(normalizedTitle)) {
             newCards.push(card);
@@ -115,7 +121,8 @@ export async function generateWithSourceChunking(
       throw new Error('No cards generated from any batch');
     }
 
-    return allCards;
+    // Final hard cap — defence in depth against dedup edge-cases.
+    return allCards.slice(0, input.count);
   }
 
   // Source is long → chunk it and distribute generation
@@ -141,6 +148,9 @@ export async function generateWithSourceChunking(
       'Generating cards from chunk',
     );
 
+    // Stop early if we've already reached the requested count.
+    if (allCards.length >= input.count) break;
+
     try {
       const chunkCards = await generateWithRetry(
         {
@@ -153,9 +163,10 @@ export async function generateWithSourceChunking(
         3,
       );
 
-      // Deduplicate by title before adding
+      // Deduplicate by title before adding, and never exceed requested count.
       const newCards: CardsOutput = [];
       for (const card of chunkCards) {
+        if (allCards.length >= input.count) break;
         const normalizedTitle = card.title.toLowerCase();
         if (!seenTitles.has(normalizedTitle)) {
           newCards.push(card);
@@ -194,5 +205,6 @@ export async function generateWithSourceChunking(
     'Completed chunked generation',
   );
 
-  return allCards;
+  // Final hard cap — defence in depth against dedup edge-cases.
+  return allCards.slice(0, input.count);
 }

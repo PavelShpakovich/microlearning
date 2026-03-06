@@ -84,8 +84,15 @@ export class GenerationService {
         async (newCards) => {
           if (newCards.length === 0) return;
 
+          // Safety net: never insert more cards than the effective quota allows.
+          // The orchestrator already caps output, but guard here too so billing
+          // is never overcharged even if an edge-case slips through.
+          const remaining = effectiveCount - totalInserted;
+          if (remaining <= 0) return;
+          const toInsert = newCards.slice(0, remaining);
+
           await supabaseAdmin.from('cards').insert(
-            newCards.map((c) => ({
+            toInsert.map((c) => ({
               user_id: userId,
               theme_id: themeId,
               source_id: sourceId,
@@ -95,7 +102,7 @@ export class GenerationService {
             })),
           );
 
-          totalInserted += newCards.length;
+          totalInserted += toInsert.length;
 
           logger.info(
             { themeId, batchCount: newCards.length },

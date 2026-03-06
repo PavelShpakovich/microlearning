@@ -139,9 +139,12 @@ export const POST = withApiHandler(async (req) => {
     'Generated cards',
   );
 
+  // Hard cap before dedup — orchestrator already caps, but be defensive.
+  const cappedCards = cards.slice(0, effectiveCount);
+
   // Deduplicate by normalized title before insert (in case LLM returned similar titles)
   const seenTitles = new Set(topicsToAvoid.map((t) => t.toLowerCase()));
-  const uniqueCards = cards.filter((card) => {
+  const uniqueCards = cappedCards.filter((card) => {
     const normalized = card.title.toLowerCase();
     if (seenTitles.has(normalized)) {
       logger.warn({ title: card.title }, 'Skipping duplicate card title');
