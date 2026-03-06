@@ -192,9 +192,9 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="basic">Basic</SelectItem>
+              <SelectItem value="basic">Starter</SelectItem>
               <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="unlimited">Unlimited</SelectItem>
+              <SelectItem value="unlimited">Max</SelectItem>
             </SelectContent>
           </Select>
           <AdminToggle
@@ -264,9 +264,9 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="basic">Basic</SelectItem>
+              <SelectItem value="basic">Starter</SelectItem>
               <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="unlimited">Unlimited</SelectItem>
+              <SelectItem value="unlimited">Max</SelectItem>
             </SelectContent>
           </Select>
         </td>
@@ -418,7 +418,7 @@ export default function AdminPage() {
   const t = useTranslations('admin');
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <BackLink />
           <h1 className="text-3xl font-bold">{t('title')}</h1>

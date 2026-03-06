@@ -247,7 +247,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
 
   if (!theme) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
+      <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10">
         <div className="mb-6 md:mb-8">
           <Skeleton className="h-4 w-32 mb-4" />
           <Skeleton className="h-10 w-64 mb-2" />
@@ -261,7 +261,7 @@ export default function EditThemePage({ params }: EditThemePageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 md:py-10">
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10">
       <div className="mb-6 md:mb-8">
         <Link
           href="/dashboard"

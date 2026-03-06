@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function SettingsSkeleton() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 space-y-6">
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       {/* Profile Card */}
       <div className="rounded-lg border bg-card p-6 space-y-6">
         <div>
@@ -121,7 +121,7 @@ export function AdminTableSkeleton() {
 
 export function DashboardSkeleton() {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <div>
         <Skeleton className="h-8 w-40 mb-2" />
         <Skeleton className="h-4 w-60 mb-6" />

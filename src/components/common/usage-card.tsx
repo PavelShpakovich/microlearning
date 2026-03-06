@@ -105,6 +105,43 @@ export function UsageCard() {
                 {t('usage.exhaustedHint')}
               </p>
             )}
+
+            {/* ── Theme usage (only for plans with a theme cap) ── */}
+            {status.plan.maxThemes !== null &&
+              (() => {
+                const themesUsed = status.themesUsed;
+                const maxThemes = status.plan.maxThemes;
+                const themesPct = Math.min(100, (themesUsed / maxThemes) * 100);
+                const themesRemaining = Math.max(0, maxThemes - themesUsed);
+                const isThemesExhausted = themesRemaining === 0;
+                return (
+                  <>
+                    <div className="border-t border-border" />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {t('usage.themeUsage', { used: themesUsed, limit: maxThemes })}
+                      </span>
+                      <span
+                        className={`font-medium tabular-nums ${
+                          themesPct >= 100
+                            ? 'text-destructive'
+                            : themesPct >= 80
+                              ? 'text-warning'
+                              : 'text-foreground'
+                        }`}
+                      >
+                        {t('usage.themesCounter', { used: themesUsed, limit: maxThemes })}
+                      </span>
+                    </div>
+                    <UsageProgressBar pct={themesPct} />
+                    <div className="text-xs text-muted-foreground">
+                      {isThemesExhausted
+                        ? t('usage.noThemesLeft')
+                        : t('usage.themesLeft', { count: themesRemaining })}
+                    </div>
+                  </>
+                );
+              })()}
           </>
         )}
       </CardContent>

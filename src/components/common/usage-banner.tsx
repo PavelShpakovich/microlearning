@@ -8,8 +8,13 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-/** Compact warning/error banner — only renders when user is ≤ LOW_CARDS_THRESHOLD or at limit. */
-export function UsageBanner() {
+interface UsageBannerProps {
+  /** Pass live local theme count to keep banner in sync without an extra API call. */
+  themesUsed?: number;
+}
+
+/** Compact warning/error banner — only renders when user is ≤ LOW_CARDS_THRESHOLD or at limit, or at/near theme limit. */
+export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {}) {
   const t = useTranslations();
   const { status, isLoading } = useSubscription();
 
@@ -19,13 +24,63 @@ export function UsageBanner() {
   const isExhausted = usage.cardsRemaining === 0;
   const isLow = !isExhausted && usage.cardsRemaining <= LOW_CARDS_THRESHOLD;
 
-  if (!isExhausted && !isLow) return null;
+  // Theme limit state (only relevant for capped plans)
+  const maxThemes = status.plan.maxThemes;
+  // Prefer the prop (live local count) over the stale API value
+  const themesUsed = themesUsedProp ?? status.themesUsed;
+  const themesRemaining = maxThemes !== null ? Math.max(0, maxThemes - themesUsed) : null;
+  const isThemesExhausted = themesRemaining === 0;
+  const isThemesLow = !isThemesExhausted && themesRemaining === 1;
 
+  // Card banners take priority; theme banner only shows when card banner is silent
+  const showCardBanner = isExhausted || isLow;
+  const showThemeBanner = !showCardBanner && (isThemesExhausted || isThemesLow);
+
+  if (!showCardBanner && !showThemeBanner) return null;
+
+  // ── Theme limit banner ──────────────────────────────────────────────────
+  if (showThemeBanner) {
+    return (
+      <Alert
+        variant={isThemesExhausted ? 'destructive' : 'default'}
+        className={`mb-6 animate-in fade-in slide-in-from-top-2 duration-300 ${
+          isThemesLow ? 'border-warning/40 bg-warning/5 text-warning [&>svg]:text-warning' : ''
+        }`}
+      >
+        {isThemesExhausted ? <Lock className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+        <div className="flex items-start justify-between gap-4 w-full">
+          <div>
+            <AlertTitle>
+              {isThemesExhausted
+                ? t('usage.themeLimitReachedBannerTitle')
+                : t('usage.themeNearLimitBannerTitle', { count: themesRemaining })}
+            </AlertTitle>
+            <AlertDescription>
+              {t('usage.themeUsage', { used: themesUsed, limit: maxThemes! })}
+            </AlertDescription>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            variant={isThemesExhausted ? 'destructive' : 'outline'}
+            className="shrink-0 h-7 text-xs"
+          >
+            <Link href="/settings#plan">
+              <ArrowUpRight className="h-3 w-3 mr-1" />
+              {t('usage.upgradeCta')}
+            </Link>
+          </Button>
+        </div>
+      </Alert>
+    );
+  }
+
+  // ── Card limit banner ───────────────────────────────────────────────────
   return (
     <Alert
       variant={isExhausted ? 'destructive' : 'default'}
       className={`mb-6 animate-in fade-in slide-in-from-top-2 duration-300 ${
-        isLow ? 'border-warning/40 bg-warning/5 text-warning-foreground [&>svg]:text-warning' : ''
+        isLow ? 'border-warning/40 bg-warning/5 text-warning [&>svg]:text-warning' : ''
       }`}
     >
       {isExhausted ? <Lock className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}

@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
-import { ValidationError } from '@/lib/errors';
+import { PlanLimitError, ValidationError } from '@/lib/errors';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/cache-utils';
+import { SubscriptionService } from '@/lib/subscriptions/service';
 
 const createThemeSchema = z.object({
   name: z.string().min(1).max(100),
@@ -41,6 +42,20 @@ export const POST = withApiHandler(async (req) => {
     throw new ValidationError({
       message: body.error.issues.map((issue) => issue.message).join(', '),
     });
+  }
+
+  // Enforce per-plan theme limit
+  const plan = await SubscriptionService.getUserPlan(user.id);
+  if (plan.maxThemes !== null) {
+    const { count } = await supabase
+      .from('themes')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    if ((count ?? 0) >= plan.maxThemes) {
+      throw new PlanLimitError({
+        message: `Theme limit reached — your plan allows up to ${plan.maxThemes} theme${plan.maxThemes === 1 ? '' : 's'}. Upgrade to create more.`,
+      });
+    }
   }
 
   const { data: theme, error } = await supabase

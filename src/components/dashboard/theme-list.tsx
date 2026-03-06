@@ -13,6 +13,7 @@ type Theme = Database['public']['Tables']['themes']['Row'];
 interface ThemeListProps {
   themes: Theme[];
   isOwner: boolean;
+  canShare?: boolean;
   cardCounts: Record<string, number>;
   togglingPrivacy: string | null;
   onPrivacyToggle: (themeId: string, currentIsPublic: boolean) => void;
@@ -23,6 +24,7 @@ interface ThemeListProps {
 export function ThemeList({
   themes,
   isOwner,
+  canShare = true,
   cardCounts,
   togglingPrivacy,
   onPrivacyToggle,
@@ -64,6 +66,7 @@ export function ThemeList({
           theme={theme}
           cardCount={cardCounts[theme.id] ?? 0}
           isOwner={isOwner}
+          canShare={canShare}
           togglingPrivacy={togglingPrivacy}
           onPrivacyToggle={onPrivacyToggle}
           onDelete={onDelete}

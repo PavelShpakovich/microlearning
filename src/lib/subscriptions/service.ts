@@ -19,7 +19,7 @@ export class SubscriptionService {
         plan_id,
         status,
         current_period_end,
-        subscription_plans!inner(cards_per_month)
+        subscription_plans!inner(cards_per_month, max_themes, community_themes)
       `,
       )
       .eq('user_id', userId)
@@ -27,19 +27,28 @@ export class SubscriptionService {
       .single();
 
     if (error || !data) {
-      // Default to free plan with 20 cards/month
+      // Default to free plan with 50 cards/month, 5 theme limit, no community themes
       return {
         planId: 'free',
-        cardsPerMonth: 20,
+        cardsPerMonth: 50,
+        maxThemes: 5,
+        communityThemes: false,
         status: 'active',
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       };
     }
 
+    const planData = data.subscription_plans as unknown as {
+      cards_per_month: number;
+      max_themes: number | null;
+      community_themes: boolean;
+    };
+
     return {
       planId: data.plan_id as 'free' | 'basic' | 'pro' | 'unlimited',
-      cardsPerMonth: (data.subscription_plans as unknown as { cards_per_month: number })
-        .cards_per_month,
+      cardsPerMonth: planData.cards_per_month,
+      maxThemes: planData.max_themes,
+      communityThemes: planData.community_themes,
       status: data.status as 'active' | 'canceled' | 'expired',
       currentPeriodEnd: data.current_period_end,
     };
@@ -94,13 +103,20 @@ export class SubscriptionService {
    * Get full subscription status
    */
   static async getSubscriptionStatus(userId: string): Promise<SubscriptionResponse> {
-    const plan = await this.getUserPlan(userId);
-    const usage = await this.getUserUsage(userId);
+    const [plan, usage, themesResult] = await Promise.all([
+      this.getUserPlan(userId),
+      this.getUserUsage(userId),
+      supabaseAdmin
+        .from('themes')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId),
+    ]);
 
     return {
       plan,
       usage,
       canGenerate: usage.cardsRemaining > 0,
+      themesUsed: themesResult.count ?? 0,
     };
   }
 
@@ -175,7 +191,7 @@ export class SubscriptionService {
       .eq('id', newPlanId)
       .single();
 
-    const cardsPerMonth = (planData as Record<string, number> | null)?.cards_per_month ?? 20;
+    const cardsPerMonth = (planData as Record<string, number> | null)?.cards_per_month ?? 50;
 
     // Delete old usage records for clean slate
     await supabaseAdmin.from('user_usage').delete().eq('user_id', userId);

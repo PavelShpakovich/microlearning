@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
-import { NotFoundError, ValidationError } from '@/lib/errors';
+import { NotFoundError, PlanLimitError, ValidationError } from '@/lib/errors';
+import { SubscriptionService } from '@/lib/subscriptions/service';
 
 const updateThemeSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -70,7 +71,18 @@ export const PATCH = withApiHandler(async (req) => {
   const updateData: Record<string, unknown> = {};
   if (body.data.name !== undefined) updateData.name = body.data.name;
   if (body.data.description !== undefined) updateData.description = body.data.description;
-  if (body.data.is_public !== undefined) updateData.is_public = body.data.is_public;
+  if (body.data.is_public !== undefined) {
+    // Only plans with community_themes access can make themes public
+    if (body.data.is_public === true) {
+      const plan = await SubscriptionService.getUserPlan(user.id);
+      if (!plan.communityThemes) {
+        throw new PlanLimitError({
+          message: 'Sharing themes publicly requires a paid plan. Upgrade to enable this feature.',
+        });
+      }
+    }
+    updateData.is_public = body.data.is_public;
+  }
 
   const { data: updatedTheme, error } = await supabase
     .from('themes')

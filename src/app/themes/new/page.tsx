@@ -13,6 +13,7 @@ import { CARD_COUNT_OPTIONS } from '@/lib/constants';
 import { BackLink } from '@/components/common/back-link';
 
 import { useUiLanguage } from '@/hooks/use-ui-language';
+import { useSubscription } from '@/hooks/use-subscription';
 import { themeApi } from '@/services/theme-api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,7 +42,21 @@ export default function NewThemePage() {
   const t = useTranslations();
   const router = useRouter();
   const { locale } = useUiLanguage();
+  const { status: subscriptionStatus } = useSubscription();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect if at theme limit — prevents direct URL access bypass
+  const atThemeLimit =
+    subscriptionStatus !== null &&
+    subscriptionStatus.plan.maxThemes !== null &&
+    subscriptionStatus.themesUsed >= subscriptionStatus.plan.maxThemes;
+
+  useEffect(() => {
+    if (atThemeLimit) {
+      toast.error(t('usage.themeLimitReachedBannerTitle'));
+      router.replace('/dashboard');
+    }
+  }, [atThemeLimit, router, t]);
 
   const form = useForm<ThemeFormValues>({
     resolver: zodResolver(themeSchema),
@@ -94,7 +109,7 @@ export default function NewThemePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 md:py-10">
+    <div className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10">
       <BackLink />
       <Card>
         <CardHeader>

@@ -49,7 +49,10 @@ export function StudyBottomBar({
     cardsRemaining != null && cardsRemaining > 0 && cardsRemaining <= LOW_CARDS_THRESHOLD;
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-background border border-border rounded-full shadow-lg max-w-[90vw] overflow-x-auto no-scrollbar">
+    <div
+      className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-background border border-border rounded-full shadow-lg max-w-[90vw] overflow-x-auto no-scrollbar"
+      style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {/* Progress */}
       <span className="shrink-0 text-xs md:text-sm font-semibold text-foreground tabular-nums">
         {totalCards > 0 ? `${Math.min(currentCardIndex + 1, totalCards)}/${totalCards}` : '—'}

@@ -14,10 +14,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 // ---------------------------------------------------------------------------
 
 const PLANS = [
-  { id: 'free', name: 'Free', cards: 20, priceMonthly: 0 },
-  { id: 'basic', name: 'Basic', cards: 200, priceMonthly: 4.99 },
-  { id: 'pro', name: 'Pro', cards: 1000, priceMonthly: 12.99 },
-  { id: 'unlimited', name: 'Unlimited', cards: 5000, priceMonthly: 24.99 },
+  { id: 'free', name: 'Free', cards: 50, priceMonthly: 0 },
+  { id: 'basic', name: 'Starter', cards: 300, priceMonthly: 4.99 },
+  { id: 'pro', name: 'Pro', cards: 2000, priceMonthly: 12.99 },
+  { id: 'unlimited', name: 'Max', cards: 5000, priceMonthly: 24.99 },
 ] as const;
 
 type Plan = (typeof PLANS)[number];
@@ -28,6 +28,7 @@ type Plan = (typeof PLANS)[number];
 
 interface PlanTileProps {
   plan: Plan;
+  features: string[];
   isCurrent: boolean;
   isUpgrade: boolean;
   isDowngrade: boolean;
@@ -38,6 +39,7 @@ interface PlanTileProps {
 
 function PlanTile({
   plan,
+  features,
   isCurrent,
   isUpgrade,
   isDowngrade,
@@ -64,6 +66,15 @@ function PlanTile({
           {plan.priceMonthly === 0 ? t('plans.free') : `$${plan.priceMonthly.toFixed(2)}/mo`}
         </p>
       </div>
+
+      <ul className="space-y-1.5">
+        {features.map((feature) => (
+          <li key={feature} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Check className="w-3 h-3 shrink-0 text-primary" />
+            {feature}
+          </li>
+        ))}
+      </ul>
 
       {isCurrent ? (
         <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
@@ -116,11 +127,19 @@ function PlanTile({
 /** Plan comparison card for Settings page — shows all tiers and upgrade CTA. */
 export function PlansCard() {
   const t = useTranslations();
+  const tl = useTranslations('landing');
   const { status, isLoading } = useSubscription();
   const [requesting, setRequesting] = useState<string | null>(null);
 
   const currentPlanId = status?.plan.planId ?? 'free';
   const currentPlanIndex = PLANS.findIndex((p) => p.id === currentPlanId);
+
+  const planFeatures: Record<string, string[]> = {
+    free: [tl('plan1Feature1'), tl('plan1Feature2')],
+    basic: [tl('plan2Feature1'), tl('plan2Feature2'), tl('plan2Feature3')],
+    pro: [tl('plan3Feature1'), tl('plan3Feature2'), tl('plan3Feature3')],
+    unlimited: [tl('plan4Feature1'), tl('plan4Feature2'), tl('plan4Feature3')],
+  };
 
   const handleUpgrade = async (planId: string) => {
     setRequesting(planId);
@@ -161,6 +180,7 @@ export function PlansCard() {
               <PlanTile
                 key={plan.id}
                 plan={plan}
+                features={planFeatures[plan.id] ?? []}
                 isCurrent={plan.id === currentPlanId}
                 isUpgrade={idx > currentPlanIndex}
                 isDowngrade={idx < currentPlanIndex}

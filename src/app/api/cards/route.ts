@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
-import { CARD_GENERATION_THRESHOLD, MAX_CARDS_PER_SESSION_FETCH } from '@/lib/constants';
+import { MAX_CARDS_PER_SESSION_FETCH } from '@/lib/constants';
 import { GenerationService } from '@/services/generation.service';
 import { SubscriptionService } from '@/lib/subscriptions/service';
 import { logger } from '@/lib/logger';
@@ -85,8 +85,12 @@ export const GET = withApiHandler(async (req) => {
   let limitReached = false;
 
   if (shouldTriggerGeneration) {
-    const [checkResult, isFailed, subscription] = await Promise.all([
-      GenerationService.checkShouldGenerate(themeId, remaining, CARD_GENERATION_THRESHOLD),
+    // Client-triggered generation: the user has scrolled near the end of their deck.
+    // We only need to guard against an already-in-progress generation and quota.
+    // We intentionally bypass the server-side threshold (checkShouldGenerate) here —
+    // that guard is designed for automatic background triggers, not explicit requests.
+    const [dbIsAlreadyGenerating, isFailed, subscription] = await Promise.all([
+      GenerationService.isGenerating(themeId),
       GenerationService.isGenerationFailed(themeId),
       SubscriptionService.getSubscriptionStatus(user.id),
     ]);
@@ -94,44 +98,36 @@ export const GET = withApiHandler(async (req) => {
     const canGenerate = subscription.canGenerate;
     const cardsRemaining = subscription.usage.cardsRemaining;
 
-    // For explicit retry attempts, clear the failure cooldown so user can retry
-    // immediately without waiting for the 60-second recovery window
     if (isFailed) {
       await GenerationService.clearFailureFlag(themeId);
       generationFailed = false;
     } else {
-      generationFailed = isFailed;
+      generationFailed = false;
     }
 
-    isGenerating = checkResult.isGenerating;
-
-    if ((checkResult.shouldGenerate || isFailed) && canGenerate) {
-      // Write generation_started_at to DB NOW (before response) so every instance
-      // sees generating=true on the very next poll.
+    if (dbIsAlreadyGenerating) {
+      // Already generating — just tell the client to keep polling
+      isGenerating = true;
+      logger.info({ themeId }, 'Generation already in progress, client should poll');
+    } else if (!canGenerate) {
+      isGenerating = false;
+      limitReached = true;
+      logger.info(
+        { themeId, userId: user.id },
+        'Skipping client-triggered generation — user has reached their monthly card limit',
+      );
+    } else {
+      // Start generation
       await GenerationService.markGenerationStarted(themeId);
       isGenerating = true;
 
-      // Use next/server after() so Vercel keeps the lambda alive for the full
-      // generation run even after the HTTP response has been sent.
       after(async () => {
         await GenerationService.doGenerate(user.id, themeId, count).catch((err: unknown) => {
           logger.error({ themeId, err }, 'Background generation failed');
         });
       });
 
-      logger.info({ themeId }, 'Triggering card generation in background');
-    } else if (!canGenerate) {
-      // Quota exhausted — clear any stale DB flag that might have been set
-      // by a previous request, so polls don't get stuck on generating=true.
-      if (isGenerating) {
-        await GenerationService.clearState(themeId);
-      }
-      isGenerating = false;
-      limitReached = true;
-      logger.info(
-        { themeId, userId: user.id },
-        'Skipping auto-generation trigger — user has reached their monthly card limit',
-      );
+      logger.info({ themeId }, 'Triggering card generation in background (client-requested)');
     }
 
     return NextResponse.json(

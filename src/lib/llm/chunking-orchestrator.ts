@@ -94,10 +94,20 @@ export async function generateWithSourceChunking(
           await onProgress(newCards);
         }
       } catch (err) {
-        logger.warn(
+        logger.error(
           { error: err instanceof Error ? err.message : String(err) },
-          'Mini-batch generation failed, continuing',
+          'Mini-batch generation failed, aborting remaining batches',
         );
+        // If we already produced some cards, return what we have.
+        // Otherwise rethrow so the caller sees a hard failure.
+        if (allCards.length > 0) {
+          logger.info(
+            { generatedSoFar: allCards.length, requested: input.count },
+            'Returning partial results after batch failure',
+          );
+          return allCards;
+        }
+        throw err;
       }
     }
 
@@ -160,11 +170,18 @@ export async function generateWithSourceChunking(
         await onProgress(newCards);
       }
     } catch (err) {
-      logger.warn(
+      logger.error(
         { chunkIndex: i, error: err instanceof Error ? err.message : String(err) },
-        'Failed to generate from chunk, continuing with other chunks',
+        'Failed to generate from chunk, aborting remaining chunks',
       );
-      // Continue with next chunk on failure
+      if (allCards.length > 0) {
+        logger.info(
+          { generatedSoFar: allCards.length, requested: input.count },
+          'Returning partial results after chunk failure',
+        );
+        return allCards;
+      }
+      throw err;
     }
   }
 

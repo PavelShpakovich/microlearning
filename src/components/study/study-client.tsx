@@ -16,6 +16,7 @@ import {
   StudyLoadingMoreScreen,
 } from '@/components/study/study-state-screens';
 import { useTranslations } from 'next-intl';
+import { Lock } from 'lucide-react';
 
 interface StudyClientProps {
   themeId: string;
@@ -32,6 +33,10 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const router = useRouter();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [resumeDismissed, setResumeDismissed] = useState(false);
+  // Eligibility is evaluated ONCE when initial loading completes and never re-checked.
+  // This prevents newly-generated cards from re-triggering the prompt mid-session.
+  const [resumeEligible, setResumeEligible] = useState(false);
+  const resumeEvaluatedRef = useRef(false);
   const seenIdsRef = useRef<Set<string>>(new Set());
   const triggerFetchedAtRef = useRef<number>(-1);
   const {
@@ -68,7 +73,8 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     }
   }, [isOwner, infiniteMode, setInfiniteMode]);
 
-  // Compute resume index: first card after the last seen card in deck order
+  // Compute resume index: first card after the last seen card in deck order.
+  // Kept as a live computation so "Continue" can always scroll to the right card.
   const resumeIndex = (() => {
     if (seenCardIds.length === 0 || cards.length === 0) return 0;
     const seenSet = new Set(seenCardIds);
@@ -79,16 +85,22 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     return lastSeenIdx + 1;
   })();
 
-  // Show resume prompt when cards are ready, there's a valid resume position, and user hasn't dismissed
-  const showResumePrompt =
-    !resumeDismissed &&
-    !isInitialLoading &&
-    cards.length > 0 &&
-    seenCardIds.length > 0 &&
-    resumeIndex > 0 &&
-    resumeIndex < cards.length;
+  // Freeze resume eligibility ONCE when initial loading completes.
+  // New cards arriving from auto-generation must NOT re-trigger this prompt mid-session.
+  useEffect(() => {
+    if (isInitialLoading || resumeEvaluatedRef.current) return;
+    resumeEvaluatedRef.current = true;
+    setResumeEligible(
+      cards.length > 0 && seenCardIds.length > 0 && resumeIndex > 0 && resumeIndex < cards.length,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialLoading]); // intentionally only react to loading completion, not card/seen changes
 
-  const done = !infiniteMode && cards.length > 0 && !isGenerating && session?.id;
+  // Show resume prompt only if it was eligible at initial-load completion and not yet dismissed
+  const showResumePrompt = resumeEligible && !resumeDismissed;
+
+  const done =
+    !infiniteMode && cards.length > 0 && !isGenerating && !isManualGenerating && session?.id;
 
   useEffect(() => {
     if (!session?.id) return;
@@ -163,12 +175,12 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   // the listener on every card append).
   const cardCountRef = useRef(cards.length);
   // Update synchronously during render (safe for refs — no re-render triggered)
-  // eslint-disable-next-line react-hooks/immutability
+
   cardCountRef.current = cards.length;
   useEffect(() => {
     if (cards.length > prevCardCountRef.current) {
       // If user was viewing the loader (index == prevLength) or further
-      if (currentCardIndex >= prevCardCountRef.current) {
+      if (currentCardIndex >= prevCardCountRef.current - 1) {
         const firstNewCard = cards[prevCardCountRef.current];
         if (firstNewCard) {
           setTimeout(() => {
@@ -303,8 +315,29 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         </div>
       ))}
 
-      {isGenerating && cards.length > 0 && <StudyLoadingMoreScreen />}
-      {done && !isGenerating && <StudyDoneScreen />}
+      {(isGenerating || isManualGenerating) && cards.length > 0 && (
+        <div className="snap-start snap-always">
+          <StudyLoadingMoreScreen />
+        </div>
+      )}
+      {isLimitReached && cards.length > 0 && !isGenerating && !isManualGenerating && (
+        <div className="w-full min-h-screen snap-start snap-always flex items-center justify-center bg-background px-6">
+          <div className="w-full max-w-xs text-center space-y-6">
+            <Lock className="w-10 h-10 text-muted-foreground mx-auto" strokeWidth={1.5} />
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('study.limitReachedTitle')}
+              </h2>
+              <p className="text-sm text-muted-foreground">{t('study.limitReachedDescription')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      {done && (
+        <div className="snap-start snap-always">
+          <StudyDoneScreen />
+        </div>
+      )}
     </main>
   );
 }

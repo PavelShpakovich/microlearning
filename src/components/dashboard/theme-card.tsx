@@ -14,6 +14,7 @@ interface ThemeCardProps {
   theme: Theme;
   cardCount: number;
   isOwner: boolean;
+  canShare?: boolean;
   togglingPrivacy: string | null;
   onPrivacyToggle: (themeId: string, currentIsPublic: boolean) => void;
   onDelete: (theme: Theme) => void;
@@ -24,13 +25,13 @@ export function ThemeCard({
   theme,
   cardCount,
   isOwner,
+  canShare = true,
   togglingPrivacy,
   onPrivacyToggle,
   onDelete,
   view = 'grid',
 }: ThemeCardProps) {
   const t = useTranslations();
-
   if (view === 'list') {
     return (
       <Card className="px-3 py-2.5 md:px-4 md:py-3">
@@ -49,7 +50,10 @@ export function ThemeCard({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {isOwner && (
-              <div className="flex items-center gap-1">
+              <div
+                className="flex items-center gap-1"
+                title={!canShare ? t('dashboard.shareLockedTooltip') : undefined}
+              >
                 {theme.is_public ? (
                   <Globe className="h-3.5 w-3.5 text-primary" />
                 ) : (
@@ -58,7 +62,7 @@ export function ThemeCard({
                 <Switch
                   checked={theme.is_public ?? false}
                   onCheckedChange={() => onPrivacyToggle(theme.id, theme.is_public ?? false)}
-                  disabled={togglingPrivacy === theme.id}
+                  disabled={togglingPrivacy === theme.id || !canShare}
                 />
               </div>
             )}
@@ -108,7 +112,10 @@ export function ThemeCard({
           >
             {/* Privacy Toggle - Left */}
             {isOwner && (
-              <div className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1">
+              <div
+                className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-1"
+                title={!canShare ? t('dashboard.shareLockedTooltip') : undefined}
+              >
                 {theme.is_public ? (
                   <Globe className="h-3 w-3 text-primary" />
                 ) : (
@@ -117,7 +124,7 @@ export function ThemeCard({
                 <Switch
                   checked={theme.is_public ?? false}
                   onCheckedChange={() => onPrivacyToggle(theme.id, theme.is_public ?? false)}
-                  disabled={togglingPrivacy === theme.id}
+                  disabled={togglingPrivacy === theme.id || !canShare}
                   className="scale-75"
                 />
               </div>
@@ -211,7 +218,10 @@ export function ThemeCard({
               </Button>
 
               {/* Privacy Toggle - Compact */}
-              <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1.5">
+              <div
+                className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1.5"
+                title={!canShare ? t('dashboard.shareLockedTooltip') : undefined}
+              >
                 {theme.is_public ? (
                   <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
                 ) : (
@@ -220,7 +230,7 @@ export function ThemeCard({
                 <Switch
                   checked={theme.is_public ?? false}
                   onCheckedChange={() => onPrivacyToggle(theme.id, theme.is_public ?? false)}
-                  disabled={togglingPrivacy === theme.id}
+                  disabled={togglingPrivacy === theme.id || !canShare}
                   className="scale-90"
                 />
               </div>

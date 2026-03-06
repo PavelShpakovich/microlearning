@@ -4,6 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
+import { Send } from 'lucide-react';
+
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 export function LandingFooter() {
   const { theme } = useTheme();
@@ -37,6 +40,17 @@ export function LandingFooter() {
           >
             {t('footerTerms')}
           </Link>
+          {BOT_URL && (
+            <a
+              href={BOT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {t('footerTelegram')}
+            </a>
+          )}
         </div>
       </div>
     </footer>

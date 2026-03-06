@@ -10,9 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
+import { Send } from 'lucide-react';
 import { UsageCard } from '@/components/common/usage-card';
 import { PlansCard } from '@/components/common/plans-card';
 import { BackLink } from '@/components/common/back-link';
+
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 interface SettingsClientProps {
   userEmail: string;
@@ -81,10 +84,29 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 space-y-6">
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       <BackLink />
       <UsageCard />
       <PlansCard />
+      {BOT_URL && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="h-4 w-4" />
+              {t('settings.telegramBotTitle')}
+            </CardTitle>
+            <CardDescription>{t('settings.telegramBotDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <a href={BOT_URL} target="_blank" rel="noopener noreferrer">
+                <Send className="h-4 w-4 mr-2" />
+                {t('settings.telegramBotCta')}
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.profileTitle')}</CardTitle>

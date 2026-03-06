@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Suspense } from 'react';
 import { RootProviders } from '@/components/root-providers';
@@ -6,6 +6,12 @@ import { Header } from '@/components/layout/header';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clario.app';
+
+export const viewport: Viewport = {
+  viewportFit: 'cover',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

@@ -25,12 +25,6 @@ export class GenerationService {
           { themeId, userId, cardsRemaining: subscription.usage.cardsRemaining },
           'Skipping auto-generation — user has reached their monthly card limit',
         );
-        // Clear the generation_started_at flag that was set before this method was
-        // called (defensive: route.ts now guards this, but keep it here as a fallback)
-        await supabaseAdmin
-          .from('themes')
-          .update({ generation_started_at: null })
-          .eq('id', themeId);
         return;
       }
 
@@ -120,26 +114,23 @@ export class GenerationService {
           'Updated user card usage after auto-generation',
         );
       }
-
-      // Clear generating flag on success
-      await supabaseAdmin
-        .from('themes')
-        .update({ generation_started_at: null, generation_failed_at: null })
-        .eq('id', themeId);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       logger.error({ themeId, errMsg }, 'Card generation failed');
 
-      // Record failure timestamp and clear generating flag
+      // Record failure timestamp so isGenerationFailed() returns true
       await supabaseAdmin
         .from('themes')
         .update({
-          generation_started_at: null,
           generation_failed_at: new Date().toISOString(),
         })
         .eq('id', themeId);
 
       throw err;
+    } finally {
+      // ALWAYS clear generation_started_at — even on Vercel timeout / uncaught error.
+      // This prevents the stale-lock problem where users see a stuck spinner.
+      await supabaseAdmin.from('themes').update({ generation_started_at: null }).eq('id', themeId);
     }
   }
 
@@ -177,7 +168,7 @@ export class GenerationService {
 
     if (!data?.generation_started_at) return false;
     const ageMs = Date.now() - new Date(data.generation_started_at).getTime();
-    return ageMs < 10 * 60 * 1000; // stale lock protection after 10 min
+    return ageMs < 3 * 60 * 1000; // stale lock protection after 3 min
   }
 
   /**

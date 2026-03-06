@@ -13,7 +13,7 @@ import { revalidateDashboard } from '@/app/api/actions/revalidate';
 
 function ScreenShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-background snap-start snap-always px-6">
+    <div className="w-full h-screen flex items-center justify-center bg-background px-6">
       {children}
     </div>
   );

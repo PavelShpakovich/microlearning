@@ -1,17 +1,15 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { auth } from '@/auth';
 import { getTranslations } from 'next-intl/server';
 import { LandingFooter } from '@/components/layout/landing-footer';
-import { Button } from '@/components/ui/button';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Sparkles, BrainCircuit, MessageSquare, Check } from 'lucide-react';
+import { Accordion } from '@/components/ui/accordion';
+import { Upload, Sparkles, BrainCircuit, MessageSquare } from 'lucide-react';
+import { HeroSection } from '@/components/landing/hero-section';
+import { SectionHeader } from '@/components/landing/section-header';
+import { FeatureCard } from '@/components/landing/feature-card';
+import { StepItem } from '@/components/landing/step-item';
+import { PlanCard } from '@/components/landing/plan-card';
+import { FaqItem } from '@/components/landing/faq-item';
 
 export default async function HomePage() {
   const session = await auth();
@@ -37,28 +35,28 @@ export default async function HomePage() {
       name: t('plan1Name'),
       price: t('plan1Price'),
       cards: t('plan1Cards'),
-      features: [t('plan1Feature1'), t('plan1Feature2'), t('plan1Feature3'), t('plan1Feature4')],
+      features: [t('plan1Feature1'), t('plan1Feature2')],
       popular: false,
     },
     {
       name: t('plan2Name'),
       price: t('plan2Price'),
       cards: t('plan2Cards'),
-      features: [t('plan2Feature1'), t('plan2Feature2'), t('plan2Feature3'), t('plan2Feature4')],
+      features: [t('plan2Feature1'), t('plan2Feature2'), t('plan2Feature3')],
       popular: true,
     },
     {
       name: t('plan3Name'),
       price: t('plan3Price'),
       cards: t('plan3Cards'),
-      features: [t('plan3Feature1'), t('plan3Feature2'), t('plan3Feature3'), t('plan3Feature4')],
+      features: [t('plan3Feature1'), t('plan3Feature2'), t('plan3Feature3')],
       popular: false,
     },
     {
       name: t('plan4Name'),
       price: t('plan4Price'),
       cards: t('plan4Cards'),
-      features: [t('plan4Feature1'), t('plan4Feature2'), t('plan4Feature3'), t('plan4Feature4')],
+      features: [t('plan4Feature1'), t('plan4Feature2'), t('plan4Feature3')],
       popular: false,
     },
   ];
@@ -73,47 +71,22 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <section className="flex flex-col items-center justify-center text-center px-4 py-24 sm:py-32 bg-linear-to-b from-background to-muted/30">
-        <span className="inline-block mb-4 text-xs font-semibold tracking-widest uppercase text-primary">
-          {t('heroTagline')}
-        </span>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl mb-6">
-          {t('heroHeadline')}
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mb-10">
-          {t('heroSubheadline')}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button size="lg" asChild>
-            <Link href="/register">{t('ctaGetStarted')}</Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/login">{t('ctaLogin')}</Link>
-          </Button>
-        </div>
-      </section>
+      {/* ── Hero ── */}
+      <HeroSection
+        tagline={t('heroTagline')}
+        headline={t('heroHeadline')}
+        subheadline={t('heroSubheadline')}
+        ctaGetStarted={t('ctaGetStarted')}
+        ctaLogin={t('ctaLogin')}
+      />
 
       {/* ── Features ── */}
       <section className="py-20 px-4 bg-background">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('featuresTitle')}</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {t('featuresSubtitle')}
-            </p>
-          </div>
+          <SectionHeader title={t('featuresTitle')} subtitle={t('featuresSubtitle')} />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map(({ icon: Icon, title, desc }) => (
-              <div
-                key={title}
-                className="flex flex-col gap-3 rounded-2xl border bg-card p-6 shadow-sm"
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg">{title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
-              </div>
+            {features.map(({ icon, title, desc }) => (
+              <FeatureCard key={title} icon={icon} title={title} desc={desc} />
             ))}
           </div>
         </div>
@@ -122,21 +95,10 @@ export default async function HomePage() {
       {/* ── How It Works ── */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('howItWorksTitle')}</h2>
-            <p className="text-muted-foreground text-lg">{t('howItWorksSubtitle')}</p>
-          </div>
+          <SectionHeader title={t('howItWorksTitle')} subtitle={t('howItWorksSubtitle')} narrow />
           <div className="flex flex-col gap-8">
             {steps.map(({ number, title, desc }) => (
-              <div key={number} className="flex gap-6 items-start">
-                <div className="w-12 h-12 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold">
-                  {number}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-xl mb-1">{title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{desc}</p>
-                </div>
-              </div>
+              <StepItem key={number} number={number} title={title} desc={desc} />
             ))}
           </div>
         </div>
@@ -145,45 +107,16 @@ export default async function HomePage() {
       {/* ── Pricing ── */}
       <section className="py-20 px-4 bg-background">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('pricingTitle')}</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {t('pricingSubtitle')}
-            </p>
-          </div>
+          <SectionHeader title={t('pricingTitle')} subtitle={t('pricingSubtitle')} />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
-              <div
+              <PlanCard
                 key={plan.name}
-                className={`relative flex flex-col rounded-2xl border p-6 shadow-sm ${
-                  plan.popular ? 'border-primary bg-primary/5 ring-2 ring-primary' : 'bg-card'
-                }`}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    {t('pricingPopular')}
-                  </Badge>
-                )}
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">{plan.name}</p>
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground pb-1">{t('pricingPerMonth')}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{plan.cards}</p>
-                </div>
-                <ul className="flex flex-col gap-2 mb-6 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 text-primary shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild variant={plan.popular ? 'default' : 'outline'} className="w-full">
-                  <Link href="/register">{t('pricingCta')}</Link>
-                </Button>
-              </div>
+                {...plan}
+                popularLabel={t('pricingPopular')}
+                perMonth={t('pricingPerMonth')}
+                cta={t('pricingCta')}
+              />
             ))}
           </div>
         </div>
@@ -192,22 +125,10 @@ export default async function HomePage() {
       {/* ── FAQ ── */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">{t('faqTitle')}</h2>
-            <p className="text-muted-foreground text-lg">{t('faqSubtitle')}</p>
-          </div>
+          <SectionHeader title={t('faqTitle')} subtitle={t('faqSubtitle')} narrow />
           <Accordion type="single" collapsible className="flex flex-col gap-2">
             {faqs.map((faq, idx) => (
-              <AccordionItem
-                key={idx}
-                value={`faq-${idx}`}
-                className="rounded-xl border bg-card px-4"
-              >
-                <AccordionTrigger className="text-left font-medium py-4">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
+              <FaqItem key={idx} value={`faq-${idx}`} question={faq.q} answer={faq.a} />
             ))}
           </Accordion>
         </div>

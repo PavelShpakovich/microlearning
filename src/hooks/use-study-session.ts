@@ -54,6 +54,15 @@ export function useStudySession(themeId: string) {
   const pollTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isPollingRef = useRef<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const prevLimitReachedRef = useRef(false);
+
+  // Toast when limit is reached for the first time during this session
+  useEffect(() => {
+    if (isLimitReached && !prevLimitReachedRef.current) {
+      toast.error(t('messages.generationLimitReached'));
+    }
+    prevLimitReachedRef.current = isLimitReached;
+  }, [isLimitReached, t]);
 
   interface FetchCardsOptions {
     triggerGeneration?: boolean;
@@ -230,6 +239,14 @@ export function useStudySession(themeId: string) {
           return [...prev, ...toAdd];
         });
         setIsGenerating(data.generating);
+
+        // Always sync limit / remaining from poll responses so quota indicator stays accurate
+        if (data.limitReached) {
+          setIsLimitReached(true);
+        }
+        if (data.cardsRemaining !== undefined) {
+          setCardsRemaining(data.cardsRemaining);
+        }
 
         if (data.generationFailed) {
           setError('GENERATION_FAILED');

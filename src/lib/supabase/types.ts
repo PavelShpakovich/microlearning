@@ -305,30 +305,36 @@ export type Database = {
       subscription_plans: {
         Row: {
           cards_per_month: number;
+          community_themes: boolean;
           created_at: string | null;
           description: string | null;
           features: Json | null;
           id: string;
+          max_themes: number | null;
           name: string;
           price_annual: number;
           price_monthly: number;
         };
         Insert: {
           cards_per_month: number;
+          community_themes?: boolean;
           created_at?: string | null;
           description?: string | null;
           features?: Json | null;
           id: string;
+          max_themes?: number | null;
           name: string;
           price_annual: number;
           price_monthly: number;
         };
         Update: {
           cards_per_month?: number;
+          community_themes?: boolean;
           created_at?: string | null;
           description?: string | null;
           features?: Json | null;
           id?: string;
+          max_themes?: number | null;
           name?: string;
           price_annual?: number;
           price_monthly?: number;

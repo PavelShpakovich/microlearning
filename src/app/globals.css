@@ -131,6 +131,10 @@
   --chart-4: oklch(0.64 0.23 50);
   --chart-5: oklch(0.72 0.18 30);
 
+  /* Warning — brighter amber readable on dark backgrounds */
+  --warning: oklch(0.82 0.17 86.047);
+  --warning-foreground: oklch(0.15 0.005 86);
+
   /* Sidebar — matches card elevation */
   --sidebar: oklch(0.16 0.008 35);
   --sidebar-foreground: oklch(0.94 0.008 40);

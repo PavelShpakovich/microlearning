@@ -7,6 +7,7 @@ export type AppErrorCode =
   | 'INGESTION_ERROR'
   | 'AUTH_ERROR'
   | 'RATE_LIMIT_ERROR'
+  | 'PLAN_LIMIT_ERROR'
   | 'INTERNAL_ERROR';
 
 export interface AppErrorOptions {
@@ -68,6 +69,13 @@ export class RateLimitError extends AppError {
   }
 }
 
+/** Thrown when a user hits a plan-based resource limit (e.g. theme count). */
+export class PlanLimitError extends AppError {
+  constructor(opts: AppErrorOptions) {
+    super('PLAN_LIMIT_ERROR', opts);
+  }
+}
+
 // ─── HTTP status mapping ──────────────────────────────────────────────────────
 
 export function httpStatusForError(error: AppError): number {
@@ -80,6 +88,8 @@ export function httpStatusForError(error: AppError): number {
       return 401;
     case 'RATE_LIMIT_ERROR':
       return 429;
+    case 'PLAN_LIMIT_ERROR':
+      return 402;
     case 'LLM_ERROR':
     case 'INGESTION_ERROR':
     case 'INTERNAL_ERROR':

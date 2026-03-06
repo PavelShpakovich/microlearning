@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Lock, ArrowUpRight } from 'lucide-react';
 import { ViewToggle } from '@/components/common/view-toggle';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { ThemeList } from './theme-list';
 import { UsageBanner } from '@/components/common/usage-banner';
+import { useSubscription } from '@/hooks/use-subscription';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
@@ -29,6 +30,7 @@ export function DashboardClient({
   cardCounts = {},
 }: DashboardClientProps) {
   const t = useTranslations();
+  const { status: subscriptionStatus } = useSubscription();
   const [themes, setThemes] = useState(initialThemes);
   const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
   const [showDeleteAllThemes, setShowDeleteAllThemes] = useState(false);
@@ -36,6 +38,11 @@ export function DashboardClient({
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState('my-themes');
+
+  const maxThemes = subscriptionStatus?.plan.maxThemes ?? null;
+  const atThemeLimit = maxThemes !== null && themes.length >= maxThemes;
+  // null while loading → default true to avoid flash of locked state for paid users
+  const canAccessCommunity = subscriptionStatus ? subscriptionStatus.plan.communityThemes : true;
 
   useEffect(() => {
     setThemes(initialThemes);
@@ -103,6 +110,7 @@ export function DashboardClient({
     <ThemeList
       themes={currentThemes}
       isOwner={isOwner}
+      canShare={canAccessCommunity}
       cardCounts={cardCounts}
       togglingPrivacy={togglingPrivacy}
       onPrivacyToggle={(id, current) => void handlePrivacyToggle(id, current)}
@@ -112,8 +120,8 @@ export function DashboardClient({
   );
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
-      <UsageBanner />
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+      <UsageBanner themesUsed={themes.length} />
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <div>
@@ -121,27 +129,67 @@ export function DashboardClient({
             {t('dashboard.heading')}
           </h1>
           <p className="mt-1 text-sm md:text-base text-muted-foreground">
-            {t('dashboard.description', { count: themes.length })}
+            {maxThemes !== null
+              ? t('dashboard.descriptionWithLimit', { count: themes.length, limit: maxThemes })
+              : t('dashboard.description', { count: themes.length })}
           </p>
         </div>
-        <Link href="/themes/new" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto">
+        {atThemeLimit ? (
+          <Button
+            className="w-full sm:w-auto"
+            disabled
+            title={t('usage.themeLimitReachedBannerTitle')}
+          >
             <Plus className="h-4 w-4 mr-2" />
             {t('buttons.addTheme')}
           </Button>
-        </Link>
+        ) : (
+          <Link href="/themes/new" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('buttons.addTheme')}
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-8">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="my-themes">{t('dashboard.myThemesTab')}</TabsTrigger>
-            <TabsTrigger value="community">{t('dashboard.communityTab')}</TabsTrigger>
+            <TabsTrigger value="community" className="flex items-center gap-1.5">
+              {!canAccessCommunity && <Lock className="w-3 h-3" />}
+              {t('dashboard.communityTab')}
+            </TabsTrigger>
           </TabsList>
           <ViewToggle viewMode={viewMode} onViewChange={handleViewChange} />
         </div>
         <TabsContent value="my-themes">{renderThemeList(themes, true)}</TabsContent>
-        <TabsContent value="community">{renderThemeList(publicThemes, false)}</TabsContent>
+        <TabsContent value="community">
+          {canAccessCommunity ? (
+            renderThemeList(publicThemes, false)
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center py-20 gap-4">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Lock className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-semibold text-base mb-1">
+                  {t('dashboard.communityLockedTitle')}
+                </p>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  {t('dashboard.communityLockedDescription')}
+                </p>
+              </div>
+              <Button asChild size="sm">
+                <Link href="/settings#plan">
+                  <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+                  {t('dashboard.communityLockedCta')}
+                </Link>
+              </Button>
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
 
       {themes.length > 0 && activeTab === 'my-themes' && (
