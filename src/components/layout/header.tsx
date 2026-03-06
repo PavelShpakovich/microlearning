@@ -6,11 +6,13 @@ import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useDisplayName } from '@/hooks/use-display-name';
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { Button } from '@/components/ui/button';
 import { isTelegramWebApp } from '@/components/telegram-provider';
+import { TgSettingsBar } from '@/components/dashboard/tg-settings-bar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,10 +30,12 @@ export function Header() {
   const displayName = useDisplayName();
   const { locale, setLanguage } = useUiLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Hide header in Telegram Mini App context
+  // In Telegram Mini App context, show settings bar on all pages except study
   if (isTelegramWebApp()) {
-    return null;
+    if (pathname.startsWith('/study')) return null;
+    return <TgSettingsBar />;
   }
 
   if (!isAuthenticated) {

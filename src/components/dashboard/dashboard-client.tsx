@@ -11,8 +11,7 @@ import { themeApi } from '@/services/theme-api';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { isTelegramWebApp } from '@/components/telegram-provider';
-import { TgSettingsBar } from './tg-settings-bar';
+
 import { ThemeList } from './theme-list';
 import { UsageBanner } from '@/components/common/usage-banner';
 
@@ -37,7 +36,6 @@ export function DashboardClient({
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState('my-themes');
-  const isTg = isTelegramWebApp();
 
   useEffect(() => {
     setThemes(initialThemes);
@@ -115,8 +113,6 @@ export function DashboardClient({
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 md:py-10">
-      {isTg && <TgSettingsBar />}
-
       <UsageBanner />
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">

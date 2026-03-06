@@ -231,13 +231,15 @@
   },
   "plans": {
     "title": "Plans",
-    "description": "Choose the plan that works for you. Contact us to upgrade.",
+    "description": "Contact us to change your plan.",
     "cardsPerMonth": "{count} cards / month",
     "free": "Free",
     "currentPlan": "Current plan",
     "upgrade": "Upgrade",
+    "downgrade": "Downgrade",
     "lowerTier": "Lower tier",
-    "upgradeRequestSent": "To upgrade, please contact {email}"
+    "upgradeRequestSent": "To upgrade, please contact {email}",
+    "downgradeRequestSent": "To downgrade, please contact {email}"
   },
   "usage": {
     "cardTitle": "Plan & Usage",

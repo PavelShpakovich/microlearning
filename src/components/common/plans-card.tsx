@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUpRight, Check, Loader2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Check, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -30,11 +30,21 @@ interface PlanTileProps {
   plan: Plan;
   isCurrent: boolean;
   isUpgrade: boolean;
+  isDowngrade: boolean;
   isRequesting: boolean;
   onUpgrade: (planId: string) => void;
+  onDowngrade: (planId: string) => void;
 }
 
-function PlanTile({ plan, isCurrent, isUpgrade, isRequesting, onUpgrade }: PlanTileProps) {
+function PlanTile({
+  plan,
+  isCurrent,
+  isUpgrade,
+  isDowngrade,
+  isRequesting,
+  onUpgrade,
+  onDowngrade,
+}: PlanTileProps) {
   const t = useTranslations();
 
   return (
@@ -77,9 +87,24 @@ function PlanTile({ plan, isCurrent, isUpgrade, isRequesting, onUpgrade }: PlanT
             </>
           )}
         </Button>
-      ) : (
-        <p className="text-xs text-muted-foreground">{t('plans.lowerTier')}</p>
-      )}
+      ) : isDowngrade ? (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onDowngrade(plan.id)}
+          disabled={isRequesting}
+          className="w-full text-xs"
+        >
+          {isRequesting ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : (
+            <>
+              <ArrowDownLeft className="w-3 h-3 mr-1" />
+              {t('plans.downgrade')}
+            </>
+          )}
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -109,6 +134,18 @@ export function PlansCard() {
     }
   };
 
+  const handleDowngrade = async (planId: string) => {
+    setRequesting(planId);
+    try {
+      const data = await profileApi.requestUpgrade(planId);
+      toast.info(t('plans.downgradeRequestSent', { email: data.supportEmail }));
+    } catch {
+      toast.error(t('errors.generic'));
+    } finally {
+      setRequesting(null);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -126,8 +163,10 @@ export function PlansCard() {
                 plan={plan}
                 isCurrent={plan.id === currentPlanId}
                 isUpgrade={idx > currentPlanIndex}
+                isDowngrade={idx < currentPlanIndex}
                 isRequesting={requesting === plan.id}
                 onUpgrade={(id) => void handleUpgrade(id)}
+                onDowngrade={(id) => void handleDowngrade(id)}
               />
             ))}
           </div>

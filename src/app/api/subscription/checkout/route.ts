@@ -8,7 +8,7 @@ import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const upgradePlanSchema = z.object({
-  planId: z.enum(['basic', 'pro', 'unlimited']),
+  planId: z.enum(['free', 'basic', 'pro', 'unlimited']),
 });
 
 /**

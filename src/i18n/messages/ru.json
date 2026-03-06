@@ -255,13 +255,15 @@
   },
   "plans": {
     "title": "Тарифы",
-    "description": "Выберите подходящий тариф. Свяжитесь с нами для смены плана.",
+    "description": "Свяжитесь с нами для смены тарифа.",
     "cardsPerMonth": "{count} карточек / месяц",
     "free": "Бесплатно",
     "currentPlan": "Текущий тариф",
     "upgrade": "Улучшить",
+    "downgrade": "Понизить",
     "lowerTier": "Более низкий тариф",
-    "upgradeRequestSent": "Для смены тарифа свяжитесь с нами: {email}"
+    "upgradeRequestSent": "Для повышения тарифа свяжитесь с нами: {email}",
+    "downgradeRequestSent": "Для понижения тарифа свяжитесь с нами: {email}"
   },
   "usage": {
     "cardTitle": "Тариф и использование",
