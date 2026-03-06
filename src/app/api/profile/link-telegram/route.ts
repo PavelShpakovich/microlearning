@@ -5,6 +5,7 @@ import { withApiHandler } from '@/lib/api/handler';
 import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
+import { logger } from '@/lib/logger';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -144,28 +145,62 @@ export const POST = withApiHandler(async (req) => {
     if (existingTgProfile) {
       const { data: stubLookup } = await supabaseAdmin.auth.admin.getUserById(existingTgProfile.id);
       const email = stubLookup.user?.email ?? '';
-      const isStub = email.startsWith('telegram_') && email.endsWith('@noreply.clario.app');
+      // More forgiving stub detection: any email starting with telegram_ and containing @noreply
+      const isStub = email.startsWith('telegram_') && email.includes('@noreply');
 
-      if (!isStub) {
-        throw new AuthError({
-          message: 'This Telegram account is already linked to a different web account',
-        });
-      }
+      logger.info(
+        { existingProfileId: existingTgProfile.id, email, isStub, telegramId },
+        'Checking if existing profile is a stub',
+      );
 
-      // Stub with content → refuse (too risky to lose data automatically)
+      // Always check for themes, regardless of stub status — empty profiles can be safely removed
       const { count: themeCount } = await supabaseAdmin
         .from('themes')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', existingTgProfile.id);
 
-      if ((themeCount ?? 0) > 0) {
+      const hasThemes = (themeCount ?? 0) > 0;
+
+      if (hasThemes && !isStub) {
+        // A real (non-stub) web account owns this telegramId — genuine conflict, cannot auto-resolve.
+        logger.warn(
+          { existingProfileId: existingTgProfile.id, themeCount },
+          'Non-stub account with themes owns this telegramId — conflict',
+        );
         throw new AuthError({
-          message:
-            'This Telegram account already has study data. Please contact support to merge your accounts.',
+          message: 'This Telegram account is already linked to a different web account',
         });
       }
 
-      // Empty stub → safe to remove and proceed
+      if (hasThemes && isStub) {
+        // Stub has themes — merge them into the web account before deleting.
+        logger.info(
+          { stubId: existingTgProfile.id, webUserId: userId, themeCount },
+          'Merging stub themes into web account',
+        );
+        // 1. Move all themes (cards + sources cascade via theme_id FK, not user_id)
+        await supabaseAdmin
+          .from('themes')
+          .update({ user_id: userId })
+          .eq('user_id', existingTgProfile.id);
+        // 2. Move bookmarked cards (ignore conflicts — web user may already have same ones)
+        const { data: stubBookmarks } = await supabaseAdmin
+          .from('bookmarked_cards')
+          .select('card_id')
+          .eq('user_id', existingTgProfile.id);
+        if (stubBookmarks?.length) {
+          await supabaseAdmin.from('bookmarked_cards').upsert(
+            stubBookmarks.map((b) => ({ user_id: userId, card_id: b.card_id })),
+            { onConflict: 'user_id,card_id', ignoreDuplicates: true },
+          );
+        }
+      }
+
+      // Empty or just-merged stub — safe to remove (subscription/usage rows cascade-delete)
+      logger.info(
+        { existingProfileId: existingTgProfile.id, isStub, hadThemes: hasThemes },
+        'Deleting stub account after merge',
+      );
       await supabaseAdmin.auth.admin.deleteUser(existingTgProfile.id);
     }
 

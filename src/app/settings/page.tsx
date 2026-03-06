@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { fetchUserProfile } from '@/lib/data-fetchers';
 import { SettingsClient } from '@/components/settings/settings-client';
 import { SettingsSkeleton } from '@/components/skeletons';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const metadata = {
   title: 'Settings',
@@ -17,14 +18,22 @@ export default async function SettingsPage() {
     redirect('/login');
   }
 
-  const profile = await fetchUserProfile();
+  // Fetch the actual auth email (not stored in JWT) to detect stub accounts.
+  // A stub is a Telegram-first user whose email is telegram_*@noreply.*
+  const [profile, { data: authUserData }] = await Promise.all([
+    fetchUserProfile(),
+    supabaseAdmin.auth.admin.getUserById(session.user.id),
+  ]);
+  const authEmail = authUserData.user?.email ?? '';
+  const isStub = authEmail.startsWith('telegram_') && authEmail.includes('@noreply');
 
   return (
     <Suspense fallback={<SettingsSkeleton />}>
       <SettingsClient
-        userEmail={session.user.email || ''}
+        userEmail={isStub ? '' : authEmail}
         initialProfile={profile}
         userName={session.user.name ?? null}
+        isStub={isStub}
       />
     </Suspense>
   );

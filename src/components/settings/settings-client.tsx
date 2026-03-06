@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, Send } from 'lucide-react';
+import { ChevronRight, Send, Globe } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 import { isTelegramWebApp } from '@/components/telegram-provider';
 
@@ -26,9 +26,16 @@ interface SettingsClientProps {
   } | null;
   /** OAuth / NextAuth display name as an additional fallback */
   userName?: string | null;
+  /** True if the user is a Telegram-first stub (no email credentials set up yet) */
+  isStub?: boolean;
 }
 
-export function SettingsClient({ userEmail, initialProfile, userName }: SettingsClientProps) {
+export function SettingsClient({
+  userEmail,
+  initialProfile,
+  userName,
+  isStub = false,
+}: SettingsClientProps) {
   const t = useTranslations();
   const [displayName, setDisplayName] = useState(initialProfile?.display_name || userName || '');
   const [streakCount, setStreakCount] = useState<number>(initialProfile?.streak_count || 0);
@@ -38,9 +45,11 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const telegramId = initialProfile?.telegram_id ?? null;
+  // Stub accounts were created by Telegram-first users (email = telegram_*@noreply.*).
+  // They need to set up web credentials before they can log in via browser.
   // Hide the Connect card when the user is already inside the Telegram WebApp —
   // the card is only useful for web (email) users who want to add bot access.
-  const showTelegramCard = BOT_URL && !isTelegramWebApp();
+  const showTelegramCard = BOT_URL && !isStub && !isTelegramWebApp();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const onConnectTelegram = async () => {
@@ -124,6 +133,22 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
           </CardHeader>
         </Card>
       </Link>
+      {isStub && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              {t('settings.webAccessCardTitle')}
+            </CardTitle>
+            <CardDescription>{t('settings.webAccessCardDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <a href="/tg/upgrade">{t('settings.webAccessCardCta')}</a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       {showTelegramCard && (
         <Card>
           <CardHeader>
@@ -194,35 +219,37 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('settings.security')}</CardTitle>
-          <CardDescription>{t('settings.securityDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">{t('settings.newPassword')}</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              placeholder={t('settings.newPasswordPlaceholder')}
-              disabled={isSavingPassword}
-            />
-          </div>
+      {!isStub && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.security')}</CardTitle>
+            <CardDescription>{t('settings.securityDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">{t('settings.newPassword')}</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder={t('settings.newPasswordPlaceholder')}
+                disabled={isSavingPassword}
+              />
+            </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={() => void onSavePassword()}
-              disabled={isSavingPassword || newPassword.length < 6}
-              variant="secondary"
-            >
-              {isSavingPassword ? t('settings.updating') : t('settings.updatePassword')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => void onSavePassword()}
+                disabled={isSavingPassword || newPassword.length < 6}
+                variant="secondary"
+              >
+                {isSavingPassword ? t('settings.updating') : t('settings.updatePassword')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

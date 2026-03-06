@@ -25,7 +25,7 @@ import { LogOut, Settings, ShieldCheck, User, Moon, Sun, Globe } from 'lucide-re
 
 export function Header() {
   const t = useTranslations();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const displayName = useDisplayName();
   const { locale, setLanguage } = useUiLanguage();
@@ -36,6 +36,11 @@ export function Header() {
   if (isTelegramWebApp()) {
     if (pathname.startsWith('/study')) return null;
     return <TgSettingsBar />;
+  }
+
+  // Skip rendering unauthenticated header while session is loading to avoid flash
+  if (isLoading) {
+    return null;
   }
 
   if (!isAuthenticated) {

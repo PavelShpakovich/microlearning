@@ -163,7 +163,9 @@
     "keyboardHint": "Press Space or Enter to {action}"
   },
   "validation": {
-    "passwordTooShort": "Password must be at least 6 characters"
+    "passwordTooShort": "Password must be at least 6 characters",
+    "invalidEmail": "Please enter a valid email address",
+    "passwordsDoNotMatch": "Passwords do not match"
   },
   "dialog": {
     "deleteTheme": "Delete theme",
@@ -236,6 +238,16 @@
     "linking": "Linking accounts…",
     "linkFailed": "Account linking failed"
   },
+  "telegramUpgrade": {
+    "title": "Set Up Web Access",
+    "description": "Add an email and password to your Telegram account — log in from any browser while keeping all your themes.",
+    "submit": "Set Up Account",
+    "submitting": "Setting up…",
+    "submitError": "Could not set up your account. Please try again.",
+    "successTitle": "Check your email",
+    "successDescription": "We sent a verification link to your address. Click it to confirm, then log in at the web app with your email and password.",
+    "errorTitle": "Something went wrong"
+  },
   "plans": {
     "title": "Plans",
     "description": "Contact us to change your plan.",
@@ -280,6 +292,9 @@
     "telegramConnecting": "Connecting…",
     "telegramConnectOpened": "Telegram opened — approve the link inside the bot",
     "telegramConnectFailed": "Could not start account linking",
+    "webAccessCardTitle": "Set Up Web Access",
+    "webAccessCardDescription": "Add an email and password so you can also sign in from any browser.",
+    "webAccessCardCta": "Set Up",
     "planCardTitle": "Plan & Billing",
     "planCardDescription": "View your usage and manage your subscription plan.",
     "planCardCta": "Manage Plan",
