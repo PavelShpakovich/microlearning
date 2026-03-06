@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, Send } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
+import { isTelegramWebApp } from '@/components/telegram-provider';
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
@@ -37,6 +38,9 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const telegramId = initialProfile?.telegram_id ?? null;
+  // Hide the Connect card when the user is already inside the Telegram WebApp —
+  // the card is only useful for web (email) users who want to add bot access.
+  const showTelegramCard = BOT_URL && !isTelegramWebApp();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const onConnectTelegram = async () => {
@@ -120,7 +124,7 @@ export function SettingsClient({ userEmail, initialProfile, userName }: Settings
           </CardHeader>
         </Card>
       </Link>
-      {BOT_URL && (
+      {showTelegramCard && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
