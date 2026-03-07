@@ -21,7 +21,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, ShieldCheck, User, Moon, Sun, Globe } from 'lucide-react';
+import {
+  LogOut,
+  Settings,
+  ShieldCheck,
+  User,
+  Moon,
+  Sun,
+  Globe,
+  LayoutDashboard,
+} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function Header() {
   const t = useTranslations();
@@ -40,7 +50,21 @@ export function Header() {
 
   // Skip rendering unauthenticated header while session is loading to avoid flash
   if (isLoading) {
-    return null;
+    return (
+      <header className="border-b bg-background sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
+          <div className="w-[64px] h-[64px] flex items-center">
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </div>
+      </header>
+    );
   }
 
   if (!isAuthenticated) {
@@ -167,7 +191,7 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
+                    <LayoutDashboard className="w-4 h-4" />
                     {t('navigation.dashboard')}
                   </Link>
                 </DropdownMenuItem>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, CheckCircle2, Lock, BookOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { revalidateDashboard } from '@/app/api/actions/revalidate';
+import { revalidateDashboard } from '@/actions/revalidate';
 
 // ---------------------------------------------------------------------------
 // Private atoms

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { profileApi } from '@/services/profile-api';
-import { revalidateProfileData } from '@/app/api/actions/profile';
+import { revalidateProfileData } from '@/actions/profile';
 import { broadcastDisplayName } from '@/hooks/use-display-name';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

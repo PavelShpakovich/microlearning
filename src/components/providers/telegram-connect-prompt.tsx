@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { Send } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { profileApi } from '@/services/profile-api';
 import { isTelegramWebApp } from '@/components/telegram-provider';
@@ -65,7 +65,13 @@ export function TelegramConnectPrompt() {
   }
 
   async function onConnect() {
-    if (!BOT_URL || !session?.user?.id) return;
+    if (!BOT_URL) return;
+    if (!session?.user?.id) {
+      toast.error(t('errors.unauthorized'));
+      signIn();
+      return;
+    }
+
     try {
       setIsConnecting(true);
       const { token } = await profileApi.generateTelegramLinkToken();
@@ -73,29 +79,38 @@ export function TelegramConnectPrompt() {
       window.open(deepLink, '_blank', 'noopener,noreferrer');
       toast.success(t('settings.telegramConnectOpened'));
       dismiss();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('settings.telegramConnectFailed'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (
+        errorMessage.includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('авторизация')
+      ) {
+        toast.error(t('errors.unauthorized'));
+        signIn();
+      } else {
+        toast.error(err instanceof Error ? err.message : t('settings.telegramConnectFailed'));
+      }
     } finally {
       setIsConnecting(false);
     }
   }
 
   return (
-    <Dialog
+    <AlertDialog
       open={open}
       onOpenChange={(v) => {
         if (!v) dismiss();
       }}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
             <Send className="h-5 w-5" />
             {t('telegramPrompt.title')}
-          </DialogTitle>
-          <DialogDescription>{t('telegramPrompt.description')}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          </AlertDialogTitle>
+          <AlertDialogDescription>{t('telegramPrompt.description')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
           <Button variant="outline" onClick={dismiss}>
             {t('telegramPrompt.dismiss')}
           </Button>
@@ -103,8 +118,8 @@ export function TelegramConnectPrompt() {
             <Send className="mr-2 h-4 w-4" />
             {isConnecting ? t('telegramPrompt.connecting') : t('telegramPrompt.connect')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

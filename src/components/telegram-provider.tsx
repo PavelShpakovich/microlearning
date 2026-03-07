@@ -32,7 +32,9 @@ declare global {
 
 export function isTelegramWebApp(): boolean {
   return (
-    typeof window !== 'undefined' && !!window.Telegram?.WebApp && !!window.Telegram.WebApp.initData
+    typeof window !== 'undefined' &&
+    !!window.Telegram?.WebApp &&
+    !!window.Telegram?.WebApp?.initData
   );
 }
 

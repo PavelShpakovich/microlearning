@@ -9,28 +9,42 @@ import { useAuth } from '@/hooks/use-auth';
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TgSettingsBar() {
   const t = useTranslations();
   const { theme: colorTheme, setTheme: setColorTheme } = useTheme();
   const { locale, setLanguage } = useUiLanguage();
-  const { user } = useAuth();
-  const { status: subscription } = useSubscription();
+  const { user, isLoading } = useAuth();
+  const { status: subscription, isLoading: subLoading } = useSubscription();
   const cardsRemaining = subscription?.usage?.cardsRemaining;
 
+  if (isLoading || subLoading) {
+    return (
+      <div className="mb-4 flex items-center justify-between gap-2 p-2">
+        <div className="shrink-0 w-20 h-7 flex items-center">
+          <Skeleton className="h-6 w-16" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-12 rounded-full" />
+          <Skeleton className="h-7 w-20 rounded-full" />
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-8 w-8" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="mb-4 flex items-center justify-between gap-2 p-1"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
-    >
+    <div className="mb-4 flex items-center justify-between gap-2 p-2">
       {/* Logo — links to dashboard */}
-      <Link href="/dashboard" className="flex-shrink-0">
+      <Link href="/dashboard" className="shrink-0">
         <Image
-          src={colorTheme === 'dark' ? '/logo-dark.png' : '/logo.png'}
+          src={colorTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
           alt="Logo"
-          width={80}
-          height={28}
-          className="h-7 w-auto object-contain"
+          width={40}
+          height={32}
+          className="h- w-auto object-contain"
           priority
         />
       </Link>
@@ -74,7 +88,7 @@ export function TgSettingsBar() {
           variant="ghost"
           size="icon"
           onClick={() => setColorTheme(colorTheme === 'dark' ? 'light' : 'dark')}
-          title={colorTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
+          title={colorTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
         >
           {colorTheme === 'dark' ? (
             <Sun className="h-3.5 w-3.5" />
