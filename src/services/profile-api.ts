@@ -81,8 +81,16 @@ class ProfileApi {
     return (await response.json()) as { token: string };
   }
 
-  /** Upgrades a Telegram stub account by setting a real email + password in-place. */
-  async upgradeStub(initData: string, email: string, password: string): Promise<void> {
+  /** Upgrades a Telegram stub account by setting a real email + password in-place.
+   * - If the email is new: returns { success: true } — user must verify via email.
+   * - If the email belongs to an existing web account and password matches:
+   *   merges stub into that account and returns { sessionToken, overLimit } for immediate sign-in.
+   */
+  async upgradeStub(
+    initData: string,
+    email: string,
+    password: string,
+  ): Promise<{ success: true } | { sessionToken: string; overLimit: boolean }> {
     const response = await fetch('/api/profile/upgrade-stub', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -92,6 +100,9 @@ class ProfileApi {
       const data = (await response.json()) as { error?: string; message?: string };
       throw new Error(data.error || data.message || `Server error ${response.status}`);
     }
+    return (await response.json()) as
+      | { success: true }
+      | { sessionToken: string; overLimit: boolean };
   }
 
   async requestUpgrade(planId: string): Promise<{ supportEmail: string }> {

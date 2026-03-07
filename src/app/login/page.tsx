@@ -23,6 +23,8 @@ import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
+
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -152,6 +154,19 @@ export default function LoginPage() {
                 {t('auth.signUpLink')}
               </Link>
             </p>
+            {BOT_URL && (
+              <p className="text-gray-600">
+                {t('auth.telegramHint')}{' '}
+                <a
+                  href={BOT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  {t('auth.telegramHintCta')}
+                </a>
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

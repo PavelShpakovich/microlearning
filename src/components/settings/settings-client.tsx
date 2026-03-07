@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 import { profileApi } from '@/services/profile-api';
 import { revalidateProfileData } from '@/app/api/actions/profile';
 import { broadcastDisplayName } from '@/hooks/use-display-name';
@@ -37,6 +38,7 @@ export function SettingsClient({
   isStub = false,
 }: SettingsClientProps) {
   const t = useTranslations();
+  const searchParams = useSearchParams();
   const [displayName, setDisplayName] = useState(initialProfile?.display_name || userName || '');
   const [streakCount, setStreakCount] = useState<number>(initialProfile?.streak_count || 0);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,6 +53,16 @@ export function SettingsClient({
   // the card is only useful for web (email) users who want to add bot access.
   const showTelegramCard = BOT_URL && !isStub && !isTelegramWebApp();
   const [isConnecting, setIsConnecting] = useState(false);
+
+  // Show over-limit warning after a web→Tg account merge redirected here with ?overLimit=1
+  useEffect(() => {
+    if (searchParams.get('overLimit') === '1') {
+      toast.warning(t('telegramUpgrade.mergedOverLimitWarning'), { duration: 8000 });
+      const url = new URL(window.location.href);
+      url.searchParams.delete('overLimit');
+      window.history.replaceState(null, '', url.toString());
+    }
+  }, [searchParams, t]);
 
   const onConnectTelegram = async () => {
     if (!BOT_URL) return;

@@ -240,13 +240,24 @@
   },
   "telegramUpgrade": {
     "title": "Set Up Web Access",
-    "description": "Add an email and password to your Telegram account — log in from any browser while keeping all your themes.",
-    "submit": "Set Up Account",
+    "description": "Add an email and password to your Telegram account — log in from any browser while keeping all your themes. Already have a web account? Enter its email and password to merge.",
+    "submit": "Continue",
     "submitting": "Setting up…",
     "submitError": "Could not set up your account. Please try again.",
+    "emailTakenWrongPassword": "That email is already registered. If it's yours, check your password.",
     "successTitle": "Check your email",
     "successDescription": "We sent a verification link to your address. Click it to confirm, then log in at the web app with your email and password.",
+    "mergedTitle": "Accounts merged!",
+    "mergedDescription": "All your Telegram themes have been moved to your web account. You are now logged in.",
+    "mergedOverLimitWarning": "Heads up: you now have more themes than your plan allows. You can still study them, but you won't be able to create new ones until you upgrade or delete some.",
     "errorTitle": "Something went wrong"
+  },
+  "telegramPrompt": {
+    "title": "Study on Telegram too",
+    "description": "Connect your Telegram account to access your flashcards directly in the bot — no extra app needed.",
+    "connect": "Connect Telegram",
+    "connecting": "Connecting…",
+    "dismiss": "Maybe later"
   },
   "plans": {
     "title": "Plans",
@@ -335,7 +346,9 @@
     "loginSuccess": "Logged in successfully!",
     "registerSuccess": "Account created successfully! Please sign in.",
     "error": "Something went wrong. Please try again.",
-    "creatingAccount": "Creating account..."
+    "creatingAccount": "Creating account...",
+    "telegramHint": "Started on Telegram?",
+    "telegramHintCta": "Set up web access"
   },
   "landing": {
     "heroTagline": "Turn Any Material Into Flashcards",

@@ -15,6 +15,8 @@ const PUBLIC_ROUTES = [
 // API routes that don't require authentication
 const PUBLIC_API_ROUTES = [
   '/api/auth', // NextAuth + Telegram auth endpoints
+  '/api/profile/upgrade-stub', // Telegram stub self-authenticates via HMAC
+  '/api/profile/link-web', // Telegram stub self-authenticates via HMAC
 ];
 
 export async function middleware(request: NextRequest) {

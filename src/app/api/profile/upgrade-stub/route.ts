@@ -6,6 +6,7 @@ import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { SubscriptionService } from '@/lib/subscriptions/service';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -106,23 +107,109 @@ export const POST = withApiHandler(async (req) => {
     throw new AuthError({ message: 'This account already has email credentials set up' });
   }
 
-  // ── 3. In-place upgrade: update email + password (same userId, no migration!) ──
-  logger.info({ userId: profile.id, telegramId, newEmail: email }, 'Upgrading stub account');
+  const stubUserId = profile.id;
 
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
+  // ── 3. Try in-place upgrade: set email + password on the stub user ─────────
+  logger.info({ userId: stubUserId, telegramId, newEmail: email }, 'Attempting stub upgrade');
+
+  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(stubUserId, {
     email,
     password,
     email_confirm: false, // require the user to verify their email
   });
 
-  if (error) {
-    logger.error({ userId: profile.id, error: error.message }, 'Failed to upgrade stub');
-    // Surface a friendly message for the most common failure — email already in use.
-    const msg = error.message.toLowerCase().includes('already')
-      ? 'This email address is already registered'
-      : error.message;
-    throw new AuthError({ message: msg });
+  if (!updateError) {
+    // Email wasn't taken — stub has been upgraded in-place. Email verification required.
+    logger.info({ userId: stubUserId, newEmail: email }, 'Stub successfully upgraded');
+    return NextResponse.json({ success: true });
   }
 
-  return NextResponse.json({ success: true });
+  // ── 4. Email already taken → attempt to sign in and merge —————————————
+  const isEmailTaken = updateError.message.toLowerCase().includes('already');
+  if (!isEmailTaken) {
+    throw new AuthError({ message: updateError.message });
+  }
+
+  logger.info({ stubUserId, email }, 'Email taken — attempting sign-in for merge');
+
+  const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError || !signInData.user) {
+    throw new AuthError({
+      message: "That email is already registered. If it's yours, check your password.",
+    });
+  }
+
+  const webUserId = signInData.user.id;
+
+  // Guard: web account must not already be linked to a DIFFERENT Telegram ID
+  const { data: webProfile } = await supabaseAdmin
+    .from('profiles')
+    .select('telegram_id')
+    .eq('id', webUserId)
+    .maybeSingle();
+
+  if (webProfile?.telegram_id && webProfile.telegram_id !== telegramId) {
+    throw new AuthError({
+      message: 'That web account is already linked to a different Telegram account',
+    });
+  }
+
+  // ── 5. Merge stub → web account ———————————————————————————————————
+  logger.info({ stubUserId, webUserId }, 'Merging stub into web account');
+
+  // Move themes (cards + sources cascade via theme_id FK, not user_id)
+  await supabaseAdmin.from('themes').update({ user_id: webUserId }).eq('user_id', stubUserId);
+
+  // Move bookmarks, ignoring conflicts
+  const { data: stubBookmarks } = await supabaseAdmin
+    .from('bookmarked_cards')
+    .select('card_id')
+    .eq('user_id', stubUserId);
+
+  if (stubBookmarks?.length) {
+    await supabaseAdmin.from('bookmarked_cards').upsert(
+      stubBookmarks.map((b) => ({ user_id: webUserId, card_id: b.card_id })),
+      { onConflict: 'user_id,card_id', ignoreDuplicates: true },
+    );
+  }
+
+  // Stamp telegram_id on the web account
+  await supabaseAdmin.from('profiles').update({ telegram_id: telegramId }).eq('id', webUserId);
+
+  // Check combined theme count vs plan limit
+  const [{ count: finalThemeCount }, planInfo] = await Promise.all([
+    supabaseAdmin
+      .from('themes')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', webUserId),
+    SubscriptionService.getUserPlan(webUserId),
+  ]);
+  const overLimit = planInfo.maxThemes !== null && (finalThemeCount ?? 0) > planInfo.maxThemes;
+
+  // Delete the stub (cascade removes its subscription/usage records)
+  await supabaseAdmin.auth.admin.deleteUser(stubUserId);
+
+  // ── 6. Issue a signed session token for the web account ——————————————
+  const { data: webProfileData } = await supabaseAdmin
+    .from('profiles')
+    .select('display_name')
+    .eq('id', webUserId)
+    .single();
+
+  const displayName =
+    webProfileData?.display_name || signInData.user.email?.split('@')[0] || 'User';
+
+  const exp = Date.now() + 2 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ userId: webUserId, displayName, exp })).toString(
+    'base64url',
+  );
+  const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+  const sig = createHmac('sha256', secret).update(payload).digest('base64url');
+
+  logger.info({ stubUserId, webUserId, overLimit }, 'Stub merged into web account');
+  return NextResponse.json({ sessionToken: `${payload}.${sig}`, overLimit });
 });

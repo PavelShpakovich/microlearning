@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { CheckCircle, AlertCircle, Mail, Lock } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -18,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { profileApi } from '@/services/profile-api';
 
-type Screen = 'loading' | 'form' | 'success' | 'error';
+type Screen = 'loading' | 'form' | 'success' | 'merged' | 'error';
 
 export default function TelegramUpgradePage() {
   const t = useTranslations();
@@ -26,6 +27,7 @@ export default function TelegramUpgradePage() {
   const [initData, setInitData] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [overLimit, setOverLimit] = useState(false);
 
   const upgradeSchema = z
     .object({
@@ -67,8 +69,21 @@ export default function TelegramUpgradePage() {
   async function onSubmit(values: UpgradeFormValues) {
     try {
       setIsSubmitting(true);
-      await profileApi.upgradeStub(initData, values.email, values.password);
-      setScreen('success');
+      const result = await profileApi.upgradeStub(initData, values.email, values.password);
+
+      if ('sessionToken' in result) {
+        // Email belonged to an existing web account — accounts merged, sign in immediately.
+        setOverLimit(result.overLimit);
+        const signInResult = await signIn('telegram', {
+          sessionToken: result.sessionToken,
+          redirect: false,
+        });
+        if (!signInResult?.ok) throw new Error(signInResult?.error ?? 'Sign-in failed');
+        setScreen('merged');
+      } else {
+        // New credentials set — email verification required before web login.
+        setScreen('success');
+      }
     } catch (err) {
       form.setError('root', {
         message: err instanceof Error ? err.message : t('telegramUpgrade.submitError'),
@@ -108,7 +123,29 @@ export default function TelegramUpgradePage() {
       </main>
     );
   }
-
+  // ── Merged ───────────────────────────────────────────────────────────────────────
+  if (screen === 'merged') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+        <CheckCircle className="mb-4 h-12 w-12 text-green-500" />
+        <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.mergedTitle')}</h1>
+        <p className="text-sm text-muted-foreground">{t('telegramUpgrade.mergedDescription')}</p>
+        {overLimit && (
+          <p className="mt-3 max-w-xs text-sm text-amber-600 dark:text-amber-400">
+            {t('telegramUpgrade.mergedOverLimitWarning')}
+          </p>
+        )}
+        <Button
+          className="mt-6"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+        >
+          Go to Dashboard
+        </Button>
+      </main>
+    );
+  }
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <main className="flex min-h-screen flex-col justify-center px-6 py-10">

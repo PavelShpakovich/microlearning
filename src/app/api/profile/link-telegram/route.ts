@@ -6,6 +6,7 @@ import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { SubscriptionService } from '@/lib/subscriptions/service';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -119,6 +120,9 @@ export const POST = withApiHandler(async (req) => {
   const telegramUser = validateTelegramInitData(body.data.initData, env.TELEGRAM_BOT_TOKEN);
   const telegramId = String(telegramUser.id);
 
+  // Tracks whether the merged theme count exceeds the web user's plan limit.
+  let overLimit = false;
+
   // ── 1. Check if the web account already has a telegram_id ──────────────────
   const { data: webProfile } = await supabaseAdmin
     .from('profiles')
@@ -194,6 +198,16 @@ export const POST = withApiHandler(async (req) => {
             { onConflict: 'user_id,card_id', ignoreDuplicates: true },
           );
         }
+
+        // Check combined theme count vs plan limit (set flag, report in response)
+        const [{ count: mergedThemeCount }, planInfo] = await Promise.all([
+          supabaseAdmin
+            .from('themes')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId),
+          SubscriptionService.getUserPlan(userId),
+        ]);
+        overLimit = planInfo.maxThemes !== null && (mergedThemeCount ?? 0) > planInfo.maxThemes;
       }
 
       // Empty or just-merged stub — safe to remove (subscription/usage rows cascade-delete)
@@ -225,5 +239,5 @@ export const POST = withApiHandler(async (req) => {
   const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
-  return NextResponse.json({ sessionToken: `${payload}.${sig}` });
+  return NextResponse.json({ sessionToken: `${payload}.${sig}`, overLimit });
 });

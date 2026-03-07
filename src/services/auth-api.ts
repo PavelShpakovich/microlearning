@@ -35,7 +35,7 @@ class AuthApi {
   async linkTelegramAccount(
     initData: string,
     linkToken: string,
-  ): Promise<{ sessionToken: string }> {
+  ): Promise<{ sessionToken: string; overLimit: boolean }> {
     const response = await fetch('/api/profile/link-telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,7 +47,7 @@ class AuthApi {
       throw new Error(data.error || data.message || `Server error ${response.status}`);
     }
 
-    return (await response.json()) as { sessionToken: string };
+    return (await response.json()) as { sessionToken: string; overLimit: boolean };
   }
 }
 

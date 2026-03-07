@@ -72,11 +72,14 @@ export default function TelegramEntryPage() {
         setPhase('linking');
 
         try {
-          const { sessionToken } = await authApi.linkTelegramAccount(initData, linkToken);
+          const { sessionToken, overLimit } = await authApi.linkTelegramAccount(
+            initData,
+            linkToken,
+          );
           const result = await signIn('telegram', { sessionToken, redirect: false });
           if (!result?.ok) throw new Error(result?.error ?? 'Link sign-in failed');
-          // Redirect to settings so the user can see the connected state.
-          window.location.href = '/settings';
+          // Redirect to settings; pass overLimit flag so the settings page can warn the user.
+          window.location.href = '/settings' + (overLimit ? '?overLimit=1' : '');
         } catch (err) {
           const msg = err instanceof Error ? err.message : t('telegram.linkFailed');
           setErrorMsg(msg);
