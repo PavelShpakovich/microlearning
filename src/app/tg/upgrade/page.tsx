@@ -81,7 +81,7 @@ export default function TelegramUpgradePage() {
         if (!signInResult?.ok) throw new Error(signInResult?.error ?? 'Sign-in failed');
         setScreen('merged');
       } else {
-        // New credentials set — email verification required before web login.
+        // New credentials set — can log in on the web immediately.
         setScreen('success');
       }
     } catch (err) {
@@ -108,7 +108,15 @@ export default function TelegramUpgradePage() {
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
         <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.errorTitle')}</h1>
-        <p className="text-sm text-muted-foreground">{errorMsg}</p>
+        <p className="mb-6 text-sm text-muted-foreground">{errorMsg}</p>
+        <Button
+          className="w-full max-w-xs"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+        >
+          {t('telegramUpgrade.goToDashboard')}
+        </Button>
       </main>
     );
   }
@@ -119,7 +127,17 @@ export default function TelegramUpgradePage() {
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <CheckCircle className="mb-4 h-12 w-12 text-green-500" />
         <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.successTitle')}</h1>
-        <p className="text-sm text-muted-foreground">{t('telegramUpgrade.successDescription')}</p>
+        <p className="mb-6 text-sm text-muted-foreground">
+          {t('telegramUpgrade.successDescription')}
+        </p>
+        <Button
+          className="w-full max-w-xs"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+        >
+          {t('telegramUpgrade.goToDashboard')}
+        </Button>
       </main>
     );
   }
@@ -141,7 +159,7 @@ export default function TelegramUpgradePage() {
             window.location.href = '/dashboard';
           }}
         >
-          Go to Dashboard
+          {t('telegramUpgrade.goToDashboard')}
         </Button>
       </main>
     );
@@ -154,6 +172,15 @@ export default function TelegramUpgradePage() {
           <h1 className="text-xl font-semibold">{t('telegramUpgrade.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('telegramUpgrade.description')}</p>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+          className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+        >
+          {t('buttons.cancel')}
+        </button>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

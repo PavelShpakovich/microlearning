@@ -245,12 +245,13 @@
     "submitting": "Setting up…",
     "submitError": "Could not set up your account. Please try again.",
     "emailTakenWrongPassword": "That email is already registered. If it's yours, check your password.",
-    "successTitle": "Check your email",
-    "successDescription": "We sent a verification link to your address. Click it to confirm, then log in at the web app with your email and password.",
+    "successTitle": "Web access is ready!",
+    "successDescription": "You can now log in at the web app with your email and password.",
     "mergedTitle": "Accounts merged!",
     "mergedDescription": "All your Telegram themes have been moved to your web account. You are now logged in.",
     "mergedOverLimitWarning": "Heads up: you now have more themes than your plan allows. You can still study them, but you won't be able to create new ones until you upgrade or delete some.",
-    "errorTitle": "Something went wrong"
+    "errorTitle": "Something went wrong",
+    "goToDashboard": "Go to Dashboard"
   },
   "telegramPrompt": {
     "title": "Study on Telegram too",
@@ -347,8 +348,7 @@
     "registerSuccess": "Account created successfully! Please sign in.",
     "error": "Something went wrong. Please try again.",
     "creatingAccount": "Creating account...",
-    "telegramHint": "Started on Telegram?",
-    "telegramHintCta": "Set up web access"
+    "telegramHint": "Started on Telegram? Open the bot → Settings → Set Up Web Access to add your email and password."
   },
   "landing": {
     "heroTagline": "Turn Any Material Into Flashcards",

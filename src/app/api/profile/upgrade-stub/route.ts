@@ -115,11 +115,11 @@ export const POST = withApiHandler(async (req) => {
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(stubUserId, {
     email,
     password,
-    email_confirm: false, // require the user to verify their email
+    email_confirm: true, // auto-confirm — matches registration behaviour
   });
 
   if (!updateError) {
-    // Email wasn't taken — stub has been upgraded in-place. Email verification required.
+    // Email wasn't taken — stub has been upgraded in-place. Ready to log in.
     logger.info({ userId: stubUserId, newEmail: email }, 'Stub successfully upgraded');
     return NextResponse.json({ success: true });
   }

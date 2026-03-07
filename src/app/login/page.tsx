@@ -155,17 +155,7 @@ export default function LoginPage() {
               </Link>
             </p>
             {BOT_URL && (
-              <p className="text-gray-600">
-                {t('auth.telegramHint')}{' '}
-                <a
-                  href={BOT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-primary hover:underline"
-                >
-                  {t('auth.telegramHintCta')}
-                </a>
-              </p>
+              <p className="text-gray-500 dark:text-gray-400">{t('auth.telegramHint')}</p>
             )}
           </div>
         </CardContent>

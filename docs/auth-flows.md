@@ -71,7 +71,7 @@ NextAuth issues 30-day JWT cookie
 ```
 
 **Registration:**  
-`POST /api/auth/register` → `supabase.auth.admin.createUser({ email_confirm: true })` → user must verify email.
+`POST /api/auth/register` → `supabase.auth.admin.createUser({ email_confirm: true })` → auto-confirms email, user can log in immediately.
 
 **Password change:**  
 `POST /api/auth/password` → `supabaseAdmin.auth.admin.updateUserById(userId, { password })` — no re-verification required.
@@ -194,7 +194,7 @@ tg/page.tsx calls signIn('telegram', { sessionToken })
 
 ## 6. Telegram → Web Upgrade / Merge
 
-Triggered from **Settings card → Set Up Web Access** (shown only to stub users) or **Login page hint**.
+Triggered from **Settings card → Set Up Web Access** (shown only to stub users inside the Telegram Mini App).
 
 ### Path A — New email (in-place upgrade)
 
@@ -205,13 +205,13 @@ Stub user enters email + password on /tg/upgrade
 POST /api/profile/upgrade-stub  { initData, email, password }
   │  Server:
   │  1. HMAC-verify initData → stubUserId
-  │  2. supabaseAdmin.auth.admin.updateUserById(stubId, { email, password })
+  │  2. supabaseAdmin.auth.admin.updateUserById(stubId, { email, password, email_confirm: true })
   │     → Success (email was new)
   │  3. Returns { success: true }
   │
   ▼
-/tg/upgrade shows "Check your email" screen
-  └─ User verifies email, then logs in normally at /login
+/tg/upgrade shows "Web access is ready!" screen
+  └─ User can now log in at /login with email + password
 ```
 
 ### Path B — Email already registered (account merge)
