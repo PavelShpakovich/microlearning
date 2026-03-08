@@ -7,7 +7,7 @@ import { ValidationError, AppError } from '@/lib/errors';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/cache-utils';
 import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(100).optional(),
@@ -112,7 +112,7 @@ export const DELETE = withApiHandler(async () => {
   // 2. Cancel Stripe subscription if exists
   if (subscription?.stripe_subscription_id) {
     try {
-      await stripe.subscriptions.cancel(subscription.stripe_subscription_id);
+      await getStripe().subscriptions.cancel(subscription.stripe_subscription_id);
     } catch (stripeErr) {
       console.error('Failed to cancel Stripe subscription during account deletion:', stripeErr);
     }
@@ -121,7 +121,7 @@ export const DELETE = withApiHandler(async () => {
   // Optional: Delete customer from Stripe entirely
   if (subscription?.stripe_customer_id) {
     try {
-      await stripe.customers.del(subscription.stripe_customer_id);
+      await getStripe().customers.del(subscription.stripe_customer_id);
     } catch (stripeErr) {
       console.error('Failed to delete Stripe customer:', stripeErr);
     }

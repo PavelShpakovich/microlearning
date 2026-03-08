@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { AppError } from '@/lib/errors';
 import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 /**
  * POST /api/subscription/portal
@@ -25,7 +25,7 @@ export const POST = withApiHandler(async () => {
     });
   }
 
-  const portalSession = await stripe.billingPortal.sessions.create({
+  const portalSession = await getStripe().billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
     return_url: `${env.NEXT_PUBLIC_APP_URL}/settings`,
   });

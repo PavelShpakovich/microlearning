@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { ValidationError, AppError } from '@/lib/errors';
 import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 const upgradePlanSchema = z.object({
   planId: z.enum(['free', 'basic', 'pro', 'max']),
@@ -65,7 +65,7 @@ export const POST = withApiHandler(async (req) => {
 
   if (!customerId && userEmail) {
     // Create new customer
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email: userEmail,
       metadata: { supabase_user_id: user.id },
     });
@@ -82,7 +82,7 @@ export const POST = withApiHandler(async (req) => {
     ? { customer: customerId }
     : { customer_email: userEmail || undefined };
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
     ...sessionParams,
