@@ -32,6 +32,7 @@ export default function TelegramUpgradePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [overLimit, setOverLimit] = useState(false);
+  const [verifyingEmail, setVerifyingEmail] = useState('');
 
   const isRequired = searchParams.get('required') === '1';
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -52,6 +53,8 @@ export default function TelegramUpgradePage() {
     defaultValues: { email: '', password: '' },
   });
 
+  const STORAGE_KEY = 'tg_upgrade_verifying';
+
   useEffect(() => {
     async function init() {
       await new Promise((r) => setTimeout(r, 50));
@@ -66,6 +69,20 @@ export default function TelegramUpgradePage() {
       window.Telegram!.WebApp.ready();
       window.Telegram!.WebApp.expand();
       setInitData(data);
+
+      // Restore verifying state if the user was redirected back mid-flow
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const { email } = JSON.parse(saved) as { email: string };
+          setVerifyingEmail(email);
+          setScreen('verifying');
+          return;
+        } catch {
+          sessionStorage.removeItem(STORAGE_KEY);
+        }
+      }
+
       setScreen('form');
     }
     void init();
@@ -93,7 +110,10 @@ export default function TelegramUpgradePage() {
         });
         form.trigger('email');
       } else {
-        // Magic link sent — ask user to check inbox.
+        // Magic link sent — persist state so remounts don't reset to form.
+        const email = values.email;
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ email }));
+        setVerifyingEmail(email);
         setScreen('verifying');
       }
     } catch (err) {
@@ -140,17 +160,21 @@ export default function TelegramUpgradePage() {
         <Mail className="mb-4 h-12 w-12 text-primary" />
         <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.checkEmail')}</h1>
         <p className="mb-6 max-w-xs text-sm text-muted-foreground">
-          {t('telegramUpgrade.checkEmailDescription')}
+          {t('telegramUpgrade.checkEmailDescription', { email: verifyingEmail })}
         </p>
-        <Button
-          variant="outline"
-          className="w-full max-w-xs"
+        <button
+          type="button"
+          className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
           onClick={() => {
-            window.location.href = callbackUrl;
+            sessionStorage.removeItem(STORAGE_KEY);
+            setVerifyingEmail('');
+            setShowPassword(false);
+            form.reset();
+            setScreen('form');
           }}
         >
-          {t('telegramUpgrade.continueInApp')}
-        </Button>
+          {t('telegramUpgrade.useDifferentEmail')}
+        </button>
       </main>
     );
   }
