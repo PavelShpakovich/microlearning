@@ -212,9 +212,12 @@ export type Database = {
           created_at: string;
           display_name: string | null;
           email_unverified: boolean;
+          email_verification_token: string | null;
+          email_verification_token_expires_at: string | null;
           id: string;
           is_admin: boolean | null;
           last_study_date: string | null;
+          pending_email: string | null;
           streak_count: number | null;
           telegram_id: string | null;
           ui_language: string | null;
@@ -223,9 +226,12 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           email_unverified?: boolean;
+          email_verification_token?: string | null;
+          email_verification_token_expires_at?: string | null;
           id: string;
           is_admin?: boolean | null;
           last_study_date?: string | null;
+          pending_email?: string | null;
           streak_count?: number | null;
           telegram_id?: string | null;
           ui_language?: string | null;
@@ -234,9 +240,12 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           email_unverified?: boolean;
+          email_verification_token?: string | null;
+          email_verification_token_expires_at?: string | null;
           id?: string;
           is_admin?: boolean | null;
           last_study_date?: string | null;
+          pending_email?: string | null;
           streak_count?: number | null;
           telegram_id?: string | null;
           ui_language?: string | null;

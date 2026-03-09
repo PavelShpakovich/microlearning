@@ -33,9 +33,11 @@ export default function TelegramUpgradePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [overLimit, setOverLimit] = useState(false);
   const [verifyingEmail, setVerifyingEmail] = useState('');
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   const isRequired = searchParams.get('required') === '1';
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const tokenExpired = searchParams.get('error') === 'token_expired';
   const { locale, setLanguage } = useUiLanguage();
 
   const upgradeSchema = z.object({
@@ -157,6 +159,18 @@ export default function TelegramUpgradePage() {
 
   // ── Verifying email ───────────────────────────────────────────────────────
   if (screen === 'verifying') {
+    async function handleResend() {
+      if (resendState !== 'idle') return;
+      try {
+        setResendState('sending');
+        await profileApi.resendVerification(initData, locale);
+        setResendState('sent');
+        setTimeout(() => setResendState('idle'), 4000);
+      } catch {
+        setResendState('idle');
+      }
+    }
+
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <Mail className="mb-4 h-12 w-12 text-primary" />
@@ -164,19 +178,39 @@ export default function TelegramUpgradePage() {
         <p className="mb-6 max-w-xs text-sm text-muted-foreground">
           {t('telegramUpgrade.checkEmailDescription', { email: verifyingEmail })}
         </p>
-        <button
-          type="button"
-          className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          onClick={() => {
-            store?.removeItem(STORAGE_KEY);
-            setVerifyingEmail('');
-            setShowPassword(false);
-            form.reset();
-            setScreen('form');
-          }}
-        >
-          {t('telegramUpgrade.useDifferentEmail')}
-        </button>
+        {tokenExpired && (
+          <p className="mb-4 max-w-xs rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {t('telegramUpgrade.tokenExpired')}
+          </p>
+        )}
+        <div className="flex flex-col items-center gap-3">
+          <button
+            type="button"
+            disabled={resendState === 'sending'}
+            className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 transition-colors disabled:opacity-50"
+            onClick={() => void handleResend()}
+          >
+            {resendState === 'sent'
+              ? t('telegramUpgrade.resendVerificationSent')
+              : resendState === 'sending'
+                ? '…'
+                : t('telegramUpgrade.resendVerification')}
+          </button>
+          <button
+            type="button"
+            className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+            onClick={() => {
+              store?.removeItem(STORAGE_KEY);
+              setVerifyingEmail('');
+              setShowPassword(false);
+              setResendState('idle');
+              form.reset();
+              setScreen('form');
+            }}
+          >
+            {t('telegramUpgrade.useDifferentEmail')}
+          </button>
+        </div>
       </main>
     );
   }

@@ -6,6 +6,7 @@ import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { FLAGS } from '@/lib/feature-flags';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -167,13 +168,14 @@ export const POST = withApiHandler(async (req) => {
     [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' ') ||
     'Telegram User';
 
-  // needsEmail = true when:
+  // needsEmail = true when EMAIL_UPGRADE_ENABLED and:
   //  a) account is still a stub (no real email set yet), OR
   //  b) user submitted a real email via /tg/upgrade but hasn't verified it yet
   //     (tracked via profiles.email_unverified — reliable regardless of Supabase internals)
   const currentEmail = authLookup.user?.email ?? '';
   const isStubEmail = currentEmail.startsWith('telegram_') && currentEmail.includes('@noreply');
-  const needsEmail = isStubEmail || !!profile?.email_unverified;
+  const needsEmail =
+    FLAGS.EMAIL_UPGRADE_ENABLED && (isStubEmail || !!profile?.email_unverified);
 
   // Issue a short-lived signed handoff token so the browser can open a
   // NextAuth session without ever touching the Supabase browser client.

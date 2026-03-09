@@ -56,6 +56,17 @@ function CallbackHandler() {
 
   useEffect(() => {
     async function exchange() {
+      // ── Path A: custom verify-email flow (our UUID token) ─────────────────
+      const isEmailVerified = params.get('email_verified') === '1';
+      const sessionToken = params.get('sessionToken');
+
+      if (isEmailVerified && sessionToken) {
+        await signIn('telegram', { sessionToken, redirect: false });
+        setEmailVerified(true);
+        return;
+      }
+
+      // ── Path B: Supabase OTP (magic link / recovery) ──────────────────────
       const tokenHash = params.get('token_hash');
       const type = params.get('type') as 'email' | 'recovery' | null;
       const callbackUrl = params.get('callbackUrl') || '/dashboard';
@@ -68,8 +79,8 @@ function CallbackHandler() {
           // Exchange Supabase session for a NextAuth session token.
           const res = await fetch('/api/auth/session-from-supabase', { method: 'POST' });
           if (res.ok) {
-            const { sessionToken } = (await res.json()) as { sessionToken: string };
-            await signIn('telegram', { sessionToken, redirect: false });
+            const { sessionToken: st } = (await res.json()) as { sessionToken: string };
+            await signIn('telegram', { sessionToken: st, redirect: false });
           }
 
           if (type === 'recovery') {

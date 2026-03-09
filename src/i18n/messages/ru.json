@@ -255,7 +255,10 @@
     "completingSignIn": "Выполняется вход…",
     "emailVerifiedTitle": "Email подтверждён!",
     "emailVerifiedDescription": "Ваш email подтверждён. Вернитесь в Telegram, чтобы продолжить.",
-    "backToTelegram": "Открыть Telegram"
+    "backToTelegram": "Открыть Telegram",
+    "resendVerification": "Отправить ещё раз",
+    "resendVerificationSent": "Письмо отправлено!",
+    "tokenExpired": "Ссылка устарела. Попробуйте ещё раз."
   },
   "telegramPrompt": {
     "title": "Учитесь и в Telegram",

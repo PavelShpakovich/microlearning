@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createHmac } from 'crypto';
+import { createHmac, randomUUID } from 'crypto';
 import { withApiHandler } from '@/lib/api/handler';
 import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -8,6 +8,7 @@ import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { getUserPlan } from '@/lib/subscription-utils';
 import { sendVerificationEmail } from '@/lib/email';
+import { FLAGS } from '@/lib/feature-flags';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -56,30 +57,32 @@ function validateTelegramInitData(initData: string, botToken: string): TelegramU
 /**
  * POST /api/profile/upgrade-stub
  *
- * Upgrades a Telegram-first "stub" account to a full account with email + password.
- * Because the stub and the final account share the same user ID, all themes/cards
- * stay in place — only the auth credentials change.
+ * Allows a Telegram-first "stub" account to add an email address.
+ * The real auth email is NOT changed until the user clicks the verification link.
  *
- * Body: { initData: string, email: string, password: string }
- *
- * Flow:
+ * Flow (email not taken):
  *  1. Validate Telegram HMAC → get telegramId
- *  2. Find the stub profile that owns this telegramId
- *  3. Confirm it is actually a stub (email starts with telegram_)
- *  4. Check the target email is not already taken by another account
- *  5. Update the stub's email + password in Supabase Auth (same userId — no migration!)
- *  6. Return success; client prompts user to check email for verification
+ *  2. Find & confirm stub profile
+ *  3. Check the target email is not already in auth.users
+ *  4. Store pending_email + UUID token + 24h expiry in profiles (stub email unchanged)
+ *  5. Send branded verification email pointing to GET /api/auth/verify-email?token=UUID
+ *  6. Return { success: true } — client shows "check inbox" screen
+ *
+ * Flow (email taken — merge):
+ *  4b. If password provided, sign in as web user, migrate themes, delete stub, issue session token
  */
 export const POST = withApiHandler(async (req) => {
+  if (!FLAGS.EMAIL_UPGRADE_ENABLED) {
+    return NextResponse.json({ error: 'Email upgrade is not enabled' }, { status: 410 });
+  }
+
   if (!env.TELEGRAM_BOT_TOKEN) {
     throw new AuthError({ message: 'Telegram auth is not configured on this server' });
   }
 
   const body = bodySchema.safeParse(await req.json());
   if (!body.success) {
-    throw new ValidationError({
-      message: 'initData and a valid email are required',
-    });
+    throw new ValidationError({ message: 'initData and a valid email are required' });
   }
 
   const { initData, email, password, locale } = body.data;
@@ -95,11 +98,10 @@ export const POST = withApiHandler(async (req) => {
     .maybeSingle();
 
   if (!profile) {
-    // Should never happen (user is authenticated), but guard anyway.
     throw new AuthError({ message: 'No profile found for this Telegram account' });
   }
 
-  // ── 2. Fetch the auth user to confirm it's a stub ────────────────────────
+  // ── 2. Confirm it is a stub account ──────────────────────────────────────
   const { data: authLookup } = await supabaseAdmin.auth.admin.getUserById(profile.id);
   const currentEmail = authLookup.user?.email ?? '';
   const isStub = currentEmail.startsWith('telegram_') && currentEmail.includes('@noreply');
@@ -111,46 +113,56 @@ export const POST = withApiHandler(async (req) => {
 
   const stubUserId = profile.id;
 
-  // ── 3. Try in-place upgrade: set email on the stub user (no password yet) ──
   logger.info({ userId: stubUserId, telegramId, newEmail: email }, 'Attempting stub upgrade');
 
-  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(stubUserId, {
-    email,
-    email_confirm: false, // user must verify via magic link
-  });
-
-  if (!updateError) {
-    // Email wasn't taken — generate a magic link and send it ourselves so we
-    // can control the language and template.
-    // Strip trailing slash to avoid double-slash in the redirect URL.
-    const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-      options: { redirectTo: `${appUrl}/auth/callback` },
+  // ── 3. Check if email is already taken in auth.users ─────────────────────
+  let takenUserId: string | null = null;
+  let page = 1;
+  paginate: for (;;) {
+    const { data: listPage, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+      page,
+      perPage: 1000,
     });
+    if (listErr) break;
+    const users = listPage?.users ?? [];
+    for (const u of users) {
+      if (u.email === email && u.id !== stubUserId) {
+        takenUserId = u.id;
+        break paginate;
+      }
+    }
+    if (users.length < 1000) break;
+    page++;
+  }
 
-    if (linkError || !linkData.properties?.action_link) {
-      logger.error({ linkError, stubUserId }, 'Failed to generate magic link');
-      throw new AuthError({ message: 'Failed to generate verification link' });
+  // ── 4a. Email is free — store as pending, send verification link ──────────
+  if (!takenUserId) {
+    const token = randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const appUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+    const verifyUrl = `${appUrl}/api/auth/verify-email?token=${token}`;
+
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        pending_email: email,
+        email_verification_token: token,
+        email_verification_token_expires_at: expiresAt,
+        email_unverified: true,
+      })
+      .eq('id', stubUserId);
+
+    if (profileUpdateError) {
+      logger.error({ profileUpdateError, stubUserId }, 'Failed to store pending email');
+      throw new AuthError({ message: 'Failed to store verification data' });
     }
 
-    await sendVerificationEmail(email, linkData.properties.action_link, locale);
-
-    // Mark the profile so the Telegram auth gate can detect unverified state
-    // independently of Supabase's internal email_confirmed_at field.
-    await supabaseAdmin.from('profiles').update({ email_unverified: true }).eq('id', stubUserId);
-    logger.info({ userId: stubUserId, newEmail: email, locale }, 'Stub email set, magic link sent');
+    await sendVerificationEmail(email, verifyUrl, locale);
+    logger.info({ userId: stubUserId, email, locale }, 'Pending email stored, verification email sent');
     return NextResponse.json({ success: true });
   }
 
-  // ── 4. Email already taken ─────────────────────────────────────────────────
-  const isEmailTaken = updateError.message.toLowerCase().includes('already');
-  if (!isEmailTaken) {
-    throw new AuthError({ message: updateError.message });
-  }
-
-  // Without a password we cannot prove ownership — tell the client to ask for one.
+  // ── 4b. Email taken — need password to prove ownership and merge ──────────
   if (!password) {
     logger.info({ stubUserId, email }, 'Email taken — requesting password from client');
     return NextResponse.json({ conflict: true });
@@ -184,13 +196,11 @@ export const POST = withApiHandler(async (req) => {
     });
   }
 
-  // ── 5. Merge stub → web account ———————————————————————————————————
+  // ── 5. Merge stub → web account ──────────────────────────────────────────
   logger.info({ stubUserId, webUserId }, 'Merging stub into web account');
 
-  // Move themes (cards + sources cascade via theme_id FK, not user_id)
   await supabaseAdmin.from('themes').update({ user_id: webUserId }).eq('user_id', stubUserId);
 
-  // Move bookmarks, ignoring conflicts
   const { data: stubBookmarks } = await supabaseAdmin
     .from('bookmarked_cards')
     .select('card_id')
@@ -203,10 +213,8 @@ export const POST = withApiHandler(async (req) => {
     );
   }
 
-  // Stamp telegram_id on the web account
   await supabaseAdmin.from('profiles').update({ telegram_id: telegramId }).eq('id', webUserId);
 
-  // Check combined theme count vs plan limit
   const [{ count: finalThemeCount }, planInfo] = await Promise.all([
     supabaseAdmin
       .from('themes')
@@ -216,10 +224,9 @@ export const POST = withApiHandler(async (req) => {
   ]);
   const overLimit = planInfo.maxThemes !== null && (finalThemeCount ?? 0) > planInfo.maxThemes;
 
-  // Delete the stub (cascade removes its subscription/usage records)
   await supabaseAdmin.auth.admin.deleteUser(stubUserId);
 
-  // ── 6. Issue a signed session token for the web account ——————————————
+  // ── 6. Issue a signed session token for the web account ──────────────────
   const { data: webProfileData } = await supabaseAdmin
     .from('profiles')
     .select('display_name')

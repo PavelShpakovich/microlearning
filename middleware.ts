@@ -20,12 +20,21 @@ const PUBLIC_API_ROUTES = [
   '/api/profile/link-web', // Telegram stub self-authenticates via HMAC
   '/api/auth/session-from-supabase', // bridges Supabase OTP → NextAuth (called from /auth/callback)
   '/api/auth/forgot-password', // sends password-reset email (public)
+  '/api/auth/verify-email', // handles verification link click (self-authenticates via token)
+  '/api/profile/resend-verification', // re-sends verification email (self-authenticates via HMAC)
 ];
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Feature flag: redirect email upgrade route to /tg when disabled
+  if (!FLAGS.EMAIL_UPGRADE_ENABLED) {
+    if (pathname === '/tg/upgrade' || pathname.startsWith('/tg/upgrade/')) {
+      return NextResponse.redirect(new URL('/tg', request.url));
+    }
+  }
 
   // Feature flag: redirect web auth routes to Telegram bot
   if (!FLAGS.WEB_AUTH_ENABLED) {

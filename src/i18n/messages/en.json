@@ -260,7 +260,10 @@
     "completingSignIn": "Completing sign-in…",
     "emailVerifiedTitle": "Email Verified!",
     "emailVerifiedDescription": "Your email has been confirmed. Return to the Telegram app to continue.",
-    "backToTelegram": "Open Telegram"
+    "backToTelegram": "Open Telegram",
+    "resendVerification": "Resend email",
+    "resendVerificationSent": "Email sent!",
+    "tokenExpired": "Verification link expired. Please try again."
   },
   "telegramPrompt": {
     "title": "Study on Telegram too",

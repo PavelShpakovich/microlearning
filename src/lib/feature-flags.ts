@@ -14,4 +14,16 @@ export const FLAGS = {
    * When true: full web login and registration are available.
    */
   WEB_AUTH_ENABLED: false,
+
+  /**
+   * When false:
+   *  - /tg/upgrade redirects to /tg
+   *  - POST /api/profile/upgrade-stub returns 410
+   *  - GET /api/auth/verify-email returns 410
+   *  - POST /api/profile/resend-verification returns 410
+   *  - Telegram auth never sets needsEmail=true (stub users go straight to dashboard)
+   *
+   * When true: users can add & verify an email address to their Telegram account.
+   */
+  EMAIL_UPGRADE_ENABLED: false,
 } as const;
