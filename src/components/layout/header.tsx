@@ -59,7 +59,7 @@ export function Header() {
     return (
       <header className="border-b bg-background sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
-          <div className="w-[64px] h-[64px] flex items-center">
+          <div className="w-h-16 h-h-16 flex items-center">
             <Skeleton className="h-8 w-16" />
           </div>
           <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export function Header() {
               width={64}
               height={64}
               priority
-              className="h-auto w-auto"
+              className="h-16 w-auto"
             />
           </Link>
           <div className="flex items-center gap-2">
@@ -142,7 +142,7 @@ export function Header() {
             width={64}
             height={64}
             priority
-            className="h-auto w-auto"
+            className="h-16 w-auto"
           />
         </Link>
 
