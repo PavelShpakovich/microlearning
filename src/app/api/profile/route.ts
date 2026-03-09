@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { auth } from '@/auth';
-import { ValidationError, AppError } from '@/lib/errors';
+import { ValidationError, AppError, AuthError } from '@/lib/errors';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/cache-utils';
 import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -40,6 +40,15 @@ export const GET = withApiHandler(async () => {
       .single();
 
     if (createError ?? !createdProfile) {
+      // 23503 = foreign_key_violation: the user.id is not in auth.users.
+      // Happens when a stale NextAuth JWT references a deleted/missing auth user.
+      // Return 401 so the client forces re-authentication instead of a raw 500.
+      if ((createError as { code?: string } | null)?.code === '23503') {
+        throw new AuthError({
+          message: 'Session expired — please sign in again',
+          cause: createError,
+        });
+      }
       throw createError ?? new Error('Failed to create profile');
     }
 

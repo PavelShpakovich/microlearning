@@ -84,17 +84,55 @@ export const POST = withApiHandler(async (req) => {
       user_metadata: { telegram_id: telegramId, source: 'telegram' },
     });
 
-    if (error ?? !newUser.user) {
-      throw new AuthError({ message: 'Failed to create user account', cause: error });
+    if (error || !newUser?.user) {
+      // The user might already exist in auth.users (e.g. after the profiles table
+      // was reset while auth.users was preserved).  Try to recover their account.
+      const isAlreadyExists =
+        error?.status === 422 ||
+        error?.message?.toLowerCase().includes('already') ||
+        error?.message?.toLowerCase().includes('registered');
+
+      if (!isAlreadyExists) {
+        throw new AuthError({ message: 'Failed to create user account', cause: error });
+      }
+
+      // Paginate through auth users to find the one with this email.
+      let recovered: string | null = null;
+      let page = 1;
+      outer: while (page <= 20) {
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 50,
+        });
+        if (!listData?.users?.length) break;
+        for (const u of listData.users) {
+          if (u.email === email) {
+            recovered = u.id;
+            break outer;
+          }
+        }
+        if (listData.users.length < 50) break;
+        page++;
+      }
+
+      if (!recovered) {
+        throw new AuthError({ message: 'Failed to create user account', cause: error });
+      }
+
+      userId = recovered;
+    } else {
+      userId = newUser.user.id;
     }
 
-    userId = newUser.user.id;
-
-    await supabaseAdmin.from('profiles').insert({
-      id: userId,
-      telegram_id: telegramId,
-      display_name: [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' '),
-    });
+    // Upsert profile — covers both fresh creation and recovery after a table reset.
+    await supabaseAdmin.from('profiles').upsert(
+      {
+        id: userId,
+        telegram_id: telegramId,
+        display_name: [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' '),
+      },
+      { onConflict: 'id' },
+    );
   }
 
   // Fetch display name + auth email for the NextAuth session
