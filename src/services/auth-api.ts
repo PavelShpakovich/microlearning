@@ -12,9 +12,7 @@ class AuthApi {
     }
   }
 
-  async exchangeTelegramInitData(
-    initData: string,
-  ): Promise<{ sessionToken: string }> {
+  async exchangeTelegramInitData(initData: string): Promise<{ sessionToken: string }> {
     const response = await fetch('/api/auth/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
