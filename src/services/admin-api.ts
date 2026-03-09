@@ -1,4 +1,4 @@
-import type { PlanId } from '@/lib/subscriptions/types';
+import { PlanId } from '@/lib/subscription-utils';
 
 export interface AdminUser {
   id: string;

@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { MAX_CARDS_PER_SESSION_FETCH } from '@/lib/constants';
 import { GenerationService } from '@/services/generation.service';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getSubscriptionStatus } from '@/lib/subscription-utils';
 import { logger } from '@/lib/logger';
 
 const querySchema = z.object({
@@ -92,11 +92,11 @@ export const GET = withApiHandler(async (req) => {
     const [dbIsAlreadyGenerating, isFailed, subscription] = await Promise.all([
       GenerationService.isGenerating(themeId),
       GenerationService.isGenerationFailed(themeId),
-      SubscriptionService.getSubscriptionStatus(user.id),
+      getSubscriptionStatus(user.id),
     ]);
 
-    const canGenerate = subscription.canGenerate;
-    const cardsRemaining = subscription.usage.cardsRemaining;
+    const canGenerate = subscription.cardsRemaining > 0;
+    const cardsRemaining = subscription.cardsRemaining;
 
     if (isFailed) {
       await GenerationService.clearFailureFlag(themeId);
@@ -145,17 +145,17 @@ export const GET = withApiHandler(async (req) => {
     const [dbIsGenerating, isFailed, subscription] = await Promise.all([
       GenerationService.isGenerating(themeId),
       GenerationService.isGenerationFailed(themeId),
-      SubscriptionService.getSubscriptionStatus(user.id),
+      getSubscriptionStatus(user.id),
     ]);
 
-    const cardsRemaining = subscription.usage.cardsRemaining;
+    const cardsRemaining = subscription.cardsRemaining;
 
     generationFailed = isFailed;
 
     // If the DB flag says generating but the user has no quota, it's a stale flag
     // (doGenerate would have returned early without clearing it). Clear it now so
     // the client polling loop doesn't get stuck on generating=true forever.
-    if (!subscription.canGenerate) {
+    if (subscription.cardsRemaining === 0) {
       if (dbIsGenerating) {
         await GenerationService.clearState(themeId);
       }

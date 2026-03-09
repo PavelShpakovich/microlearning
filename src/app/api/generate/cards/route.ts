@@ -4,7 +4,7 @@ import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, RateLimitError, ValidationError } from '@/lib/errors';
 import { generateWithSourceChunking } from '@/services/generation.service';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getSubscriptionStatus, incrementCardCount } from '@/lib/subscription-utils';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import {
@@ -56,14 +56,14 @@ export const POST = withApiHandler(async (req) => {
   const { themeId, sourceIds, count } = body.data;
 
   // Check usage limits
-  const subscription = await SubscriptionService.getSubscriptionStatus(user.id);
+  const subscription = await getSubscriptionStatus(user.id);
   if (!subscription.canGenerate) {
     return NextResponse.json({ errorCode: 'GENERATION_LIMIT_REACHED' }, { status: 400 });
   }
 
   // Cap to cardsRemaining if the user requested more than they have left.
   // Return a machine-readable warning code so the client can translate it.
-  const effectiveCount = Math.min(count, subscription.usage.cardsRemaining);
+  const effectiveCount = Math.min(count, subscription.cardsRemaining);
   const partialWarning =
     effectiveCount < count
       ? {
@@ -179,14 +179,14 @@ export const POST = withApiHandler(async (req) => {
 
   // Track usage
   if (inserted && inserted.length > 0) {
-    await SubscriptionService.incrementCardCount(user.id, inserted.length);
+    await incrementCardCount(user.id, inserted.length);
     logger.info(
-      { userId: user.id, cardsGenerated: inserted.length, plan: subscription.plan.planId },
+      { userId: user.id, cardsGenerated: inserted.length, plan: subscription.planId },
       'Updated user card usage',
     );
   }
 
-  const cardsRemaining = Math.max(0, subscription.usage.cardsRemaining - (inserted?.length ?? 0));
+  const cardsRemaining = Math.max(0, subscription.cardsRemaining - (inserted?.length ?? 0));
 
   return NextResponse.json(
     {

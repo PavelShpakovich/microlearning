@@ -42,7 +42,7 @@ export function DashboardClient({
   const maxThemes = subscriptionStatus?.plan.maxThemes ?? null;
   const atThemeLimit = maxThemes !== null && themes.length >= maxThemes;
   // null while loading → default true to avoid flash of locked state for paid users
-  const canAccessCommunity = subscriptionStatus ? subscriptionStatus.plan.communityThemes : true;
+  const canAccessCommunity = subscriptionStatus ? subscriptionStatus.plan.communityThemes > 0 : true;
 
   useEffect(() => {
     setThemes(initialThemes);

@@ -22,7 +22,6 @@ interface SettingsClientProps {
   userEmail: string;
   initialProfile: {
     display_name: string | null;
-    streak_count: number | null;
     telegram_id: string | null;
   } | null;
   /** OAuth / NextAuth display name as an additional fallback */

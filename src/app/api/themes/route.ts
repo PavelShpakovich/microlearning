@@ -4,7 +4,7 @@ import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { PlanLimitError, ValidationError } from '@/lib/errors';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/cache-utils';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getUserPlan } from '@/lib/subscription-utils';
 
 const createThemeSchema = z.object({
   name: z.string().min(1).max(100),
@@ -45,7 +45,7 @@ export const POST = withApiHandler(async (req) => {
   }
 
   // Enforce per-plan theme limit
-  const plan = await SubscriptionService.getUserPlan(user.id);
+  const plan = await getUserPlan(user.id);
   if (plan.maxThemes !== null) {
     const { count } = await supabase
       .from('themes')

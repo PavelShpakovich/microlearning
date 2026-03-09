@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, PlanLimitError, ValidationError } from '@/lib/errors';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getUserPlan } from '@/lib/subscription-utils';
 
 const updateThemeSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -74,7 +74,7 @@ export const PATCH = withApiHandler(async (req) => {
   if (body.data.is_public !== undefined) {
     // Only plans with community_themes access can make themes public
     if (body.data.is_public === true) {
-      const plan = await SubscriptionService.getUserPlan(user.id);
+      const plan = await getUserPlan(user.id);
       if (!plan.communityThemes) {
         throw new PlanLimitError({
           message: 'Sharing themes publicly requires a paid plan. Upgrade to enable this feature.',

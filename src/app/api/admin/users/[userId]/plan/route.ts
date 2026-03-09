@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { changePlan } from '@/lib/subscription-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
@@ -36,7 +36,7 @@ export const PUT = withApiHandler(async (req: Request, ctx?: unknown) => {
 
   try {
     // Change the plan
-    await SubscriptionService.changePlan(userId, planId as 'free' | 'basic' | 'pro' | 'max');
+    await changePlan(userId, planId as 'free' | 'basic' | 'pro' | 'max');
 
     logger.info({ adminId: user.id, userId, newPlan: planId }, 'Admin changed user plan');
 

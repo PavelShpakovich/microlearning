@@ -41,12 +41,11 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PRICE_BASIC: z.string().optional(),
-  STRIPE_PRICE_PRO: z.string().optional(),
-  STRIPE_PRICE_MAX: z.string().optional(),
+  // Telegram Stars pricing (in Stars, aligned to USD exchange rate ~0.013 per Star)
+  // Update these values if USD/Star exchange rate changes
+  TELEGRAM_STARS_PRICE_BASIC: z.string().regex(/^\d+$/).default('400'), // ~$5.20
+  TELEGRAM_STARS_PRICE_PRO: z.string().regex(/^\d+$/).default('1000'), // ~$13
+  TELEGRAM_STARS_PRICE_MAX: z.string().regex(/^\d+$/).default('2000'), // ~$26
 
   // Node
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

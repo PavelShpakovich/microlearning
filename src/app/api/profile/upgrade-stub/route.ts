@@ -6,7 +6,7 @@ import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getUserPlan } from '@/lib/subscription-utils';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
@@ -186,7 +186,7 @@ export const POST = withApiHandler(async (req) => {
       .from('themes')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', webUserId),
-    SubscriptionService.getUserPlan(webUserId),
+    getUserPlan(webUserId),
   ]);
   const overLimit = planInfo.maxThemes !== null && (finalThemeCount ?? 0) > planInfo.maxThemes;
 

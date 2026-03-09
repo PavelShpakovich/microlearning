@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { resetUsage } from '@/lib/subscription-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
@@ -20,7 +20,7 @@ export const POST = withApiHandler(async (_req: Request, ctx?: unknown) => {
   }
 
   try {
-    await SubscriptionService.resetUsage(userId);
+    await resetUsage(userId);
 
     logger.info({ adminId: user.id, userId }, 'Admin reset user card usage');
 

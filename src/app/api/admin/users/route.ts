@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getUserPlan, getUserUsage } from '@/lib/subscription-utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -45,8 +45,8 @@ export const GET = withApiHandler(async (req: Request) => {
               .select('display_name, is_admin')
               .eq('id', authUser.id)
               .single(),
-            SubscriptionService.getUserPlan(authUser.id),
-            SubscriptionService.getUserUsage(authUser.id),
+            getUserPlan(authUser.id),
+            getUserUsage(authUser.id),
           ]);
 
           return {

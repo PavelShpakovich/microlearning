@@ -1,32 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Check, Loader2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/use-subscription';
-import { profileApi } from '@/services/profile-api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PaymentSelectionDialog } from '@/components/settings/payment-selection-dialog';
 import { isTelegramWebApp, getTelegramWebApp } from '@/components/telegram-provider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// ---------------------------------------------------------------------------
-// Plan data
-// ---------------------------------------------------------------------------
-
+// Stars prices for each plan (roughly aligned to current USD rates)
+// These should be kept in sync with env vars: TELEGRAM_STARS_PRICE_*
 const PLANS = [
-  { id: 'free', name: 'Free', cards: 50, priceMonthly: 0 },
-  { id: 'basic', name: 'Starter', cards: 300, priceMonthly: 4.99 },
-  { id: 'pro', name: 'Pro', cards: 2000, priceMonthly: 12.99 },
-  { id: 'max', name: 'Max', cards: 5000, priceMonthly: 24.99 },
+  { id: 'free', name: 'Free', cards: 50, starsPrice: 0 },
+  { id: 'basic', name: 'Starter', cards: 300, starsPrice: 400 }, // ~$5.20
+  { id: 'pro', name: 'Pro', cards: 2000, starsPrice: 1000 }, // ~$13
+  { id: 'max', name: 'Max', cards: 5000, starsPrice: 2000 }, // ~$26
 ] as const;
 
 type Plan = (typeof PLANS)[number];
-
-// ---------------------------------------------------------------------------
-// PlanTile atom
-// ---------------------------------------------------------------------------
 
 interface PlanTileProps {
   plan: Plan;
@@ -35,8 +28,8 @@ interface PlanTileProps {
   isUpgrade: boolean;
   isDowngrade: boolean;
   isRequesting: boolean;
-  onUpgrade: (planId: string) => void;
-  onDowngrade: (planId: string) => void;
+  canUpgrade: boolean;
+  onSelect: () => void;
 }
 
 function PlanTile({
@@ -46,8 +39,8 @@ function PlanTile({
   isUpgrade,
   isDowngrade,
   isRequesting,
-  onUpgrade,
-  onDowngrade,
+  canUpgrade,
+  onSelect,
 }: PlanTileProps) {
   const t = useTranslations();
 
@@ -65,7 +58,7 @@ function PlanTile({
           </p>
         </div>
         <p className="text-sm font-semibold shrink-0">
-          {plan.priceMonthly === 0 ? t('plans.free') : `$${plan.priceMonthly.toFixed(2)}/mo`}
+          {plan.starsPrice === 0 ? t('plans.free') : `${plan.starsPrice}⭐`}
         </p>
       </div>
 
@@ -87,9 +80,10 @@ function PlanTile({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => onUpgrade(plan.id)}
-          disabled={isRequesting}
+          onClick={onSelect}
+          disabled={isRequesting || !canUpgrade}
           className="w-full text-xs"
+          title={!canUpgrade ? 'Open in Telegram to upgrade' : ''}
         >
           {isRequesting ? (
             <Loader2 className="w-3 h-3 animate-spin" />
@@ -104,7 +98,7 @@ function PlanTile({
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => onDowngrade(plan.id)}
+          onClick={onSelect}
           disabled={isRequesting}
           className="w-full text-xs"
         >
@@ -130,14 +124,11 @@ function PlanTile({
 export function PlansCard() {
   const t = useTranslations();
   const tl = useTranslations('landing');
-  const { status, isLoading } = useSubscription();
+  const { status, isLoading, refetch } = useSubscription();
 
-  // Dialog State
-  const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState<Plan | null>(null);
-  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [requesting, setRequesting] = useState<string | null>(null);
 
-  const currentPlanId = status?.plan.planId ?? 'free';
+  const currentPlanId = status?.planId ?? 'free';
   const currentPlanIndex = PLANS.findIndex((p) => p.id === currentPlanId);
 
   const planFeatures: Record<string, string[]> = {
@@ -147,124 +138,124 @@ export function PlansCard() {
     max: [tl('plan4Feature1'), tl('plan4Feature2'), tl('plan4Feature3')],
   };
 
-  const openUpgradeDialog = (planId: string) => {
-    const plan = PLANS.find((p) => p.id === planId) || null;
-    setSelectedPlanForUpgrade(plan);
-  };
-
-  const handleStripe = async (planId: string) => {
-    setIsProcessingUpgrade(true);
-    try {
-      const data = await profileApi.requestUpgrade(planId);
-
-      // If we are in the Telegram Mini App, we must open Stripe in an external browser
-      // to avoid violating Apple/Google in-app purchase store guidelines.
-      if (isTelegramWebApp()) {
-        const twa = getTelegramWebApp();
-        twa?.openLink(data.url);
-      } else {
-        // Standard web app redirect
-        window.location.href = data.url;
-      }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('errors.generic'));
-    } finally {
-      setIsProcessingUpgrade(false);
-      setSelectedPlanForUpgrade(null);
-    }
-  };
-
-  const handleTelegramStars = async (planId: string) => {
-    setIsProcessingUpgrade(true);
-    try {
-      if (!isTelegramWebApp()) {
-        toast.error('Telegram Stars are only available inside the Telegram App.');
-        return;
-      }
-
-      const data = await profileApi.requestTelegramStarsUpgrade(planId);
-      const twa = getTelegramWebApp();
-
-      if (twa) {
-        twa.openInvoice(data.invoiceLink, (paymentStatus) => {
-          if (paymentStatus === 'paid') {
-            toast.success('Payment successful! Your account will be upgraded shortly.');
-          } else if (paymentStatus === 'cancelled') {
-            toast.info('Payment was cancelled.');
-          } else {
-            toast.error('Payment failed. Please try again.');
-          }
-        });
-      }
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : t('errors.generic'));
-    } finally {
-      setIsProcessingUpgrade(false);
-      setSelectedPlanForUpgrade(null);
-    }
-  };
-
   const handleDowngrade = async (planId: string) => {
+    if (planId !== 'free') return; // Only allow downgrade to free
+    
     setRequesting(planId);
     try {
-      // Create a customer portal session for downgrading via stripe
-      const response = await fetch('/api/subscription/portal', { method: 'POST' });
-      if (!response.ok) throw new Error();
-      const { url } = await response.json();
-
-      if (isTelegramWebApp()) {
-        getTelegramWebApp()?.openLink(url);
-      } else {
-        window.location.href = url;
+      // Call API to cancel the current subscription and revert to free
+      const response = await fetch('/api/profile/telegram-subscription', {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to downgrade subscription');
       }
-    } catch {
-      toast.error(t('errors.generic'));
+      
+      toast.success(t('subscriptions.downgradeSuccess') || 'Plan downgraded to Free');
+      // Trigger subscription refresh
+      if (refetch) await refetch();
+    } catch (error) {
+      toast.error(t('errors.generic') || 'Failed to downgrade subscription');
     } finally {
       setRequesting(null);
     }
   };
 
-  return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('plans.title')}</CardTitle>
-          <CardDescription>{t('plans.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="h-32 bg-muted animate-pulse rounded-lg" />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PLANS.map((plan, idx) => (
-                <PlanTile
-                  key={plan.id}
-                  plan={plan}
-                  features={planFeatures[plan.id] ?? []}
-                  isCurrent={plan.id === currentPlanId}
-                  isUpgrade={idx > currentPlanIndex}
-                  isDowngrade={idx < currentPlanIndex}
-                  isRequesting={requesting === plan.id}
-                  onUpgrade={(id) => openUpgradeDialog(id)}
-                  onDowngrade={(id) => void handleDowngrade(id)}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+  const handlePlanSelect = async (plan: typeof PLANS[number]) => {
+    if (plan.id === 'free' && plan.id !== currentPlanId) {
+      // Downgrade to free
+      await handleDowngrade(plan.id);
+    } else if (plan.id !== 'free' && plan.id !== currentPlanId) {
+      // Upgrade: Check if in Telegram or show web warning
+      if (!isTelegramWebApp()) {
+        toast.error(
+          t('subscriptions.telegramOnly') || 
+          'Please open this app in Telegram to upgrade your plan'
+        );
+        return;
+      }
+      
+      // In Telegram, create and open invoice
+      setRequesting(plan.id);
+      try {
+        const starsPrice = [
+          { id: 'basic', price: 400 },
+          { id: 'pro', price: 1000 },
+          { id: 'max', price: 2000 },
+        ].find(p => p.id === plan.id)?.price;
 
-      {selectedPlanForUpgrade && (
-        <PaymentSelectionDialog
-          open={!!selectedPlanForUpgrade}
-          onOpenChange={(open) => !open && setSelectedPlanForUpgrade(null)}
-          planId={selectedPlanForUpgrade.id}
-          planName={selectedPlanForUpgrade.name}
-          onSelectStripe={handleStripe}
-          onSelectTelegramStars={handleTelegramStars}
-          isProcessing={isProcessingUpgrade}
-        />
-      )}
-    </>
+        if (!starsPrice) throw new Error('Invalid plan');
+
+        const response = await fetch('/api/telegram/invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId: plan.id, starsPrice }),
+        });
+
+        if (!response.ok) throw new Error('Failed to create invoice');
+
+        const { invoiceLink } = await response.json();
+        
+        // Use Telegram Bot API to open invoice in Mini App
+        const tg = getTelegramWebApp();
+        if (tg?.openInvoice) {
+          tg.openInvoice(invoiceLink, (status: string) => {
+            if (status === 'paid') {
+              toast.success(t('subscriptions.upgradeSuccess') || 'Plan upgraded successfully!');
+              if (refetch) refetch();
+            } else if (status === 'cancelled') {
+              toast.info(t('subscriptions.upgradeCancelled') || 'Payment cancelled');
+            }
+          });
+        } else {
+          window.open(invoiceLink, '_blank');
+        }
+      } catch {
+        toast.error(t('errors.generic') || 'Failed to initiate payment');
+      } finally {
+        setRequesting(null);
+      }
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('plans.title')}</CardTitle>
+        <CardDescription>{t('plans.description')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!isTelegramWebApp() && (
+          <Alert className="mb-4 border-amber-200 bg-amber-50">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              {t('subscriptions.webAppWarning') || 
+              'To upgrade your plan, please open this app on your Telegram account using the bot.'}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isLoading ? (
+          <div className="h-32 bg-muted animate-pulse rounded-lg" />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {PLANS.map((plan, idx) => (
+              <PlanTile
+                key={plan.id}
+                plan={plan}
+                features={planFeatures[plan.id] ?? []}
+                isCurrent={plan.id === currentPlanId}
+                isUpgrade={idx > currentPlanIndex}
+                isDowngrade={idx < currentPlanIndex}
+                isRequesting={requesting === plan.id}
+                canUpgrade={isTelegramWebApp() || plan.id === 'free'}
+                onSelect={() => handlePlanSelect(plan)}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

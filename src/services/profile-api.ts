@@ -1,8 +1,16 @@
-import type { SubscriptionResponse } from '@/lib/subscriptions/types';
+// SubscriptionResponse type replaced with inline types
 
 type ProfileResponse = {
   display_name: string | null;
   telegram_id: string | null;
+};
+
+type SubscriptionResponse = {
+  planId: 'free' | 'basic' | 'pro' | 'max';
+  cardsLimit: number;
+  cardsGenerated: number;
+  cardsRemaining: number;
+  isPaid: boolean;
 };
 
 class ProfileApi {

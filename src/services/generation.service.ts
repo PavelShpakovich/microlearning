@@ -2,7 +2,7 @@ import { generateWithSourceChunking } from '@/lib/llm/chunking-orchestrator';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { MAX_CARDS_PER_BATCH } from '@/lib/constants';
-import { SubscriptionService } from '@/lib/subscriptions/service';
+import { getSubscriptionStatus, incrementCardCount } from '@/lib/subscription-utils';
 
 export { generateWithRetry, generateWithSourceChunking } from '@/lib/llm/chunking-orchestrator';
 
@@ -19,10 +19,10 @@ export class GenerationService {
     logger.info({ themeId }, 'Starting card generation');
     try {
       // Check subscription quota before doing any work
-      const subscription = await SubscriptionService.getSubscriptionStatus(userId);
+      const subscription = await getSubscriptionStatus(userId);
       if (!subscription.canGenerate) {
         logger.info(
-          { themeId, userId, cardsRemaining: subscription.usage.cardsRemaining },
+          { themeId, userId, cardsRemaining: subscription.cardsRemaining },
           'Skipping auto-generation — user has reached their monthly card limit',
         );
         return;
@@ -31,7 +31,7 @@ export class GenerationService {
       // Cap the requested count to how many cards the user still has left this period
       const effectiveCount = Math.min(
         customCount ?? MAX_CARDS_PER_BATCH,
-        subscription.usage.cardsRemaining,
+        subscription.cardsRemaining,
       );
 
       const { data: theme } = await supabaseAdmin
@@ -115,7 +115,7 @@ export class GenerationService {
 
       // Track usage for cards inserted via the auto-generation path
       if (totalInserted > 0) {
-        await SubscriptionService.incrementCardCount(userId, totalInserted);
+        await incrementCardCount(userId, totalInserted);
         logger.info(
           { userId, themeId, totalInserted, plan: subscription.plan.planId },
           'Updated user card usage after auto-generation',
