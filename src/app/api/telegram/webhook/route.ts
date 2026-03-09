@@ -15,6 +15,16 @@ import { getValidPaidPlanIds } from '@/lib/plan-limits';
  * Telegram sends updates to this endpoint based on webhook configuration.
  */
 export async function POST(req: Request) {
+  // Reject requests that don't carry the correct secret token
+  // (protects against forged successful_payment / pre_checkout_query events)
+  if (env.TELEGRAM_WEBHOOK_SECRET) {
+    const incomingSecret = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
+    if (incomingSecret !== env.TELEGRAM_WEBHOOK_SECRET) {
+      logger.warn('Webhook request rejected: invalid or missing secret token');
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+  }
+
   try {
     const update = await req.json();
 
@@ -217,6 +227,17 @@ export async function POST(req: Request) {
           );
         } catch (err) {
           logger.error({ err, chatId }, 'Failed to send start message');
+        }
+      } else if (text === '/paysupport') {
+        // Required by Telegram ToS §6.2.1 — respond to payment support requests
+        try {
+          const supportEmail = process.env.SUPPORT_EMAIL ?? 'support@example.com';
+          await sendTelegramMessage(
+            chatId,
+            `💳 *Payment Support*\n\nIf you have any issues with your subscription or payment, please contact us:\n\n📧 ${supportEmail}\n\nWe will review your case and issue a refund if needed.`,
+          );
+        } catch (err) {
+          logger.error({ err, chatId }, 'Failed to send paysupport message');
         }
       }
 

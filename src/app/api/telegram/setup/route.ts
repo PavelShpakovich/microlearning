@@ -39,6 +39,7 @@ export const POST = withApiHandler(async () => {
         url: webhookUrl,
         allowed_updates: ['message', 'pre_checkout_query'],
         drop_pending_updates: false,
+        ...(env.TELEGRAM_WEBHOOK_SECRET ? { secret_token: env.TELEGRAM_WEBHOOK_SECRET } : {}),
       }),
     },
   );
