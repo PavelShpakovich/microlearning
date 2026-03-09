@@ -27,26 +27,24 @@ export function useUiLanguage() {
   }, []);
 
   const setLanguage = async (newLocale: Locale) => {
-    try {
-      setIsLoading(true);
+    setIsLoading(true);
 
-      // Update cookie
-      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    // Always update cookie + local state + page locale — even for stub users.
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    setLocale(newLocale);
 
-      // Update database preference only if authenticated
-      if (status === 'authenticated') {
+    // Best-effort DB update — will be blocked with 403 for stub accounts
+    // (they haven't set an email yet), which is fine; the cookie is enough.
+    if (status === 'authenticated') {
+      try {
         await profileApi.updateUiLanguage(newLocale);
+      } catch (error) {
+        console.warn('Language DB update skipped (stub or unauthenticated):', error);
       }
-
-      setLocale(newLocale);
-
-      // Refresh to apply new locale
-      router.refresh();
-    } catch (error) {
-      console.error('Failed to set language:', error);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
+    router.refresh();
   };
 
   return {

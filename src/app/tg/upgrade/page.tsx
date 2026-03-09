@@ -6,8 +6,9 @@ import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CheckCircle, AlertCircle, Mail, Lock } from 'lucide-react';
+import { CheckCircle, AlertCircle, Mail, Lock, Globe } from 'lucide-react';
 import { signIn } from 'next-auth/react';
+import { useUiLanguage } from '@/hooks/use-ui-language';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,6 +35,7 @@ export default function TelegramUpgradePage() {
 
   const isRequired = searchParams.get('required') === '1';
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const { locale, setLanguage } = useUiLanguage();
 
   const upgradeSchema = z.object({
     email: z.string().email(t('validation.invalidEmail')),
@@ -177,10 +179,32 @@ export default function TelegramUpgradePage() {
     );
   }
 
+  // ── Language toggle ─────────────────────────────────────────────────────
+  const LangToggle = () => (
+    <div className="flex items-center gap-1 self-end">
+      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+      {(['en', 'ru'] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          onClick={() => void setLanguage(l)}
+          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
+            locale === l
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <main className="flex min-h-screen flex-col justify-center px-6 py-10">
       <div className="mx-auto w-full max-w-sm space-y-6">
+        <LangToggle />
         <div className="space-y-1">
           <h1 className="text-xl font-semibold">
             {isRequired ? t('telegramUpgrade.requiredTitle') : t('telegramUpgrade.title')}
