@@ -4,7 +4,6 @@ import { Globe, Moon, Settings, ShieldCheck, Sun, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/hooks/use-auth';
 import { useUiLanguage } from '@/hooks/use-ui-language';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -39,14 +38,11 @@ export function TgSettingsBar() {
     <div className="mb-4 flex items-center justify-between gap-2 p-2">
       {/* Logo — links to dashboard */}
       <Link href="/dashboard" className="shrink-0">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={colorTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
           alt="Logo"
-          width={40}
-          height={32}
           className="h-8 w-auto object-contain"
-          priority
-          unoptimized
         />
       </Link>
 
