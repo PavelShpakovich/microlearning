@@ -119,7 +119,9 @@ export const POST = withApiHandler(async (req) => {
 
   if (!updateError) {
     // Email wasn't taken — send a magic link so the user can verify their address.
-    const appUrl = env.NEXTAUTH_URL ?? 'https://clario.app';
+    // Use NEXT_PUBLIC_APP_URL (always set, always the correct production URL).
+    // NEXTAUTH_URL is optional and may be localhost in some envs.
+    const appUrl = env.NEXT_PUBLIC_APP_URL;
     await supabaseAdmin.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${appUrl}/auth/callback` },
