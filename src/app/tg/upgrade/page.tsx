@@ -228,7 +228,6 @@ export default function TelegramUpgradePage() {
   return (
     <main className="flex min-h-screen flex-col justify-center px-6 py-10">
       <div className="mx-auto w-full max-w-sm space-y-6">
-        <LangToggle />
         <div className="space-y-1">
           <h1 className="text-xl font-semibold">
             {isRequired ? t('telegramUpgrade.requiredTitle') : t('telegramUpgrade.title')}
