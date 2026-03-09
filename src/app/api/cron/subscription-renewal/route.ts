@@ -124,23 +124,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       `Open the app to renew and keep your progress going!`;
 
     try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: telegramId,
-            text,
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔄 Renew subscription', web_app: { url: `${appUrl}/settings/plan` } }],
-              ],
-            },
-          }),
-        },
-      );
+      const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: telegramId,
+          text,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔄 Renew subscription', web_app: { url: `${appUrl}/settings/plan` } }],
+            ],
+          },
+        }),
+      });
 
       if (res.ok) {
         reminded++;

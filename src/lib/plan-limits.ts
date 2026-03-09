@@ -17,10 +17,10 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Fallback limits used only when DB is unreachable — must match migration seed in 0002_consolidation.sql
 const DEFAULT_LIMITS: Record<string, PlanLimits> = {
-  free:  { cardsPerMonth: 50,   maxThemes: 5,    communityThemes: 0  },
-  basic: { cardsPerMonth: 300,  maxThemes: 20,   communityThemes: 5  },
-  pro:   { cardsPerMonth: 2000, maxThemes: null,  communityThemes: 10 },
-  max:   { cardsPerMonth: 5000, maxThemes: null,  communityThemes: 50 },
+  free: { cardsPerMonth: 50, maxThemes: 5, communityThemes: 0 },
+  basic: { cardsPerMonth: 300, maxThemes: 20, communityThemes: 5 },
+  pro: { cardsPerMonth: 2000, maxThemes: null, communityThemes: 10 },
+  max: { cardsPerMonth: 5000, maxThemes: null, communityThemes: 50 },
 };
 
 export async function getPlanLimits(planId: string): Promise<PlanLimits> {
@@ -64,10 +64,7 @@ export async function getPlanLimits(planId: string): Promise<PlanLimits> {
  * Used for validating payment webhooks.
  */
 export async function getValidPaidPlanIds(): Promise<string[]> {
-  const { data } = await supabaseAdmin
-    .from('subscription_plans')
-    .select('id')
-    .neq('id', 'free');
+  const { data } = await supabaseAdmin.from('subscription_plans').select('id').neq('id', 'free');
 
   if (!data || data.length === 0) {
     // Fallback to known plans if DB unreachable

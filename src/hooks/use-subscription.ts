@@ -5,7 +5,7 @@ import type { AvailablePlan } from '@/app/api/profile/telegram-subscription/rout
 
 /**
  * Telegram Stars subscription status hook.
- * 
+ *
  * Since we now use Telegram Stars for payments only:
  * - Users must be inside Telegram to see paid features
  * - Subscription status is managed via Telegram in-app purchases
@@ -18,7 +18,7 @@ export interface SubscriptionStatus {
   isPaid: boolean;
   expiresAt: string | null;
   inTelegram: boolean;
-  
+
   // Backward compatibility with components expecting nested objects
   plan: {
     planId: 'free' | 'basic' | 'pro' | 'max';
@@ -27,7 +27,7 @@ export interface SubscriptionStatus {
     maxThemes: number | null;
     communityThemes: number;
   };
-  
+
   // Usage tracking
   usage: {
     cardsGenerated: number;
@@ -36,7 +36,7 @@ export interface SubscriptionStatus {
     periodStart: string;
     periodEnd: string;
   };
-  
+
   // Theme usage
   themesUsed: number;
 

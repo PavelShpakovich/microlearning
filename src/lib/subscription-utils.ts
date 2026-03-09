@@ -42,8 +42,7 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
   const isExpired =
     !subscription ||
     subscription.status !== 'active' ||
-    (subscription.current_period_end != null &&
-      new Date(subscription.current_period_end) < now);
+    (subscription.current_period_end != null && new Date(subscription.current_period_end) < now);
 
   const planId = (isExpired ? 'free' : (subscription?.plan_id ?? 'free')) as PlanId;
   const limits = await getPlanLimits(planId);
