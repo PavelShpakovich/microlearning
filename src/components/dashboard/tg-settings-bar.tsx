@@ -46,6 +46,7 @@ export function TgSettingsBar() {
           height={32}
           className="h-8 w-auto object-contain"
           priority
+          unoptimized
         />
       </Link>
 

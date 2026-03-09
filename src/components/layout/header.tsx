@@ -80,6 +80,7 @@ export function Header() {
               width={64}
               height={64}
               priority
+              unoptimized
               className="h-auto w-auto"
             />
           </Link>
@@ -138,6 +139,7 @@ export function Header() {
             width={64}
             height={64}
             priority
+            unoptimized
             className="h-auto w-auto"
           />
         </Link>
