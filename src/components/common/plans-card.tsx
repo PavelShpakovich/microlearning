@@ -9,17 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { isTelegramWebApp, getTelegramWebApp } from '@/components/telegram-provider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { AvailablePlan } from '@/app/api/profile/telegram-subscription/route';
 
-// Stars prices for each plan (roughly aligned to current USD rates ~$0.024/Star)
-// These should be kept in sync with env vars: TELEGRAM_STARS_PRICE_*
-const PLANS = [
-  { id: 'free', name: 'Free', cards: 50, starsPrice: 0 },
-  { id: 'basic', name: 'Starter', cards: 300, starsPrice: 200 }, // ~$4.80
-  { id: 'pro', name: 'Pro', cards: 2000, starsPrice: 500 }, // ~$12
-  { id: 'max', name: 'Max', cards: 5000, starsPrice: 1000 }, // ~$24
-] as const;
-
-type Plan = (typeof PLANS)[number];
+type Plan = AvailablePlan;
 
 interface PlanTileProps {
   plan: Plan;
@@ -54,7 +46,7 @@ function PlanTile({
         <div>
           <p className="font-semibold text-sm">{plan.name}</p>
           <p className="text-xs text-muted-foreground">
-            {t('plans.cardsPerMonth', { count: plan.cards.toLocaleString() })}
+            {t('plans.cardsPerMonth', { count: plan.cardsPerMonth.toLocaleString() })}
           </p>
         </div>
         <p className="text-sm font-semibold shrink-0">
@@ -129,7 +121,8 @@ export function PlansCard() {
   const [requesting, setRequesting] = useState<string | null>(null);
 
   const currentPlanId = status?.planId ?? 'free';
-  const currentPlanIndex = PLANS.findIndex((p) => p.id === currentPlanId);
+  const plans: Plan[] = status?.availablePlans ?? [];
+  const currentPlanIndex = plans.findIndex((p) => p.id === currentPlanId);
 
   const planFeatures: Record<string, string[]> = {
     free: [tl('plan1Feature1'), tl('plan1Feature2')],
@@ -162,7 +155,7 @@ export function PlansCard() {
     }
   };
 
-  const handlePlanSelect = async (plan: (typeof PLANS)[number]) => {
+  const handlePlanSelect = async (plan: Plan) => {
     if (plan.id === 'free' && plan.id !== currentPlanId) {
       // Downgrade to free
       await handleDowngrade(plan.id);
@@ -179,12 +172,7 @@ export function PlansCard() {
       // In Telegram, create and open invoice
       setRequesting(plan.id);
       try {
-        const starsPrice = [
-          { id: 'basic', price: 400 },
-          { id: 'pro', price: 1000 },
-          { id: 'max', price: 2000 },
-        ].find((p) => p.id === plan.id)?.price;
-
+        const starsPrice = plan.starsPrice;
         if (!starsPrice) throw new Error('Invalid plan');
 
         const response = await fetch('/api/telegram/invoice', {
@@ -240,7 +228,7 @@ export function PlansCard() {
           <div className="h-32 bg-muted animate-pulse rounded-lg" />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PLANS.map((plan, idx) => (
+            {plans.map((plan, idx) => (
               <PlanTile
                 key={plan.id}
                 plan={plan}

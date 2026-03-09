@@ -3,6 +3,7 @@ import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getPlanLimits } from '@/lib/plan-limits';
+import { env } from '@/lib/env';
 
 export interface SubscriptionStatus {
   // Plan information
@@ -31,6 +32,17 @@ export interface SubscriptionStatus {
 
   // Theme usage
   themesUsed: number;
+
+  // All available plans for display
+  availablePlans: AvailablePlan[];
+}
+
+export interface AvailablePlan {
+  id: 'free' | 'basic' | 'pro' | 'max';
+  name: string;
+  cardsPerMonth: number;
+  maxThemes: number | null;
+  starsPrice: number;
 }
 
 /**
@@ -102,6 +114,27 @@ export const GET = withApiHandler(async () => {
 
   const expiresAt = isPaid ? new Date(subscription!.current_period_end).toISOString() : null;
 
+  // Fetch all plans from DB for display
+  const { data: allPlans } = await supabaseAdmin
+    .from('subscription_plans')
+    .select('id, name, cards_per_month, max_themes')
+    .order('price_monthly', { ascending: true });
+
+  const starsPriceMap: Record<string, number> = {
+    free: 0,
+    basic: parseInt(env.TELEGRAM_STARS_PRICE_BASIC, 10),
+    pro: parseInt(env.TELEGRAM_STARS_PRICE_PRO, 10),
+    max: parseInt(env.TELEGRAM_STARS_PRICE_MAX, 10),
+  };
+
+  const availablePlans: AvailablePlan[] = (allPlans ?? []).map((p) => ({
+    id: p.id as AvailablePlan['id'],
+    name: p.name,
+    cardsPerMonth: p.cards_per_month,
+    maxThemes: p.max_themes,
+    starsPrice: starsPriceMap[p.id] ?? 0,
+  }));
+
   return NextResponse.json({
     planId: planId as 'free' | 'basic' | 'pro' | 'max',
     isPaid,
@@ -125,6 +158,7 @@ export const GET = withApiHandler(async () => {
     },
 
     themesUsed: themesUsed ?? 0,
+    availablePlans,
   } as SubscriptionStatus);
 });
 
@@ -177,5 +211,6 @@ function defaultFreeResponse(): NextResponse<SubscriptionStatus> {
     },
 
     themesUsed: 0,
+    availablePlans: [],
   } as SubscriptionStatus);
 }

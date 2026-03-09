@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import type { AvailablePlan } from '@/app/api/profile/telegram-subscription/route';
 
 /**
  * Telegram Stars subscription status hook.
@@ -38,6 +39,9 @@ export interface SubscriptionStatus {
   
   // Theme usage
   themesUsed: number;
+
+  // All available plans for display (from DB + env Stars prices)
+  availablePlans: AvailablePlan[];
 }
 
 interface SubscriptionResponse {

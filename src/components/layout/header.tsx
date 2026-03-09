@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 export function Header() {
   const t = useTranslations();
