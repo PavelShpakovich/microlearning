@@ -43,9 +43,6 @@ const envSchema = z.object({
 
   // Telegram Stars pricing (in Stars, aligned to USD exchange rate ~0.024 per Star)
   // Update these values if USD/Star exchange rate changes
-  TELEGRAM_STARS_PRICE_BASIC: z.string().regex(/^\d+$/).default('200'), // ~$4.80
-  TELEGRAM_STARS_PRICE_PRO: z.string().regex(/^\d+$/).default('500'), // ~$12
-  TELEGRAM_STARS_PRICE_MAX: z.string().regex(/^\d+$/).default('1000'), // ~$24
 
   // Resend (transactional email)
   RESEND_API_KEY: z.string().optional(),

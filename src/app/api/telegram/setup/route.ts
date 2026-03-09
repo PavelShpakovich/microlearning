@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { AuthError } from '@/lib/errors';
 import { withApiHandler } from '@/lib/api/handler';
 import { env } from '@/lib/env';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 /**
  * POST /api/telegram/setup
@@ -81,6 +82,14 @@ export const POST = withApiHandler(async () => {
     result?: { id: number; first_name: string; username: string; can_join_groups: boolean };
   };
 
+  // Fetch current Stars prices from DB
+  const { data: planPrices } = await supabaseAdmin
+    .from('subscription_plans')
+    .select('id, stars_price')
+    .neq('id', 'free');
+
+  const prices = Object.fromEntries((planPrices ?? []).map((p) => [p.id, p.stars_price]));
+
   return NextResponse.json({
     ok: true,
     webhook: {
@@ -88,11 +97,7 @@ export const POST = withApiHandler(async () => {
       info: webhookInfo.result,
     },
     bot: getMeData.result,
-    prices: {
-      basic: env.TELEGRAM_STARS_PRICE_BASIC,
-      pro: env.TELEGRAM_STARS_PRICE_PRO,
-      max: env.TELEGRAM_STARS_PRICE_MAX,
-    },
+    prices,
   });
 });
 
@@ -140,16 +145,20 @@ export const GET = withApiHandler(async () => {
   const currentUrl = webhookInfo.result?.url ?? '';
   const isRegistered = currentUrl === expectedWebhookUrl;
 
+  // Fetch current Stars prices from DB
+  const { data: planPrices } = await supabaseAdmin
+    .from('subscription_plans')
+    .select('id, stars_price')
+    .neq('id', 'free');
+
+  const prices = Object.fromEntries((planPrices ?? []).map((p) => [p.id, p.stars_price]));
+
   return NextResponse.json({
     ok: true,
     isRegistered,
     expectedUrl: expectedWebhookUrl,
     webhook: webhookInfo.result,
     bot: getMeData.result,
-    prices: {
-      basic: env.TELEGRAM_STARS_PRICE_BASIC,
-      pro: env.TELEGRAM_STARS_PRICE_PRO,
-      max: env.TELEGRAM_STARS_PRICE_MAX,
-    },
+    prices,
   });
 });

@@ -315,8 +315,7 @@ export type Database = {
           id: string;
           max_themes: number | null;
           name: string;
-          price_annual: number;
-          price_monthly: number;
+          stars_price: number;
         };
         Insert: {
           cards_per_month: number;
@@ -327,8 +326,7 @@ export type Database = {
           id: string;
           max_themes?: number | null;
           name: string;
-          price_annual: number;
-          price_monthly: number;
+          stars_price?: number;
         };
         Update: {
           cards_per_month?: number;
@@ -339,8 +337,7 @@ export type Database = {
           id?: string;
           max_themes?: number | null;
           name?: string;
-          price_annual?: number;
-          price_monthly?: number;
+          stars_price?: number;
         };
         Relationships: [];
       };

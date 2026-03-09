@@ -7,6 +7,7 @@
 
 import { env } from '@/lib/env';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getPlanLimits } from '@/lib/plan-limits';
 
 interface TelegramInvoiceLink {
   ok: boolean;
@@ -93,27 +94,14 @@ export async function createTelegramInvoiceLink(
 }
 
 /**
- * Get the Stars price for a plan based on env vars.
- * Prices should be kept in sync with USD exchange rate (~$0.024 per Star).
+ * Get the Stars price for a plan from the database.
  */
-export function getPlanStarsPrice(planId: 'basic' | 'pro' | 'max'): number {
-  const priceMap: Record<'basic' | 'pro' | 'max', string> = {
-    basic: env.TELEGRAM_STARS_PRICE_BASIC,
-    pro: env.TELEGRAM_STARS_PRICE_PRO,
-    max: env.TELEGRAM_STARS_PRICE_MAX,
-  };
-
-  const priceStr = priceMap[planId];
-  if (!priceStr) {
-    throw new Error(`Unknown plan: ${planId}`);
+export async function getPlanStarsPrice(planId: string): Promise<number> {
+  const limits = await getPlanLimits(planId);
+  if (limits.starsPrice < 1) {
+    throw new Error(`No Stars price configured for plan: ${planId}`);
   }
-
-  const price = parseInt(priceStr, 10);
-  if (Number.isNaN(price) || price < 1) {
-    throw new Error(`Invalid Stars price for plan ${planId}: ${priceStr}`);
-  }
-
-  return price;
+  return limits.starsPrice;
 }
 
 /**

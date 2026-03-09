@@ -12,12 +12,6 @@ import { PlanCard } from '@/components/landing/plan-card';
 import { FaqItem } from '@/components/landing/faq-item';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const STARS_PRICES: Record<string, number> = {
-  basic: parseInt(process.env.TELEGRAM_STARS_PRICE_BASIC ?? '200', 10),
-  pro: parseInt(process.env.TELEGRAM_STARS_PRICE_PRO ?? '500', 10),
-  max: parseInt(process.env.TELEGRAM_STARS_PRICE_MAX ?? '1000', 10),
-};
-
 export default async function HomePage() {
   const session = await auth();
   if (session) redirect('/dashboard');
@@ -27,8 +21,8 @@ export default async function HomePage() {
   // Fetch plan data from DB
   const { data: dbPlans } = await supabaseAdmin
     .from('subscription_plans')
-    .select('id, name, cards_per_month, max_themes')
-    .order('price_monthly', { ascending: true });
+    .select('id, name, cards_per_month, max_themes, stars_price')
+    .order('stars_price', { ascending: true });
 
   type DbPlan = NonNullable<typeof dbPlans>[number];
 
@@ -53,7 +47,7 @@ export default async function HomePage() {
   const plans = (dbPlans ?? []).map((plan) => ({
     id: plan.id,
     name: planNames[plan.id] ?? plan.name,
-    starsPrice: STARS_PRICES[plan.id] ?? 0,
+    starsPrice: plan.stars_price,
     features: buildFeatures(plan, t),
     popular: plan.id === 'basic',
   }));

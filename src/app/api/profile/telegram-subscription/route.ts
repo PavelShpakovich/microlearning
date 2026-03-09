@@ -3,7 +3,6 @@ import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getPlanLimits } from '@/lib/plan-limits';
-import { env } from '@/lib/env';
 
 export interface SubscriptionStatus {
   // Plan information
@@ -116,22 +115,15 @@ export const GET = withApiHandler(async () => {
   // Fetch all plans from DB for display
   const { data: allPlans } = await supabaseAdmin
     .from('subscription_plans')
-    .select('id, name, cards_per_month, max_themes')
-    .order('price_monthly', { ascending: true });
-
-  const starsPriceMap: Record<string, number> = {
-    free: 0,
-    basic: parseInt(env.TELEGRAM_STARS_PRICE_BASIC, 10),
-    pro: parseInt(env.TELEGRAM_STARS_PRICE_PRO, 10),
-    max: parseInt(env.TELEGRAM_STARS_PRICE_MAX, 10),
-  };
+    .select('id, name, cards_per_month, max_themes, stars_price')
+    .order('stars_price', { ascending: true });
 
   const availablePlans: AvailablePlan[] = (allPlans ?? []).map((p) => ({
     id: p.id as AvailablePlan['id'],
     name: p.name,
     cardsPerMonth: p.cards_per_month,
     maxThemes: p.max_themes,
-    starsPrice: starsPriceMap[p.id] ?? 0,
+    starsPrice: p.stars_price,
   }));
 
   return NextResponse.json({
