@@ -11,7 +11,7 @@ import { getUserPlan } from '@/lib/subscription-utils';
 const bodySchema = z.object({
   initData: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(6).optional(), // only provided when merging a conflicting account
 });
 
 interface TelegramUser {
@@ -76,7 +76,7 @@ export const POST = withApiHandler(async (req) => {
   const body = bodySchema.safeParse(await req.json());
   if (!body.success) {
     throw new ValidationError({
-      message: 'initData, email, and password (min 6 chars) are required',
+      message: 'initData and a valid email are required',
     });
   }
 
@@ -109,25 +109,35 @@ export const POST = withApiHandler(async (req) => {
 
   const stubUserId = profile.id;
 
-  // ── 3. Try in-place upgrade: set email + password on the stub user ─────────
+  // ── 3. Try in-place upgrade: set email on the stub user (no password yet) ──
   logger.info({ userId: stubUserId, telegramId, newEmail: email }, 'Attempting stub upgrade');
 
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(stubUserId, {
     email,
-    password,
-    email_confirm: true, // auto-confirm — matches registration behaviour
+    email_confirm: false, // user must verify via magic link
   });
 
   if (!updateError) {
-    // Email wasn't taken — stub has been upgraded in-place. Ready to log in.
-    logger.info({ userId: stubUserId, newEmail: email }, 'Stub successfully upgraded');
+    // Email wasn't taken — send a magic link so the user can verify their address.
+    const appUrl = env.NEXTAUTH_URL ?? 'https://clario.app';
+    await supabaseAdmin.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${appUrl}/auth/callback` },
+    });
+    logger.info({ userId: stubUserId, newEmail: email }, 'Stub email set, magic link sent');
     return NextResponse.json({ success: true });
   }
 
-  // ── 4. Email already taken → attempt to sign in and merge —————————————
+  // ── 4. Email already taken ─────────────────────────────────────────────────
   const isEmailTaken = updateError.message.toLowerCase().includes('already');
   if (!isEmailTaken) {
     throw new AuthError({ message: updateError.message });
+  }
+
+  // Without a password we cannot prove ownership — tell the client to ask for one.
+  if (!password) {
+    logger.info({ stubUserId, email }, 'Email taken — requesting password from client');
+    return NextResponse.json({ conflict: true });
   }
 
   logger.info({ stubUserId, email }, 'Email taken — attempting sign-in for merge');

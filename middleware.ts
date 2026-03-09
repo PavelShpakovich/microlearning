@@ -17,6 +17,8 @@ const PUBLIC_API_ROUTES = [
   '/api/auth', // NextAuth + Telegram auth endpoints
   '/api/profile/upgrade-stub', // Telegram stub self-authenticates via HMAC
   '/api/profile/link-web', // Telegram stub self-authenticates via HMAC
+  '/api/auth/session-from-supabase', // bridges Supabase OTP → NextAuth (called from /auth/callback)
+  '/api/auth/forgot-password', // sends password-reset email (public)
 ];
 
 export async function middleware(request: NextRequest) {

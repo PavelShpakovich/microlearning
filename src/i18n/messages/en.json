@@ -12,7 +12,8 @@
     "login": "Login",
     "register": "Sign Up",
     "adminPanel": "Admin Panel",
-    "back": "Back"
+    "back": "Back",
+    "openInTelegram": "Open in Telegram"
   },
   "buttons": {
     "save": "Save",
@@ -240,13 +241,16 @@
   },
   "telegramUpgrade": {
     "title": "Set Up Web Access",
-    "description": "Add an email and password to your Telegram account — log in from any browser while keeping all your themes. Already have a web account? Enter its email and password to merge.",
+    "description": "Add your email to enable web access. Already have an account here? Enter its email to merge.",
+    "requiredTitle": "Verify Your Email",
+    "requiredDescription": "To access the web app, please add your email address. We'll send you a quick verification link.",
     "submit": "Continue",
     "submitting": "Setting up…",
     "submitError": "Could not set up your account. Please try again.",
-    "emailTakenWrongPassword": "That email is already registered. If it's yours, check your password.",
-    "successTitle": "Web access is ready!",
-    "successDescription": "You can now log in at the web app with your email and password.",
+    "conflictHint": "That email is already registered. Enter your password below to merge accounts.",
+    "checkEmail": "Check your inbox",
+    "checkEmailDescription": "We sent a verification link to your email. Click it to confirm your address, then return to the app.",
+    "continueInApp": "Continue in Telegram",
     "mergedTitle": "Accounts merged!",
     "mergedDescription": "All your Telegram themes have been moved to your web account. You are now logged in.",
     "mergedOverLimitWarning": "Heads up: you now have more themes than your plan allows. You can still study them, but you won't be able to create new ones until you upgrade or delete some.",
@@ -376,7 +380,21 @@
     "registerSuccess": "Account created successfully! Please sign in.",
     "error": "Something went wrong. Please try again.",
     "creatingAccount": "Creating account...",
-    "telegramHint": "Started on Telegram? Open the bot → Settings → Set Up Web Access to add your email and password."
+    "telegramHint": "Started on Telegram? Open the bot → Settings → Set Up Web Access to add your email and password.",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordDescription": "Enter your email and we'll send you a link to reset your password.",
+    "forgotPasswordSentTitle": "Check your inbox",
+    "forgotPasswordSentDescription": "If an account with that email exists, you'll receive a reset link shortly.",
+    "backToLogin": "Back to login",
+    "sendResetLink": "Send reset link",
+    "sending": "Sending…",
+    "setPasswordTitle": "Set new password",
+    "setPasswordDescription": "Choose a new password for your account.",
+    "setPassword": "Set password",
+    "newPassword": "New password",
+    "passwordUpdated": "Password updated successfully!",
+    "saving": "Saving…"
   },
   "landing": {
     "heroTagline": "Turn Any Material Into Flashcards",

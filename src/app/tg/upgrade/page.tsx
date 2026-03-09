@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -19,32 +20,34 @@ import {
 import { Input } from '@/components/ui/input';
 import { profileApi } from '@/services/profile-api';
 
-type Screen = 'loading' | 'form' | 'success' | 'merged' | 'error';
+type Screen = 'loading' | 'form' | 'verifying' | 'merged' | 'error';
 
 export default function TelegramUpgradePage() {
   const t = useTranslations();
+  const searchParams = useSearchParams();
   const [screen, setScreen] = useState<Screen>('loading');
   const [initData, setInitData] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [overLimit, setOverLimit] = useState(false);
 
-  const upgradeSchema = z
-    .object({
-      email: z.string().email(t('validation.invalidEmail')),
-      password: z.string().min(6, t('validation.passwordTooShort')),
-      confirmPassword: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: t('validation.passwordsDoNotMatch'),
-      path: ['confirmPassword'],
-    });
+  const isRequired = searchParams.get('required') === '1';
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
+  const upgradeSchema = z.object({
+    email: z.string().email(t('validation.invalidEmail')),
+    password: z
+      .string()
+      .refine((v) => !showPassword || v.length >= 6, t('validation.passwordTooShort'))
+      .optional(),
+  });
 
   type UpgradeFormValues = z.infer<typeof upgradeSchema>;
 
   const form = useForm<UpgradeFormValues>({
     resolver: zodResolver(upgradeSchema),
-    defaultValues: { email: '', password: '', confirmPassword: '' },
+    defaultValues: { email: '', password: '' },
   });
 
   useEffect(() => {
@@ -72,7 +75,7 @@ export default function TelegramUpgradePage() {
       const result = await profileApi.upgradeStub(initData, values.email, values.password);
 
       if ('sessionToken' in result) {
-        // Email belonged to an existing web account — accounts merged, sign in immediately.
+        // Merge complete — sign in immediately.
         setOverLimit(result.overLimit);
         const signInResult = await signIn('telegram', {
           sessionToken: result.sessionToken,
@@ -80,9 +83,16 @@ export default function TelegramUpgradePage() {
         });
         if (!signInResult?.ok) throw new Error(signInResult?.error ?? 'Sign-in failed');
         setScreen('merged');
+      } else if ('conflict' in result && result.conflict) {
+        // Email taken — reveal password field so user can prove ownership.
+        setShowPassword(true);
+        form.setError('email', {
+          message: t('telegramUpgrade.conflictHint'),
+        });
+        form.trigger('email');
       } else {
-        // New credentials set — can log in on the web immediately.
-        setScreen('success');
+        // Magic link sent — ask user to check inbox.
+        setScreen('verifying');
       }
     } catch (err) {
       form.setError('root', {
@@ -121,27 +131,29 @@ export default function TelegramUpgradePage() {
     );
   }
 
-  // ── Success ───────────────────────────────────────────────────────────────
-  if (screen === 'success') {
+  // ── Verifying email ───────────────────────────────────────────────────────
+  if (screen === 'verifying') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-        <CheckCircle className="mb-4 h-12 w-12 text-green-500" />
-        <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.successTitle')}</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          {t('telegramUpgrade.successDescription')}
+        <Mail className="mb-4 h-12 w-12 text-primary" />
+        <h1 className="mb-2 text-lg font-semibold">{t('telegramUpgrade.checkEmail')}</h1>
+        <p className="mb-6 max-w-xs text-sm text-muted-foreground">
+          {t('telegramUpgrade.checkEmailDescription')}
         </p>
         <Button
+          variant="outline"
           className="w-full max-w-xs"
           onClick={() => {
-            window.location.href = '/dashboard';
+            window.location.href = callbackUrl;
           }}
         >
-          {t('telegramUpgrade.goToDashboard')}
+          {t('telegramUpgrade.continueInApp')}
         </Button>
       </main>
     );
   }
-  // ── Merged ───────────────────────────────────────────────────────────────────────
+
+  // ── Merged ────────────────────────────────────────────────────────────────
   if (screen === 'merged') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
@@ -156,7 +168,7 @@ export default function TelegramUpgradePage() {
         <Button
           className="mt-6"
           onClick={() => {
-            window.location.href = '/dashboard';
+            window.location.href = callbackUrl;
           }}
         >
           {t('telegramUpgrade.goToDashboard')}
@@ -164,23 +176,33 @@ export default function TelegramUpgradePage() {
       </main>
     );
   }
+
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <main className="flex min-h-screen flex-col justify-center px-6 py-10">
       <div className="mx-auto w-full max-w-sm space-y-6">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold">{t('telegramUpgrade.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('telegramUpgrade.description')}</p>
+          <h1 className="text-xl font-semibold">
+            {isRequired ? t('telegramUpgrade.requiredTitle') : t('telegramUpgrade.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isRequired
+              ? t('telegramUpgrade.requiredDescription')
+              : t('telegramUpgrade.description')}
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href = '/dashboard';
-          }}
-          className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
-        >
-          {t('buttons.cancel')}
-        </button>
+
+        {!isRequired && (
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = callbackUrl;
+            }}
+            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+          >
+            {t('buttons.cancel')}
+          </button>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -207,51 +229,32 @@ export default function TelegramUpgradePage() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('auth.password')}</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type="password"
-                        placeholder="••••••"
-                        autoComplete="new-password"
-                        className="pl-9"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('auth.confirmPassword')}</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        type="password"
-                        placeholder="••••••"
-                        autoComplete="new-password"
-                        className="pl-9"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Password field — only shown when the email is already taken */}
+            {showPassword && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('auth.password')}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="••••••"
+                          autoComplete="current-password"
+                          className="pl-9"
+                          {...field}
+                          value={field.value ?? ''}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {form.formState.errors.root && (
               <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>

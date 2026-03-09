@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
+
 export function Header() {
   const t = useTranslations();
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -115,11 +117,10 @@ export function Header() {
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
 
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">{t('navigation.login')}</Link>
-            </Button>
             <Button size="sm" asChild>
-              <Link href="/register">{t('navigation.register')}</Link>
+              <a href={BOT_URL} target="_blank" rel="noopener noreferrer">
+                {t('navigation.openInTelegram')}
+              </a>
             </Button>
           </div>
         </div>

@@ -97,17 +97,21 @@ export const POST = withApiHandler(async (req) => {
     });
   }
 
-  // Fetch display name for the NextAuth session
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('display_name')
-    .eq('id', userId)
-    .single();
+  // Fetch display name + auth email for the NextAuth session
+  const [{ data: profile }, { data: authLookup }] = await Promise.all([
+    supabaseAdmin.from('profiles').select('display_name').eq('id', userId).single(),
+    supabaseAdmin.auth.admin.getUserById(userId),
+  ]);
 
   const displayName =
     profile?.display_name ||
     [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' ') ||
     'Telegram User';
+
+  // needsEmail = true when the account is still a stub (no real email set yet)
+  const currentEmail = authLookup.user?.email ?? '';
+  const needsEmail =
+    currentEmail.startsWith('telegram_') && currentEmail.includes('@noreply');
 
   // Issue a short-lived signed handoff token so the browser can open a
   // NextAuth session without ever touching the Supabase browser client.
@@ -117,5 +121,5 @@ export const POST = withApiHandler(async (req) => {
   const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
-  return NextResponse.json({ sessionToken: `${payload}.${sig}` });
+  return NextResponse.json({ sessionToken: `${payload}.${sig}`, needsEmail });
 });

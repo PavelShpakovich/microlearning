@@ -12,7 +12,9 @@ class AuthApi {
     }
   }
 
-  async exchangeTelegramInitData(initData: string): Promise<{ sessionToken: string }> {
+  async exchangeTelegramInitData(
+    initData: string,
+  ): Promise<{ sessionToken: string; needsEmail: boolean }> {
     const response = await fetch('/api/auth/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -24,7 +26,7 @@ class AuthApi {
       throw new Error(data.error || `Server error ${response.status}`);
     }
 
-    return (await response.json()) as { sessionToken: string };
+    return (await response.json()) as { sessionToken: string; needsEmail: boolean };
   }
 
   /**

@@ -140,18 +140,18 @@ export function PlansCard() {
 
   const handleDowngrade = async (planId: string) => {
     if (planId !== 'free') return; // Only allow downgrade to free
-    
+
     setRequesting(planId);
     try {
       // Call API to cancel the current subscription and revert to free
       const response = await fetch('/api/profile/telegram-subscription', {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to downgrade subscription');
       }
-      
+
       toast.success(t('subscriptions.downgradeSuccess') || 'Plan downgraded to Free');
       // Trigger subscription refresh
       if (refetch) await refetch();
@@ -162,7 +162,7 @@ export function PlansCard() {
     }
   };
 
-  const handlePlanSelect = async (plan: typeof PLANS[number]) => {
+  const handlePlanSelect = async (plan: (typeof PLANS)[number]) => {
     if (plan.id === 'free' && plan.id !== currentPlanId) {
       // Downgrade to free
       await handleDowngrade(plan.id);
@@ -170,12 +170,12 @@ export function PlansCard() {
       // Upgrade: Check if in Telegram or show web warning
       if (!isTelegramWebApp()) {
         toast.error(
-          t('subscriptions.telegramOnly') || 
-          'Please open this app in Telegram to upgrade your plan'
+          t('subscriptions.telegramOnly') ||
+            'Please open this app in Telegram to upgrade your plan',
         );
         return;
       }
-      
+
       // In Telegram, create and open invoice
       setRequesting(plan.id);
       try {
@@ -183,7 +183,7 @@ export function PlansCard() {
           { id: 'basic', price: 400 },
           { id: 'pro', price: 1000 },
           { id: 'max', price: 2000 },
-        ].find(p => p.id === plan.id)?.price;
+        ].find((p) => p.id === plan.id)?.price;
 
         if (!starsPrice) throw new Error('Invalid plan');
 
@@ -196,7 +196,7 @@ export function PlansCard() {
         if (!response.ok) throw new Error('Failed to create invoice');
 
         const { invoiceLink } = await response.json();
-        
+
         // Use Telegram Bot API to open invoice in Mini App
         const tg = getTelegramWebApp();
         if (tg?.openInvoice) {
@@ -230,8 +230,8 @@ export function PlansCard() {
           <Alert className="mb-4 border-amber-200 bg-amber-50">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
-              {t('subscriptions.webAppWarning') || 
-              'To upgrade your plan, please open this app on your Telegram account using the bot.'}
+              {t('subscriptions.webAppWarning') ||
+                'To upgrade your plan, please open this app on your Telegram account using the bot.'}
             </AlertDescription>
           </Alert>
         )}

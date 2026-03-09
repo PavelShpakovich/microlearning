@@ -144,6 +144,15 @@ export default function LoginPage() {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? t('auth.signingIn') : t('auth.signIn')}
               </Button>
+
+              <div className="text-right">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors"
+                >
+                  {t('auth.forgotPassword')}
+                </Link>
+              </div>
             </form>
           </Form>
 

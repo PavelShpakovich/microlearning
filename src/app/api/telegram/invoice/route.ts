@@ -3,27 +3,24 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/api/auth';
 import { withApiHandler } from '@/lib/api/handler';
 import { ValidationError, AppError } from '@/lib/errors';
-import {
-  createTelegramInvoiceLink,
-  getPlanStarsPrice,
-  getPlanDetails,
-} from '@/lib/telegram-stars';
+import { createTelegramInvoiceLink, getPlanStarsPrice, getPlanDetails } from '@/lib/telegram-stars';
 
 const invoiceRequestSchema = z.object({
-  planId: z.enum(['basic', 'pro', 'max'] as const).refine(
-    (val) => ['basic', 'pro', 'max'].includes(val),
-    { message: 'Invalid plan. Must be basic, pro, or max.' }
-  ),
+  planId: z
+    .enum(['basic', 'pro', 'max'] as const)
+    .refine((val) => ['basic', 'pro', 'max'].includes(val), {
+      message: 'Invalid plan. Must be basic, pro, or max.',
+    }),
 });
 
 /**
  * POST /api/telegram/invoice
- * 
+ *
  * Generate a Telegram Stars invoice link for plan upgrade.
- * 
+ *
  * Request body: { planId: 'basic' | 'pro' | 'max' }
  * Response: { invoiceLink: string }
- * 
+ *
  * The client will open this link with tg.openInvoice(invoiceLink, callback)
  */
 export const POST = withApiHandler(async (req) => {
@@ -59,4 +56,3 @@ export const POST = withApiHandler(async (req) => {
     throw new AppError('INTERNAL_ERROR', { message });
   }
 });
-

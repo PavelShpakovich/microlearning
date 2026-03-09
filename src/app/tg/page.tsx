@@ -94,14 +94,28 @@ export default function TelegramEntryPage() {
       try {
         // 1. Validate initData on the server — server verifies the Telegram
         //    HMAC and returns a short-lived signed token.
-        const { sessionToken } = await authApi.exchangeTelegramInitData(initData);
+        const { sessionToken, needsEmail } = await authApi.exchangeTelegramInitData(initData);
 
-        // 2. Exchange for a NextAuth session (same cookie as email users).
+        // 2. If the user hasn't provided a real email yet, gate them at the
+        //    upgrade page before completing the session.
+        if (needsEmail) {
+          const upgradeUrl =
+            `/tg/upgrade?required=1` +
+            (callbackUrl !== '/dashboard'
+              ? `&callbackUrl=${encodeURIComponent(callbackUrl)}`
+              : '');
+          // Sign in first so they have a valid session on the upgrade page too.
+          await signIn('telegram', { sessionToken, redirect: false });
+          window.location.href = upgradeUrl;
+          return;
+        }
+
+        // 3. Exchange for a NextAuth session (same cookie as email users).
         //    This eliminates the Supabase browser-client race condition.
         const result = await signIn('telegram', { sessionToken, redirect: false });
         if (!result?.ok) throw new Error(result?.error ?? 'Sign-in failed');
 
-        // 3. Hard navigate — NextAuth has already set the session cookie so
+        // 4. Hard navigate — NextAuth has already set the session cookie so
         //    the middleware will see it on the very next request.
         window.location.href = callbackUrl;
       } catch (err) {
