@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
@@ -77,10 +78,13 @@ export function Header() {
       <header className="border-b bg-background sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img
+            <Image
               src={theme === 'dark' ? '/logo.png' : '/logo-dark.png'}
               alt="Logo"
-              style={{ width: '64px', height: 'auto' }}
+              width={64}
+              height={64}
+              priority
+              className="h-auto w-auto"
             />
           </Link>
           <div className="flex items-center gap-2">
@@ -132,10 +136,13 @@ export function Header() {
     <header className="border-b bg-background sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1 md:py-2 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <img
+          <Image
             src={theme === 'dark' ? '/logo.png' : '/logo-dark.png'}
             alt="Logo"
-            style={{ width: '64px', height: 'auto' }}
+            width={64}
+            height={64}
+            priority
+            className="h-auto w-auto"
           />
         </Link>
 
