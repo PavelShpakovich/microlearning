@@ -77,6 +77,8 @@ export function Header() {
               alt="Logo"
               width={64}
               height={64}
+              priority
+              className="h-auto w-auto"
             />
           </Link>
           <div className="flex items-center gap-2">
@@ -134,6 +136,8 @@ export function Header() {
             alt="Logo"
             width={64}
             height={64}
+            priority
+            className="h-auto w-auto"
           />
         </Link>
 

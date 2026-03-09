@@ -44,7 +44,7 @@ export function TgSettingsBar() {
           alt="Logo"
           width={40}
           height={32}
-          className="h- w-auto object-contain"
+          className="h-8 w-auto object-contain"
           priority
         />
       </Link>
