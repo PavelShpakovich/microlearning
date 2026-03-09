@@ -8,13 +8,13 @@ import { createSupabaseClient } from '@/lib/supabase/client';
 import { CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
-function Spinner() {
+function Spinner({ text }: { text?: string }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      <p className="text-sm text-gray-500">Completing sign-in…</p>
+      {text && <p className="text-sm text-gray-500">{text}</p>}
     </main>
   );
 }
@@ -28,7 +28,9 @@ function EmailVerifiedScreen() {
           <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight">{t('emailVerifiedTitle')}</h1>
-        <p className="text-muted-foreground text-sm leading-relaxed">{t('emailVerifiedDescription')}</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {t('emailVerifiedDescription')}
+        </p>
         <Button asChild className="w-full mt-2">
           <a href={BOT_URL}>{t('backToTelegram')}</a>
         </Button>
@@ -49,6 +51,7 @@ function EmailVerifiedScreen() {
  */
 function CallbackHandler() {
   const params = useSearchParams();
+  const t = useTranslations('telegramUpgrade');
   const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
@@ -88,7 +91,7 @@ function CallbackHandler() {
   }, [params]);
 
   if (emailVerified) return <EmailVerifiedScreen />;
-  return <Spinner />;
+  return <Spinner text={t('completingSignIn')} />;
 }
 
 export default function AuthCallbackPage() {

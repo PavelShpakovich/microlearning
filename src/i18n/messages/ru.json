@@ -252,6 +252,7 @@
     "mergedOverLimitWarning": "Внимание: теперь у вас больше тем, чем позволяет ваш тариф. Вы можете их изучать, но не сможете создавать новые, пока не смените тариф или не удалите лишние.",
     "errorTitle": "Что-то пошло не так",
     "goToDashboard": "Перейти на главную",
+    "completingSignIn": "Выполняется вход…",
     "emailVerifiedTitle": "Email подтверждён!",
     "emailVerifiedDescription": "Ваш email подтверждён. Вернитесь в Telegram, чтобы продолжить.",
     "backToTelegram": "Открыть Telegram"

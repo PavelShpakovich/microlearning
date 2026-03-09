@@ -257,6 +257,7 @@
     "mergedOverLimitWarning": "Heads up: you now have more themes than your plan allows. You can still study them, but you won't be able to create new ones until you upgrade or delete some.",
     "errorTitle": "Something went wrong",
     "goToDashboard": "Go to Dashboard",
+    "completingSignIn": "Completing sign-in…",
     "emailVerifiedTitle": "Email Verified!",
     "emailVerifiedDescription": "Your email has been confirmed. Return to the Telegram app to continue.",
     "backToTelegram": "Open Telegram"
