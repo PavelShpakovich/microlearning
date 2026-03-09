@@ -10,12 +10,53 @@ import { FeatureCard } from '@/components/landing/feature-card';
 import { StepItem } from '@/components/landing/step-item';
 import { PlanCard } from '@/components/landing/plan-card';
 import { FaqItem } from '@/components/landing/faq-item';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+
+const STARS_PRICES: Record<string, number> = {
+  basic: parseInt(process.env.TELEGRAM_STARS_PRICE_BASIC ?? '200', 10),
+  pro: parseInt(process.env.TELEGRAM_STARS_PRICE_PRO ?? '500', 10),
+  max: parseInt(process.env.TELEGRAM_STARS_PRICE_MAX ?? '1000', 10),
+};
 
 export default async function HomePage() {
   const session = await auth();
   if (session) redirect('/dashboard');
 
   const t = await getTranslations('landing');
+
+  // Fetch plan data from DB
+  const { data: dbPlans } = await supabaseAdmin
+    .from('subscription_plans')
+    .select('id, name, cards_per_month, max_themes')
+    .order('price_monthly', { ascending: true });
+
+  type DbPlan = NonNullable<typeof dbPlans>[number];
+
+  function buildFeatures(plan: DbPlan, tl: typeof t): string[] {
+    const cards = plan.cards_per_month.toLocaleString();
+    const themes =
+      plan.max_themes === null
+        ? tl('featureUnlimitedThemes')
+        : tl('featureThemes', { count: plan.max_themes });
+    if (plan.id === 'free') return [themes, tl('featureCards', { count: cards })];
+    return [themes, tl('featureCards', { count: cards }), tl('featureCommunity')];
+  }
+
+  // Map plan IDs to localised names
+  const planNames: Record<string, string> = {
+    free: t('plan1Name'),
+    basic: t('plan2Name'),
+    pro: t('plan3Name'),
+    max: t('plan4Name'),
+  };
+
+  const plans = (dbPlans ?? []).map((plan) => ({
+    id: plan.id,
+    name: planNames[plan.id] ?? plan.name,
+    starsPrice: STARS_PRICES[plan.id] ?? 0,
+    features: buildFeatures(plan, t),
+    popular: plan.id === 'basic',
+  }));
 
   const features = [
     { icon: Upload, title: t('feature1Title'), desc: t('feature1Desc') },
@@ -28,37 +69,6 @@ export default async function HomePage() {
     { number: t('step1Number'), title: t('step1Title'), desc: t('step1Desc') },
     { number: t('step2Number'), title: t('step2Title'), desc: t('step2Desc') },
     { number: t('step3Number'), title: t('step3Title'), desc: t('step3Desc') },
-  ];
-
-  const plans = [
-    {
-      name: t('plan1Name'),
-      price: t('plan1Price'),
-      cards: t('plan1Cards'),
-      features: [t('plan1Feature1'), t('plan1Feature2')],
-      popular: false,
-    },
-    {
-      name: t('plan2Name'),
-      price: t('plan2Price'),
-      cards: t('plan2Cards'),
-      features: [t('plan2Feature1'), t('plan2Feature2'), t('plan2Feature3')],
-      popular: true,
-    },
-    {
-      name: t('plan3Name'),
-      price: t('plan3Price'),
-      cards: t('plan3Cards'),
-      features: [t('plan3Feature1'), t('plan3Feature2'), t('plan3Feature3')],
-      popular: false,
-    },
-    {
-      name: t('plan4Name'),
-      price: t('plan4Price'),
-      cards: t('plan4Cards'),
-      features: [t('plan4Feature1'), t('plan4Feature2'), t('plan4Feature3')],
-      popular: false,
-    },
   ];
 
   const faqs = [
@@ -111,9 +121,13 @@ export default async function HomePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
               <PlanCard
-                key={plan.name}
-                {...plan}
+                key={plan.id}
+                name={plan.name}
+                starsPrice={plan.starsPrice}
+                features={plan.features}
+                popular={plan.popular}
                 popularLabel={t('pricingPopular')}
+                freeLabel={t('pricingFree')}
                 perMonth={t('pricingPerMonth')}
                 cta={t('pricingCta')}
               />

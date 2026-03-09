@@ -8,23 +8,28 @@ const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario
 
 interface PlanCardProps {
   name: string;
-  price: string;
+  starsPrice: number; // 0 = free
   features: string[];
   popular: boolean;
   popularLabel: string;
+  freeLabel: string;
   perMonth: string;
   cta: string;
 }
 
 export function PlanCard({
   name,
-  price,
+  starsPrice,
   features,
   popular,
   popularLabel,
+  freeLabel,
   perMonth,
   cta,
 }: PlanCardProps) {
+  const isFree = starsPrice === 0;
+  const priceDisplay = isFree ? freeLabel : starsPrice.toLocaleString();
+  const priceSuffix = isFree ? null : '⭐';
   return (
     <div
       className={`relative flex flex-col rounded-2xl border p-6 shadow-sm ${
@@ -37,8 +42,9 @@ export function PlanCard({
       <div className="mb-4">
         <p className="text-sm font-medium text-muted-foreground mb-1">{name}</p>
         <div className="flex items-end gap-1">
-          <span className="text-4xl font-bold">{price}</span>
-          <span className="text-muted-foreground pb-1">{perMonth}</span>
+          <span className="text-4xl font-bold">{priceDisplay}</span>
+          {priceSuffix && <span className="text-2xl font-bold pb-0.5">{priceSuffix}</span>}
+          {!isFree && <span className="text-muted-foreground pb-1">{perMonth}</span>}
         </div>
       </div>
       <ul className="flex flex-col gap-2 mb-6 flex-1">
