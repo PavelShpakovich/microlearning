@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getPlanLimits } from '@/lib/plan-limits';
 
 /**
  * Utilities for subscription operations (replaces deleted SubscriptionService)
@@ -27,13 +28,6 @@ export interface SubscriptionStatus {
   };
 }
 
-const PLAN_LIMITS: Record<PlanId, { cardsPerMonth: number; maxThemes: number; communityThemes: number }> = {
-  free: { cardsPerMonth: 50, maxThemes: 3, communityThemes: 0 },
-  basic: { cardsPerMonth: 300, maxThemes: 10, communityThemes: 5 },
-  pro: { cardsPerMonth: 2000, maxThemes: 50, communityThemes: 10 },
-  max: { cardsPerMonth: 5000, maxThemes: 999, communityThemes: 50 },
-};
-
 /**
  * Get subscription status for a user (admin operation)
  */
@@ -45,7 +39,7 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
     .maybeSingle();
 
   const planId = (subscription?.plan_id ?? 'free') as PlanId;
-  const limits = PLAN_LIMITS[planId];
+  const limits = await getPlanLimits(planId);
 
   // Get current usage
   const now = new Date();
@@ -98,7 +92,7 @@ export async function getUserPlan(userId: string): Promise<{
     .maybeSingle();
 
   const planId = (subscription?.plan_id ?? 'free') as PlanId;
-  const limits = PLAN_LIMITS[planId];
+  const limits = await getPlanLimits(planId);
 
   return {
     planId,
@@ -111,9 +105,11 @@ export async function getUserPlan(userId: string): Promise<{
 /**
  * Get user's current usage for this period
  */
-export async function getUserUsage(userId: string): Promise<{ cardsGenerated: number; cardsLimit: number; cardsRemaining: number }> {
+export async function getUserUsage(
+  userId: string,
+): Promise<{ cardsGenerated: number; cardsLimit: number; cardsRemaining: number }> {
   const planId = await getUserPlanId(userId);
-  const limits = PLAN_LIMITS[planId];
+  const limits = await getPlanLimits(planId);
 
   const now = new Date();
   const { data: usage } = await supabaseAdmin
@@ -149,27 +145,20 @@ async function getUserPlanId(userId: string): Promise<PlanId> {
  * Reset user's card usage for current period (admin operation)
  */
 export async function resetUsage(userId: string): Promise<void> {
-  await supabaseAdmin
-    .from('user_usage')
-    .delete()
-    .eq('user_id', userId);
+  await supabaseAdmin.from('user_usage').delete().eq('user_id', userId);
 }
 
 /**
  * Get plan limits
  */
-export async function getPlanLimits(planId: PlanId): Promise<{ cardsPerMonth: number }> {
-  return {
-    cardsPerMonth: PLAN_LIMITS[planId].cardsPerMonth,
-  };
-}
+export { getPlanLimits } from '@/lib/plan-limits';
 
 /**
  * Increment user's card generation count
  */
 export async function incrementCardCount(userId: string, count: number): Promise<void> {
   const now = new Date();
-  
+
   // Try to update existing usage record
   const { data: existingUsage, error: fetchError } = await supabaseAdmin
     .from('user_usage')
@@ -195,26 +184,25 @@ export async function incrementCardCount(userId: string, count: number): Promise
   } else {
     // Create new usage record
     const planId = await getUserPlanId(userId);
-    const limits = PLAN_LIMITS[planId];
-    
+    const limits = await getPlanLimits(planId);
+
     const periodStart = new Date();
     periodStart.setDate(1);
     periodStart.setHours(0, 0, 0, 0);
-    
+
     const periodEnd = new Date(periodStart);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
 
-    const { error: insertError } = await supabaseAdmin
-      .from('user_usage')
-      .insert({
-        user_id: userId,
-        cards_generated: count,
-        cards_limit: limits.cardsPerMonth,
-        period_start: periodStart.toISOString(),
-        period_end: periodEnd.toISOString(),
-      });
+    const { error: insertError } = await supabaseAdmin.from('user_usage').insert({
+      user_id: userId,
+      cards_generated: count,
+      cards_limit: limits.cardsPerMonth,
+      period_start: periodStart.toISOString(),
+      period_end: periodEnd.toISOString(),
+    });
 
-    if (insertError && insertError.code !== '23505') { // Ignore duplicate key
+    if (insertError && insertError.code !== '23505') {
+      // Ignore duplicate key
       throw insertError;
     }
   }
@@ -228,19 +216,19 @@ export async function changePlan(userId: string, planId: PlanId): Promise<void> 
   const periodEnd = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + 1);
 
-  const { error: upsertError } = await supabaseAdmin
-    .from('user_subscriptions')
-    .upsert({
+  const { error: upsertError } = await supabaseAdmin.from('user_subscriptions').upsert(
+    {
       user_id: userId,
       plan_id: planId,
       status: 'active',
       current_period_start: now.toISOString(),
       current_period_end: periodEnd.toISOString(),
-    }, { onConflict: 'user_id' });
+    },
+    { onConflict: 'user_id' },
+  );
 
   if (upsertError) throw upsertError;
 
   // Reset usage when plan changes
   await resetUsage(userId);
 }
-

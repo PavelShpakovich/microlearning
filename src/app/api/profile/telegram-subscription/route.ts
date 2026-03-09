@@ -2,14 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-
-// Define plan limits here to avoid circular dependencies
-const PLAN_LIMITS: Record<string, { cardsPerMonth: number; maxThemes: number; communityThemes: number }> = {
-  free: { cardsPerMonth: 50, maxThemes: 3, communityThemes: 0 },
-  basic: { cardsPerMonth: 300, maxThemes: 10, communityThemes: 5 },
-  pro: { cardsPerMonth: 2000, maxThemes: 50, communityThemes: 10 },
-  max: { cardsPerMonth: 5000, maxThemes: 999, communityThemes: 50 },
-};
+import { getPlanLimits } from '@/lib/plan-limits';
 
 export interface SubscriptionStatus {
   // Plan information
@@ -17,7 +10,7 @@ export interface SubscriptionStatus {
   isPaid: boolean;
   expiresAt: string | null;
   inTelegram: boolean;
-  
+
   // Backward compatibility with components expecting nested objects
   plan: {
     planId: 'free' | 'basic' | 'pro' | 'max';
@@ -26,7 +19,7 @@ export interface SubscriptionStatus {
     maxThemes: number;
     communityThemes: number;
   };
-  
+
   // Usage tracking
   usage: {
     cardsGenerated: number;
@@ -35,14 +28,14 @@ export interface SubscriptionStatus {
     periodStart: string;
     periodEnd: string;
   };
-  
+
   // Theme usage
   themesUsed: number;
 }
 
 /**
  * GET /api/profile/telegram-subscription
- * 
+ *
  * Returns the user's subscription status including usage stats.
  * Combines data from user_subscriptions, user_usage, and themes tables.
  */
@@ -64,7 +57,7 @@ export const GET = withApiHandler(async () => {
 
   const planId = subscription?.plan_id ?? 'free';
   const isPaid = subscription && planId !== 'free' && subscription.status === 'active';
-  const limits = PLAN_LIMITS[planId] || PLAN_LIMITS['free'];
+  const limits = await getPlanLimits(planId);
 
   // Fetch current usage period
   const now = new Date();
@@ -84,7 +77,8 @@ export const GET = withApiHandler(async () => {
   const cardsLimit = usage?.cards_limit ?? limits.cardsPerMonth;
   const cardsRemaining = Math.max(0, cardsLimit - cardsGenerated);
   const periodStart = usage?.period_start ?? new Date().toISOString();
-  const periodEnd = usage?.period_end ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const periodEnd =
+    usage?.period_end ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   // Fetch theme count
   const { count: themesUsed, error: themesError } = await supabaseAdmin
@@ -103,7 +97,7 @@ export const GET = withApiHandler(async () => {
     isPaid,
     expiresAt,
     inTelegram: true,
-    
+
     plan: {
       planId: planId as 'free' | 'basic' | 'pro' | 'max',
       cardsPerMonth: limits.cardsPerMonth,
@@ -111,7 +105,7 @@ export const GET = withApiHandler(async () => {
       maxThemes: limits.maxThemes,
       communityThemes: limits.communityThemes,
     },
-    
+
     usage: {
       cardsGenerated,
       cardsLimit,
@@ -119,14 +113,14 @@ export const GET = withApiHandler(async () => {
       periodStart,
       periodEnd,
     },
-    
+
     themesUsed: themesUsed ?? 0,
   } as SubscriptionStatus);
 });
 
 /**
  * DELETE /api/profile/telegram-subscription
- * 
+ *
  * Cancels the user's subscription and reverts them to free plan.
  */
 export const DELETE = withApiHandler(async () => {
@@ -140,17 +134,11 @@ export const DELETE = withApiHandler(async () => {
 
   if (deleteError) {
     console.error('Failed to delete subscription:', deleteError);
-    return NextResponse.json(
-      { error: 'Failed to downgrade subscription' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to downgrade subscription' }, { status: 500 });
   }
 
   // Reset usage if exists
-  await supabaseAdmin
-    .from('user_usage')
-    .delete()
-    .eq('user_id', user.id);
+  await supabaseAdmin.from('user_usage').delete().eq('user_id', user.id);
 
   return NextResponse.json({ success: true });
 });
@@ -161,7 +149,7 @@ function defaultFreeResponse(): NextResponse<SubscriptionStatus> {
     isPaid: false,
     expiresAt: null,
     inTelegram: true,
-    
+
     plan: {
       planId: 'free',
       cardsPerMonth: 50,
@@ -169,7 +157,7 @@ function defaultFreeResponse(): NextResponse<SubscriptionStatus> {
       maxThemes: 3,
       communityThemes: 0,
     },
-    
+
     usage: {
       cardsGenerated: 0,
       cardsLimit: 50,
@@ -177,7 +165,7 @@ function defaultFreeResponse(): NextResponse<SubscriptionStatus> {
       periodStart: new Date().toISOString(),
       periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     },
-    
+
     themesUsed: 0,
   } as SubscriptionStatus);
 }
