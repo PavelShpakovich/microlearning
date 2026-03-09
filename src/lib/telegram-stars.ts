@@ -19,6 +19,7 @@ interface TelegramInvoicePayload {
   title: string;
   description: string;
   payload: string;
+  provider_token: string; // Must be '' for Telegram Stars (XTR)
   currency: 'XTR'; //Telegram Stars
   prices: Array<{
     label: string;
@@ -49,6 +50,7 @@ export async function createTelegramInvoiceLink(
     // Encode only the essential fields, separated by | to stay well under the limit.
     // Format: "<userId>|<planId>" (UUID=36 + "|" + max 5 = 42 chars)
     payload: `${userId}|${planId}`,
+    provider_token: '', // Required to be empty string for Telegram Stars (XTR)
     currency: 'XTR',
     prices: [
       {
@@ -68,18 +70,22 @@ export async function createTelegramInvoiceLink(
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const errorData = (await response.json()) as {
-      ok: boolean;
-      description?: string;
-    };
-    throw new Error(`Telegram API error: ${errorData.description || `HTTP ${response.status}`}`);
+  const rawText = await response.text();
+  let data: TelegramInvoiceLink;
+  try {
+    data = JSON.parse(rawText) as TelegramInvoiceLink;
+  } catch {
+    throw new Error(`Telegram API returned non-JSON (HTTP ${response.status}): ${rawText.slice(0, 200)}`);
   }
 
-  const data = (await response.json()) as TelegramInvoiceLink;
+  if (!response.ok || !data.ok) {
+    throw new Error(
+      `Telegram API error (HTTP ${response.status}): ${data.description || JSON.stringify(data)}`,
+    );
+  }
 
-  if (!data.ok || !data.result?.invoice_link) {
-    throw new Error(`Failed to create Telegram invoice: ${data.description || 'Unknown error'}`);
+  if (!data.result?.invoice_link) {
+    throw new Error(`Telegram invoice link missing in response: ${JSON.stringify(data)}`);
   }
 
   return data.result.invoice_link;

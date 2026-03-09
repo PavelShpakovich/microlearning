@@ -245,21 +245,21 @@ async function answerPreCheckoutQuery(
   errorMessage?: string,
 ): Promise<boolean> {
   try {
-    const params = new URLSearchParams({
+    const body: Record<string, unknown> = {
       pre_checkout_query_id: preCheckoutQueryId,
-      ok: ok.toString(),
-    });
+      ok,
+    };
 
     if (!ok && errorMessage) {
-      params.append('error_message', errorMessage);
+      body.error_message = errorMessage;
     }
 
     const response = await fetch(
       `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerPreCheckoutQuery`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       },
     );
 
@@ -282,25 +282,22 @@ async function answerPreCheckoutQuery(
 async function sendTelegramMessage(
   chatId: number,
   text: string,
-  options?: unknown,
+  extra?: Record<string, unknown>,
 ): Promise<boolean> {
   try {
-    const params = new URLSearchParams({
-      chat_id: chatId.toString(),
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
       text,
       parse_mode: 'Markdown',
-    });
-
-    if (options) {
-      params.append('reply_markup', JSON.stringify(options));
-    }
+      ...extra,
+    };
 
     const response = await fetch(
       `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       },
     );
 
