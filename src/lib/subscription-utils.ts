@@ -193,16 +193,31 @@ export async function incrementCardCount(userId: string, count: number): Promise
 
     if (updateError) throw updateError;
   } else {
-    // Create new usage record
+    // Create new usage record — use the subscription's billing period so the
+    // window aligns with when they subscribed, not the calendar month start.
     const planId = await getUserPlanId(userId);
     const limits = await getPlanLimits(planId);
 
-    const periodStart = new Date();
-    periodStart.setDate(1);
-    periodStart.setHours(0, 0, 0, 0);
+    const { data: subscription } = await supabaseAdmin
+      .from('user_subscriptions')
+      .select('current_period_start, current_period_end')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    const periodEnd = new Date(periodStart);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    let periodStart: Date;
+    let periodEnd: Date;
+
+    if (subscription?.current_period_start && subscription?.current_period_end) {
+      periodStart = new Date(subscription.current_period_start);
+      periodEnd = new Date(subscription.current_period_end);
+    } else {
+      // Free plan / no subscription: fall back to calendar month
+      periodStart = new Date();
+      periodStart.setDate(1);
+      periodStart.setHours(0, 0, 0, 0);
+      periodEnd = new Date(periodStart);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+    }
 
     const { error: insertError } = await supabaseAdmin.from('user_usage').insert({
       user_id: userId,
