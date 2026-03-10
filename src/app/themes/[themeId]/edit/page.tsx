@@ -76,7 +76,6 @@ export default function EditThemePage({ params }: EditThemePageProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [cardCount, setCardCount] = useState(10);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const form = useForm<ThemeFormValues>({
     resolver: zodResolver(themeSchema),
@@ -202,28 +201,8 @@ export default function EditThemePage({ params }: EditThemePageProps) {
     }
   };
 
-  const handleGenerateCards = async () => {
-    const toastId = toast.loading(t('themes.generating'));
-    try {
-      setIsGenerating(true);
-      const readySourceIds = sources.filter((s) => s.status === 'ready').map((s) => s.id);
-      await themeApi.generateCards(
-        themeId,
-        cardCount,
-        readySourceIds.length > 0 ? readySourceIds : undefined,
-      );
-      toast.success(t('themes.success'), { id: toastId });
-      router.push(`/study/${themeId}`);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : '';
-      const errorText =
-        msg === 'GENERATION_LIMIT_REACHED'
-          ? t('messages.generationLimitReached')
-          : t('themes.error');
-      toast.error(errorText, { id: toastId });
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleGenerateCards = () => {
+    router.push(`/study/${themeId}?count=${cardCount}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -280,18 +259,11 @@ export default function EditThemePage({ params }: EditThemePageProps) {
               {theme.description || t('sources.description')}
             </p>
           </div>
-          {isGenerating ? (
-            <Button disabled className="w-full sm:w-auto">
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              {t('buttons.generating')}
+          <Link href={`/study/${themeId}`} className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto">
+              {t('sources.studyButton')}
             </Button>
-          ) : (
-            <Link href={`/study/${themeId}`} className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto">
-                {t('sources.studyButton')}
-              </Button>
-            </Link>
-          )}
+          </Link>
         </div>
       </div>
 
@@ -525,7 +497,6 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                         <button
                           key={n}
                           onClick={() => setCardCount(n)}
-                          disabled={isGenerating}
                           className={`flex-1 rounded-lg border-2 py-2 text-sm font-semibold transition-all cursor-pointer ${
                             cardCount === n
                               ? 'border-primary bg-primary text-primary-foreground'
@@ -538,15 +509,11 @@ export default function EditThemePage({ params }: EditThemePageProps) {
                     </div>
                   </div>
                   <Button
-                    onClick={() => void handleGenerateCards()}
-                    disabled={
-                      isGenerating || sources.filter((s) => s.status === 'ready').length === 0
-                    }
+                    onClick={handleGenerateCards}
+                    disabled={sources.filter((s) => s.status === 'ready').length === 0}
                     className="w-full h-auto whitespace-normal py-2 leading-snug"
                   >
-                    {isGenerating
-                      ? `${t('buttons.generating')}`
-                      : `${t('buttons.createAndGenerate')}`}
+                    {t('buttons.createAndGenerate')}
                   </Button>
                   {sources.filter((s) => s.status === 'ready').length === 0 && (
                     <p className="text-xs text-center text-muted-foreground mt-2">
