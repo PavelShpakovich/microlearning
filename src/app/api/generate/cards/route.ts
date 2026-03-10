@@ -82,7 +82,8 @@ export const POST = withApiHandler(async (req) => {
 
   if (!theme) throw new NotFoundError({ message: 'Theme not found' });
 
-  // Optionally enrich with source text from all provided sources
+  // Enrich with source text: use the provided sourceIds if given, otherwise fall
+  // back to ALL ready sources for this theme (consistent with doGenerate auto-path).
   let sourceText: string | undefined;
   let primarySourceId: string | undefined;
   if (sourceIds && sourceIds.length > 0) {
@@ -112,6 +113,22 @@ export const POST = withApiHandler(async (req) => {
       .join('\n\n---\n\n');
     if (sourceText.length === 0) {
       sourceText = undefined;
+    }
+  } else {
+    // No specific sourceIds — fall back to all ready sources for the theme
+    const { data: allSources } = await supabaseAdmin
+      .from('data_sources')
+      .select('id, extracted_text')
+      .eq('theme_id', themeId)
+      .eq('status', 'ready');
+
+    if (allSources && allSources.length > 0) {
+      primarySourceId = allSources[0].id;
+      const merged = allSources
+        .map((s) => s.extracted_text ?? '')
+        .filter((t) => t.length > 0)
+        .join('\n\n---\n\n');
+      if (merged.length > 0) sourceText = merged;
     }
   }
 

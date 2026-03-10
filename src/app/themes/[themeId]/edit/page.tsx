@@ -206,7 +206,12 @@ export default function EditThemePage({ params }: EditThemePageProps) {
     const toastId = toast.loading(t('themes.generating'));
     try {
       setIsGenerating(true);
-      await themeApi.generateCards(themeId, cardCount);
+      const readySourceIds = sources.filter((s) => s.status === 'ready').map((s) => s.id);
+      await themeApi.generateCards(
+        themeId,
+        cardCount,
+        readySourceIds.length > 0 ? readySourceIds : undefined,
+      );
       toast.success(t('themes.success'), { id: toastId });
       router.push(`/study/${themeId}`);
     } catch (error) {
