@@ -19,6 +19,8 @@ const PUBLIC_API_ROUTES = [
   '/api/profile/link-web', // Telegram stub self-authenticates via HMAC
   '/api/auth/session-from-supabase', // bridges Supabase OTP → NextAuth (called from /auth/callback)
   '/api/auth/forgot-password', // sends password-reset email (public)
+  '/api/telegram/webhook', // Telegram Bot API webhook — authenticated via secret token header
+  '/api/cron', // Vercel Cron jobs — authenticated via CRON_SECRET header
 ];
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
