@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Check, Loader2, AlertCircle } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Check,
+  Loader2,
+  AlertCircle,
+  ExternalLink,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/use-subscription';
@@ -10,6 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { isTelegramWebApp, getTelegramWebApp } from '@/components/telegram-provider';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { AvailablePlan } from '@/app/api/profile/telegram-subscription/route';
+
+const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 type Plan = AvailablePlan;
 
@@ -148,7 +157,7 @@ export function PlansCard() {
       toast.success(t('subscriptions.downgradeSuccess') || 'Plan downgraded to Free');
       // Trigger subscription refresh
       if (refetch) await refetch();
-    } catch (error) {
+    } catch {
       toast.error(t('errors.generic') || 'Failed to downgrade subscription');
     } finally {
       setRequesting(null);
@@ -188,20 +197,29 @@ export function PlansCard() {
         // Use Telegram Bot API to open invoice in Mini App
         const tg = getTelegramWebApp();
         if (tg?.openInvoice) {
+          // Clear spinner before openInvoice — the call is non-blocking and
+          // the sheet stays open, so we must not leave the button spinning.
+          setRequesting(null);
           tg.openInvoice(invoiceLink, (status: string) => {
             if (status === 'paid') {
-              toast.success(t('subscriptions.upgradeSuccess') || 'Plan upgraded successfully!');
-              if (refetch) refetch();
+              toast.success(t('subscriptions.upgradeSuccess', { planName: plan.name }));
+              // Give the webhook ~1.5 s to write to DB before refreshing
+              setTimeout(() => {
+                if (refetch) void refetch();
+              }, 1500);
             } else if (status === 'cancelled') {
-              toast.info(t('subscriptions.upgradeCancelled') || 'Payment cancelled');
+              toast.info(t('subscriptions.upgradeCancelled'));
+            } else {
+              // 'failed' or any other terminal status
+              toast.error(t('subscriptions.upgradeFailed'));
             }
           });
         } else {
           window.open(invoiceLink, '_blank');
+          setRequesting(null);
         }
       } catch {
         toast.error(t('errors.generic') || 'Failed to initiate payment');
-      } finally {
         setRequesting(null);
       }
     }
@@ -214,12 +232,20 @@ export function PlansCard() {
         <CardDescription>{t('plans.description')}</CardDescription>
       </CardHeader>
       <CardContent>
-        {!isTelegramWebApp() && (
+        {!isTelegramWebApp() && BOT_URL && (
           <Alert className="mb-4 border-amber-200 bg-amber-50">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
-              {t('subscriptions.webAppWarning') ||
-                'To upgrade your plan, please open this app on your Telegram account using the bot.'}
+              {t('subscriptions.webAppWarning')}{' '}
+              <a
+                href={BOT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-0.5 underline font-medium"
+              >
+                {BOT_URL.replace('https://', '')}
+                <ExternalLink className="w-3 h-3 ml-0.5" />
+              </a>
             </AlertDescription>
           </Alert>
         )}

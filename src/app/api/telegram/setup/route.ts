@@ -83,6 +83,28 @@ export const POST = withApiHandler(async () => {
     result?: { id: number; first_name: string; username: string; can_join_groups: boolean };
   };
 
+  // Register bot commands so the menu shows /start and /paysupport
+  const setCommandsResponse = await fetch(
+    `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/setMyCommands`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        commands: [
+          { command: 'start', description: 'Open the Mini App' },
+          { command: 'paysupport', description: 'Payment support / refund help' },
+        ],
+      }),
+    },
+  );
+  const setCommandsData = (await setCommandsResponse.json()) as {
+    ok: boolean;
+    description?: string;
+  };
+  if (!setCommandsData.ok) {
+    console.warn('setMyCommands failed:', setCommandsData.description);
+  }
+
   // Fetch current Stars prices from DB
   const { data: planPrices } = await supabaseAdmin
     .from('subscription_plans')
@@ -98,6 +120,7 @@ export const POST = withApiHandler(async () => {
       info: webhookInfo.result,
     },
     bot: getMeData.result,
+    commands: setCommandsData.ok ? 'registered' : 'failed',
     prices,
   });
 });

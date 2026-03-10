@@ -248,26 +248,13 @@
   },
   "plans": {
     "title": "Plans",
-    "description": "Contact us to change your plan.",
+    "description": "Upgrade your plan with Telegram Stars ⭐",
     "cardsPerMonth": "{count} cards / month",
     "free": "Free",
     "currentPlan": "Current plan",
     "upgrade": "Upgrade",
     "downgrade": "Downgrade",
-    "lowerTier": "Lower tier",
-    "upgradeRequestSent": "To upgrade, please contact {email}",
-    "downgradeRequestSent": "To downgrade, please contact {email}",
-    "paymentSelection": {
-      "title": "Select Payment Method",
-      "description": "How would you like to pay for the {planName} plan?",
-      "creditCard": "Credit Card / Global Web",
-      "creditCardDescTwa": "Standard Stripe checkout. Opens in a secure external browser.",
-      "creditCardDescWeb": "Standard Stripe checkout (Apple Pay / Google Pay / Cards).",
-      "telegramStars": "Telegram Stars",
-      "telegramStarsDescTwa": "Pay natively via Telegram without traditional banking restrictions (Best for CIS).",
-      "telegramStarsDescWeb": "Requires Telegram App setup. Click to see instructions.",
-      "cancel": "Cancel"
-    }
+    "lowerTier": "Lower tier"
   },
   "usage": {
     "cardTitle": "Plan & Usage",
@@ -277,7 +264,7 @@
     "cardsLeft": "{count} {count, plural, one {card} other {cards}} remaining",
     "noCardsLeft": "No cards remaining",
     "periodRenews": "Renews {date}",
-    "exhaustedHint": "You've reached your monthly limit. Contact us or wait for the next billing cycle.",
+    "exhaustedHint": "You've reached your monthly limit. Upgrade your plan or wait for the next billing cycle.",
     "limitReachedBannerTitle": "Monthly generation limit reached",
     "lowCardsBannerTitle": "Only {count} card {count, plural, one {generation} other {generations}} left this month",
     "periodUsage": "{generated} of {limit} cards generated this month",
@@ -290,11 +277,12 @@
     "themeNearLimitBannerTitle": "Only {count} {count, plural, one {theme slot} other {theme slots}} left"
   },
   "subscriptions": {
-    "upgradeSuccess": "✅ Payment Successful!\n\n🎉 Your plan has been upgraded to **{planName}**!\n\nYou now have access to all premium features. Enjoy! 🚀",
-    "upgradeCancelled": "❌ Payment Cancelled\n\nYour plan upgrade has been cancelled. You're still on the **Free** plan.",
+    "upgradeSuccess": "✅ Plan upgraded to {planName}! You now have access to all premium features.",
+    "upgradeCancelled": "Payment cancelled.",
+    "upgradeFailed": "Payment failed. Please try again.",
     "downgradeSuccess": "📉 Plan Downgraded\n\nYou've been downgraded to the **Free** plan. Your usage has been reset.",
-    "telegramOnly": "💬 Upgrade via Telegram\n\nTo upgrade your plan, open the bot at https://t.me/clario_bot and select your desired plan.",
-    "webAppWarning": "⚠️ This feature is only available in the Telegram Mini App.\n\nOpen the Telegram bot to manage your subscription: https://t.me/clario_bot"
+    "telegramOnly": "Upgrades are available only inside the Telegram Mini App. Open the bot to manage your subscription.",
+    "webAppWarning": "To upgrade, open the app via Telegram:"
   },
   "settings": {
     "dangerZone": "Danger Zone",

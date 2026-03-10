@@ -287,26 +287,13 @@
   },
   "plans": {
     "title": "Тарифы",
-    "description": "Свяжитесь с нами для смены тарифа.",
+    "description": "Улучшите тариф с помощью Telegram Stars ⭐",
     "cardsPerMonth": "{count} карточек / месяц",
     "free": "Бесплатно",
     "currentPlan": "Текущий тариф",
     "upgrade": "Улучшить",
     "downgrade": "Понизить",
-    "lowerTier": "Более низкий тариф",
-    "upgradeRequestSent": "Для повышения тарифа свяжитесь с нами: {email}",
-    "downgradeRequestSent": "Для понижения тарифа свяжитесь с нами: {email}",
-    "paymentSelection": {
-      "title": "Выберите способ оплаты",
-      "description": "Как вы хотите оплатить тариф {planName}?",
-      "creditCard": "Банковская карта / Веб-версия",
-      "creditCardDescTwa": "Стандартная оплата через Stripe. Откроется в безопасном внешнем браузере.",
-      "creditCardDescWeb": "Стандартная оплата через Stripe (Apple Pay / Google Pay / Карты).",
-      "telegramStars": "Telegram Stars (Звезды)",
-      "telegramStarsDescTwa": "Оплачивайте прямо в Telegram без ограничений традиционных банков (Лучший выбор для СНГ).",
-      "telegramStarsDescWeb": "Требуется установленное приложение Telegram. Нажмите, чтобы посмотреть инструкции.",
-      "cancel": "Отмена"
-    }
+    "lowerTier": "Более низкий тариф"
   },
   "usage": {
     "cardTitle": "Тариф и использование",
@@ -316,7 +303,7 @@
     "cardsLeft": "Осталось {count} {count, plural, one {карточка} few {карточки} other {карточек}}",
     "noCardsLeft": "Карточки закончились",
     "periodRenews": "Обновляется {date}",
-    "exhaustedHint": "Вы достигли месячного лимита. Свяжитесь с нами или подождите следующего биллингового периода.",
+    "exhaustedHint": "Вы достигли месячного лимита. Улучшите тариф или подождите следующего периода.",
     "limitReachedBannerTitle": "Месячный лимит генерации исчерпан",
     "lowCardsBannerTitle": "Осталось всего {count} {count, plural, one {генерация} few {генерации} other {генераций}} в этом месяце",
     "periodUsage": "{generated} из {limit} карточек сгенерировано в этом месяце",
@@ -329,11 +316,12 @@
     "themeNearLimitBannerTitle": "Осталось {count} {count, plural, one {место} few {места} other {мест}} для тем"
   },
   "subscriptions": {
-    "upgradeSuccess": "✅ Платеж успешен!\n\n🎉 Ваш тариф обновлен на **{planName}**!\n\nТеперь у вас есть доступ ко всем премиум функциям. Спасибо! 🚀",
-    "upgradeCancelled": "❌ Платеж отменен\n\nОбновление тарифа отменено. Вы остаетесь на плане **Free** (Бесплатный).",
-    "downgradeSuccess": "📉 Тариф понижен\n\nВы перейдены на плен **Free** (Бесплатный). Счётчик использования был сброшен.",
-    "telegramOnly": "💬 Улучшение тарифа через Telegram\n\nДля смены тарифа откройте бота по ссылке https://t.me/clario_bot и выберите нужный план.",
-    "webAppWarning": "⚠️ Эта функция доступна только в мини-приложении Telegram.\n\nОткройте бота для управления подпиской: https://t.me/clario_bot"
+    "upgradeSuccess": "✅ Тариф обновлён до {planName}! Теперь вам доступны все премиум-функции.",
+    "upgradeCancelled": "Платёж отменён.",
+    "upgradeFailed": "Оплата не удалась. Попробуйте ещё раз.",
+    "downgradeSuccess": "📉 Тариф понижен\n\nВы переведены на бесплатный тариф. Счётчик использования был сброшен.",
+    "telegramOnly": "Улучшение тарифа доступно только в мини-приложении Telegram. Откройте бота для управления подпиской.",
+    "webAppWarning": "Для улучшения откройте приложение через Telegram:"
   },
   "settings": {
     "dangerZone": "Опасная зона",
