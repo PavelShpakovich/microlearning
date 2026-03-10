@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, RefreshCw, Plus, Infinity, LogOut, AlertTriangle, List } from 'lucide-react';
+import { Loader2, RefreshCw, Plus, Infinity, LogOut, AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CARD_COUNT_OPTIONS, LOW_CARDS_THRESHOLD } from '@/lib/constants';
@@ -46,6 +47,7 @@ export function StudyBottomBar({
   onScrollToCard,
 }: StudyBottomBarProps) {
   const t = useTranslations();
+  const [jumpOpen, setJumpOpen] = useState(false);
   const anyGenerating = isGenerating || isManualGenerating;
   const isLowOnCards =
     cardsRemaining != null && cardsRemaining > 0 && cardsRemaining <= LOW_CARDS_THRESHOLD;
@@ -56,14 +58,13 @@ export function StudyBottomBar({
       style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {/* Progress */}
-      <Popover>
+      <Popover open={jumpOpen} onOpenChange={setJumpOpen}>
         <PopoverTrigger asChild>
           <button
             title={t('study.jumpToCard')}
             className="shrink-0 flex items-center gap-1 text-xs md:text-sm font-semibold text-foreground tabular-nums hover:text-primary transition-colors cursor-pointer"
           >
             {totalCards > 0 ? `${Math.min(currentCardIndex + 1, totalCards)}/${totalCards}` : '—'}
-            <List className="w-3 h-3 opacity-60" />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-1.5 max-h-60 overflow-y-auto" align="center" side="top">
@@ -71,7 +72,10 @@ export function StudyBottomBar({
             {Array.from({ length: totalCards }, (_, i) => (
               <button
                 key={i}
-                onClick={() => onScrollToCard(i)}
+                onClick={() => {
+                  onScrollToCard(i);
+                  setJumpOpen(false);
+                }}
                 className={`w-full px-3 py-1.5 rounded text-sm font-medium text-left transition-colors cursor-pointer ${
                   i === currentCardIndex
                     ? 'bg-primary text-primary-foreground'
