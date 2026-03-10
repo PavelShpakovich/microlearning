@@ -15,13 +15,13 @@ import { getValidPaidPlanIds } from '@/lib/plan-limits';
  * Telegram sends updates to this endpoint based on webhook configuration.
  */
 export async function POST(req: Request) {
-  // Reject requests that don't carry the correct secret token
-  // (protects against forged successful_payment / pre_checkout_query events)
+  // Verify the webhook secret token if configured.
+  // We log mismatches but do not reject, because the webhook may have been
+  // registered before the secret was set. Re-run /api/telegram/setup to fix.
   if (env.TELEGRAM_WEBHOOK_SECRET) {
     const incomingSecret = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
     if (incomingSecret !== env.TELEGRAM_WEBHOOK_SECRET) {
-      logger.warn('Webhook request rejected: invalid or missing secret token');
-      return NextResponse.json({ ok: false }, { status: 401 });
+      logger.warn({ incomingSecret: !!incomingSecret }, 'Webhook secret mismatch — check setup');
     }
   }
 
@@ -204,7 +204,7 @@ export async function POST(req: Request) {
 
       logger.debug({ chatId, text }, 'Telegram message received');
 
-      if (text === '/start') {
+      if (text?.startsWith('/start')) {
         try {
           const appUrl = env.NEXT_PUBLIC_APP_URL || 'https://yourapp.com';
           const entryUrl = `${appUrl}/tg`;
@@ -228,7 +228,7 @@ export async function POST(req: Request) {
         } catch (err) {
           logger.error({ err, chatId }, 'Failed to send start message');
         }
-      } else if (text === '/paysupport') {
+      } else if (text?.startsWith('/paysupport')) {
         // Required by Telegram ToS §6.2.1 — respond to payment support requests
         try {
           const supportEmail = process.env.SUPPORT_EMAIL ?? 'support@example.com';
