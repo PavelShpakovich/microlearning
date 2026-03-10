@@ -45,10 +45,10 @@ export function UsageCard() {
   const isExhausted = status?.usage.cardsRemaining === 0;
 
   const planNames: Record<string, string> = {
-    free: t('plan1Name'),
-    basic: t('plan2Name'),
-    pro: t('plan3Name'),
-    max: t('plan4Name'),
+    free: t('landing.plan1Name'),
+    basic: t('landing.plan2Name'),
+    pro: t('landing.plan3Name'),
+    max: t('landing.plan4Name'),
   };
 
   const planName = status
