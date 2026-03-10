@@ -30,7 +30,7 @@ declare module 'next-auth/jwt' {
   }
 }
 
-const nextAuthSecret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+const nextAuthSecret = env.NEXTAUTH_SECRET;
 
 export const authOptions: NextAuthOptions = {
   secret: nextAuthSecret,
@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
         const [payload, sig] = parts as [string, string];
 
         // Verify HMAC signature
-        const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+        const secret = env.NEXTAUTH_SECRET;
         const expectedSig = createHmac('sha256', secret).update(payload).digest('base64url');
         if (sig !== expectedSig) throw new Error('Invalid session token signature');
 
@@ -194,6 +194,6 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
 };

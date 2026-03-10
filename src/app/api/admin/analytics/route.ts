@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 
 export interface AdminAnalytics {
@@ -23,22 +22,8 @@ export interface AdminAnalytics {
  * Admin-only.
  */
 export const GET = withApiHandler(async () => {
-  const { user } = await requireAuth();
-
-  // Verify admin access
-  const isCallerAdmin =
-    ('isAdmin' in user && user.isAdmin) ||
-    (() => {
-      if (!env.ADMIN_EMAILS) return false;
-      const email = ('email' in user && user.email) || '';
-      return env.ADMIN_EMAILS.split(',')
-        .map((e) => e.trim())
-        .includes(email);
-    })();
-
-  if (!isCallerAdmin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();

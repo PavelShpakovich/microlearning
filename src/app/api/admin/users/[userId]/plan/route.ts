@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { changePlan } from '@/lib/subscription-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
@@ -15,7 +15,9 @@ const changePlanSchema = z.object({
  * Admin endpoint to change a user's subscription plan
  */
 export const PUT = withApiHandler(async (req: Request, ctx?: unknown) => {
-  const { user } = await requireAuth();
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
+  const { user } = adminCheck;
 
   const { params } = (ctx as { params: Promise<Record<string, string>> } | undefined) || {};
   const { userId } = (await params) || {};

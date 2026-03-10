@@ -72,33 +72,59 @@ Rules:
 };
 
 /**
+ * Sanitize user-provided text before embedding it in an LLM prompt.
+ * Strips XML-like tags that could escape the delimiters used to isolate user data,
+ * and removes common prompt-injection prefixes.
+ */
+function sanitizeUserInput(text: string): string {
+  return (
+    text
+      // Remove any attempt to close or open our XML-style delimiters
+      .replace(/<\/?user-content[^>]*>/gi, '')
+      .replace(/<\/?source-material[^>]*>/gi, '')
+      // Strip null bytes and other control characters (except newlines/tabs)
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+  );
+}
+
+/**
  * Builds the system + user prompt for info card generation.
  * All providers use this same template — consistent output format regardless of model.
+ *
+ * User-supplied content is wrapped in XML-style delimiters to clearly separate
+ * data from instructions, mitigating prompt injection attacks.
  */
 export function buildPrompt(input: GenerateInput): { system: string; user: string } {
   const lang = input.language || 'en';
   const t = PROMPTS[lang];
 
-  const contextBlock = input.sourceText
-    ? `${t.context}${input.sourceText.slice(0, 8000)}\n---\n\n`
+  // Sanitize all user-controlled inputs before embedding in the prompt
+  const safeTopic = sanitizeUserInput(input.theme);
+  const safeDescription = input.description ? sanitizeUserInput(input.description) : undefined;
+  const safeSourceText = input.sourceText
+    ? sanitizeUserInput(input.sourceText.slice(0, 8000))
+    : undefined;
+  const safeTopicsToAvoid = input.topicsToAvoid?.map(sanitizeUserInput) ?? [];
+
+  // Wrap source material in XML delimiters to isolate it from instructions
+  const contextBlock = safeSourceText
+    ? `${t.context}<source-material>\n${safeSourceText}\n</source-material>\n\n`
     : '';
 
-  const descriptionBlock = input.description
+  const descriptionBlock = safeDescription
     ? lang === 'ru'
-      ? `\nОписание темы: ${input.description}\n`
-      : `\nTheme description: ${input.description}\n`
+      ? `\nОписание темы: <user-content>${safeDescription}</user-content>\n`
+      : `\nTheme description: <user-content>${safeDescription}</user-content>\n`
     : '';
 
   const avoidBlock =
-    input.topicsToAvoid && input.topicsToAvoid.length > 0
-      ? `${t.avoid}- ${input.topicsToAvoid.join('\n- ')}\n`
-      : '';
+    safeTopicsToAvoid.length > 0 ? `${t.avoid}- ${safeTopicsToAvoid.join('\n- ')}\n` : '';
 
   const languageBlock = lang === 'ru' ? '\nВсё содержимое должно быть на русском языке.' : '';
 
   const user = `${contextBlock}${t.instructions(
     input.count,
-    input.theme,
+    safeTopic,
   )}${descriptionBlock}${avoidBlock}${languageBlock}
 ${lang === 'ru' ? 'Каждая карточка должна:' : 'Each card must:'}
 ${t.requirements}

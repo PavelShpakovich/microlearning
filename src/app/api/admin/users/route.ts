@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getUserPlan, getUserUsage } from '@/lib/subscription-utils';
 import { logger } from '@/lib/logger';
@@ -13,7 +13,8 @@ import { logger } from '@/lib/logger';
  *  - perPage: items per page (default 20, max 100)
  */
 export const GET = withApiHandler(async (req: Request) => {
-  await requireAuth();
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
 
   const url = new URL(req.url);
   const pageStr = url.searchParams.get('page') ?? '1';

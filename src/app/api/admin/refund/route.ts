@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { env } from '@/lib/env';
 import { refundStarPayment } from '@/lib/telegram-stars';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
@@ -20,23 +19,9 @@ const refundSchema = z.object({
  * Calls refundStarPayment via Telegram Bot API.
  */
 export const POST = withApiHandler(async (req) => {
-  const { user } = await requireAuth();
-
-  // Verify admin access
-  const isCallerAdmin =
-    ('isAdmin' in user && user.isAdmin) ||
-    (() => {
-      if (!env.ADMIN_EMAILS) return false;
-      const email = ('email' in user && user.email) || '';
-      return env.ADMIN_EMAILS.split(',')
-        .map((e) => e.trim())
-        .includes(email);
-    })();
-
-  if (!isCallerAdmin) {
-    return NextResponse.json({ error: 'Only admins can issue refunds' }, { status: 403 });
-  }
-
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
+  const { user } = adminCheck;
   const body = refundSchema.safeParse(await req.json());
   if (!body.success) {
     throw new ValidationError({

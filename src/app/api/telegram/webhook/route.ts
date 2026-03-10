@@ -15,14 +15,17 @@ import { getValidPaidPlanIds } from '@/lib/plan-limits';
  * Telegram sends updates to this endpoint based on webhook configuration.
  */
 export async function POST(req: Request) {
-  // Verify the webhook secret token if configured.
-  // We log mismatches but do not reject, because the webhook may have been
-  // registered before the secret was set. Re-run /api/telegram/setup to fix.
-  if (env.TELEGRAM_WEBHOOK_SECRET) {
-    const incomingSecret = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
-    if (incomingSecret !== env.TELEGRAM_WEBHOOK_SECRET) {
-      logger.warn({ incomingSecret: !!incomingSecret }, 'Webhook secret mismatch — check setup');
-    }
+  // Verify the webhook secret token. If not configured, reject all requests —
+  // TELEGRAM_WEBHOOK_SECRET must be set in production.
+  const webhookSecret = env.TELEGRAM_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    logger.error('TELEGRAM_WEBHOOK_SECRET is not set — rejecting webhook request');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 401 });
+  }
+  const incomingSecret = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
+  if (incomingSecret !== webhookSecret) {
+    logger.warn({ hasSecret: !!incomingSecret }, 'Webhook secret mismatch — rejecting request');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // Both flows produce a next-auth.session-token cookie — no dual-system needed.
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.SUPABASE_SERVICE_KEY,
+    secret: process.env.NEXTAUTH_SECRET,
   });
 
   if (!token) {

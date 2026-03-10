@@ -61,7 +61,7 @@ export const POST = withApiHandler(async () => {
   const payload = Buffer.from(JSON.stringify({ userId: user.id, displayName, exp })).toString(
     'base64url',
   );
-  const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+  const secret = env.NEXTAUTH_SECRET;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
   logger.info({ userId: user.id }, 'NextAuth session token issued from Supabase OTP session');

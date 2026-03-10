@@ -5,7 +5,12 @@ import PDFParser from 'pdf2json';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { ValidationError } from '@/lib/errors';
-import { DATA_SOURCE_TYPES, MAX_UPLOAD_BYTES, ALLOWED_MIME_TYPES } from '@/lib/constants';
+import {
+  DATA_SOURCE_TYPES,
+  MAX_UPLOAD_BYTES,
+  ALLOWED_MIME_TYPES,
+  BLOCKED_IP_RANGES,
+} from '@/lib/constants';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const createSourceSchema = z.object({
@@ -56,6 +61,24 @@ export const POST = withApiHandler(async (req) => {
   if (type === 'url' && !url) {
     throw new ValidationError({ message: 'url is required for type=url' });
   }
+
+  // Validate URL against SSRF-blocked IP ranges before storing
+  if (type === 'url' && url) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new ValidationError({ message: 'URL must use HTTP or HTTPS' });
+      }
+      for (const pattern of BLOCKED_IP_RANGES) {
+        if (pattern.test(parsed.hostname)) {
+          throw new ValidationError({ message: 'URL points to a private or reserved address' });
+        }
+      }
+    } catch (e) {
+      if (e instanceof ValidationError) throw e;
+      throw new ValidationError({ message: 'Invalid URL' });
+    }
+  }
   if (type === 'text' && !content) {
     throw new ValidationError({ message: 'content is required for type=text' });
   }
@@ -103,6 +126,9 @@ async function handleFileUpload(req: Request, userId: string): Promise<NextRespo
 
   const type = typeRaw as 'pdf' | 'docx';
   const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Validate actual file content via magic bytes (client-provided MIME type is not trusted)
+  validateMagicBytes(buffer, type);
 
   // For DOCX, extract text immediately
   if (type === 'docx') {
@@ -169,6 +195,25 @@ async function handleFileUpload(req: Request, userId: string): Promise<NextRespo
   }
 
   throw new ValidationError({ message: `Unknown file type: ${type}` });
+}
+
+/**
+ * Validates file content by inspecting magic bytes (file signatures).
+ * This prevents MIME type spoofing where a client sends a malicious file
+ * with a trusted Content-Type / file.type value.
+ */
+function validateMagicBytes(buffer: Buffer, type: 'pdf' | 'docx'): void {
+  if (type === 'pdf') {
+    // PDF files begin with %PDF (hex: 25 50 44 46)
+    if (buffer.length < 4 || buffer.toString('ascii', 0, 4) !== '%PDF') {
+      throw new ValidationError({ message: 'File content does not match a valid PDF' });
+    }
+  } else if (type === 'docx') {
+    // DOCX is a ZIP archive — begins with PK (hex: 50 4B)
+    if (buffer.length < 2 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
+      throw new ValidationError({ message: 'File content does not match a valid DOCX' });
+    }
+  }
 }
 
 async function extractDocxText(buffer: Buffer): Promise<string> {

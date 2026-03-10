@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { resetUsage } from '@/lib/subscription-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
@@ -10,7 +10,9 @@ import { logger } from '@/lib/logger';
  * Admin endpoint to reset a user's card usage to zero for the current period.
  */
 export const POST = withApiHandler(async (_req: Request, ctx?: unknown) => {
-  const { user } = await requireAuth();
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
+  const { user } = adminCheck;
 
   const { params } = (ctx as { params: Promise<Record<string, string>> } | undefined) || {};
   const { userId } = (await params) || {};

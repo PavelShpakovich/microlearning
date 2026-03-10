@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
-import { requireAuth } from '@/lib/api/auth';
+import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { env } from '@/lib/env';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
@@ -17,24 +16,9 @@ const toggleAdminSchema = z.object({
  * Only users in ADMIN_EMAILS can promote/demote others
  */
 export const PUT = withApiHandler(async (req: Request, ctx?: unknown) => {
-  const { user } = await requireAuth();
-
-  // Verify admin access — either flagged as admin in the session (NextAuth)
-  // or the email appears in the ADMIN_EMAILS env var (Supabase sessions).
-  const isCallerAdmin =
-    ('isAdmin' in user && user.isAdmin) ||
-    (() => {
-      if (!env.ADMIN_EMAILS) return false;
-      const email = ('email' in user && user.email) || '';
-      return env.ADMIN_EMAILS.split(',')
-        .map((e) => e.trim())
-        .includes(email);
-    })();
-
-  if (!isCallerAdmin) {
-    return NextResponse.json({ error: 'Only admins can toggle admin status' }, { status: 403 });
-  }
-
+  const adminCheck = await requireAdmin();
+  if (adminCheck instanceof NextResponse) return adminCheck;
+  const { user } = adminCheck;
   const { params } = (ctx as { params: Promise<Record<string, string>> } | undefined) || {};
   const { userId } = (await params) || {};
 

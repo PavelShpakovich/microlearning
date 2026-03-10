@@ -168,7 +168,7 @@ export const POST = withApiHandler(async (req) => {
   const payload = Buffer.from(JSON.stringify({ userId, displayName, exp, isStub: false })).toString(
     'base64url',
   );
-  const secret = env.NEXTAUTH_SECRET ?? env.SUPABASE_SERVICE_KEY;
+  const secret = env.NEXTAUTH_SECRET;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
   return NextResponse.json({ sessionToken: `${payload}.${sig}`, needsEmail: false });

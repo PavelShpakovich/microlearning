@@ -15,11 +15,14 @@ import { logger } from '@/lib/logger';
 export async function GET(req: NextRequest): Promise<NextResponse> {
   // ── Auth ──────────────────────────────────────────────────────────────
   const secret = env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get('authorization') ?? '';
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!secret) {
+    // CRON_SECRET must always be set — an unprotected cron endpoint is a security risk.
+    logger.error('CRON_SECRET is not configured — rejecting request');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const auth = req.headers.get('authorization') ?? '';
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const now = new Date();
