@@ -139,7 +139,9 @@
     "resumeTitle": "С возвращением!",
     "resumePrompt": "Вы просмотрели {count} из {total} карточек в этой сессии.",
     "resumeContinue": "Продолжить с карточки {number}",
-    "resumeStartOver": "Начать сначала"
+    "resumeStartOver": "Начать сначала",
+    "jumpToCard": "Перейти к карточке",
+    "cardNumber": "Карточка {number}"
   },
   "themes": {
     "heading": "Темы",

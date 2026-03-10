@@ -328,6 +328,14 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         canDecreaseFontSize={canDecreaseFontSize}
         canGenerate={isOwner && !isLimitReached}
         cardsRemaining={isOwner ? cardsRemaining : null}
+        onScrollToCard={(index) => {
+          const card = cardsRef.current[index];
+          if (card) {
+            document
+              .querySelector(`[data-card-id="${card.id}"]`)
+              ?.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
       />
 
       {cards.length === 0 && isInitialLoading && <StudyInitialLoadingScreen />}

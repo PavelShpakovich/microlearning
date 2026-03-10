@@ -139,7 +139,9 @@
     "resumeTitle": "Welcome back!",
     "resumePrompt": "You've seen {count} of {total} cards in this session.",
     "resumeContinue": "Continue from card {number}",
-    "resumeStartOver": "Start from beginning"
+    "resumeStartOver": "Start from beginning",
+    "jumpToCard": "Jump to card",
+    "cardNumber": "Card {number}"
   },
   "themes": {
     "heading": "Themes",
