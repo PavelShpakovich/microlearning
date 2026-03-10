@@ -277,10 +277,10 @@
     "themeNearLimitBannerTitle": "Only {count} {count, plural, one {theme slot} other {theme slots}} left"
   },
   "subscriptions": {
-    "upgradeSuccess": "✅ Plan upgraded to {planName}! You now have access to all premium features.",
+    "upgradeSuccess": "Plan upgraded to {planName}! You now have access to all premium features.",
     "upgradeCancelled": "Payment cancelled.",
     "upgradeFailed": "Payment failed. Please try again.",
-    "downgradeSuccess": "📉 Plan Downgraded\n\nYou've been downgraded to the **Free** plan. Your usage has been reset.",
+    "downgradeSuccess": "Plan Downgraded. You've been moved to the Free plan and your usage has been reset.",
     "telegramOnly": "Upgrades are available only inside the Telegram Mini App. Open the bot to manage your subscription.",
     "webAppWarning": "To upgrade, open the app via Telegram:"
   },

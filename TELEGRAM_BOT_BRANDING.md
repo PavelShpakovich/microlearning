@@ -73,10 +73,10 @@ help - What can Clario do?
 
 In @BotFather → `/mybots` → your bot → **Bot Settings** → **Menu Button**:
 
-| Field       | Value                                    |
-| ----------- | ---------------------------------------- |
-| Button text | `Study Now ⚡`                           |
-| URL         | `https://microlearning-nu.vercel.app/tg` |
+| Field       | Value                |
+| ----------- | -------------------- |
+| Button text | `Study Now ⚡`       |
+| URL         | clario-tg.vercel.app |
 
 ---
 

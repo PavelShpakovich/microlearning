@@ -133,7 +133,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           parse_mode: 'Markdown',
           reply_markup: {
             inline_keyboard: [
-              [{ text: '🔄 Renew subscription', web_app: { url: `${appUrl}/settings/plan` } }],
+              [{ text: 'Renew subscription', web_app: { url: `${appUrl}/settings/plan` } }],
             ],
           },
         }),

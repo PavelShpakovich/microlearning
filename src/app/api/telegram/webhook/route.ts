@@ -188,7 +188,7 @@ export async function POST(req: Request) {
       try {
         await sendTelegramMessage(
           chatId,
-          `✅ Payment Successful!\n\n🎉 Your plan has been upgraded to **${planName}**!\n\nYou now have access to all premium features. Enjoy! 🚀`,
+          `Payment successful! Your plan has been upgraded to ${planName}. You now have access to all premium features.`,
         );
       } catch (err) {
         logger.warn({ err, chatId }, 'Failed to send confirmation message');
@@ -211,13 +211,13 @@ export async function POST(req: Request) {
 
           await sendTelegramMessage(
             chatId,
-            'Welcome to Microlearning! 🚀\n\nTransform long content into bite-sized flashcards and study them right here in Telegram.',
+            'Welcome to Clario!\n\nTransform long content into bite-sized flashcards and study them right here in Telegram.',
             {
               reply_markup: {
                 inline_keyboard: [
                   [
                     {
-                      text: '🚀 Launch App',
+                      text: 'Launch App',
                       web_app: { url: entryUrl },
                     },
                   ],
@@ -234,7 +234,7 @@ export async function POST(req: Request) {
           const supportEmail = process.env.SUPPORT_EMAIL ?? 'support@example.com';
           await sendTelegramMessage(
             chatId,
-            `💳 *Payment Support*\n\nIf you have any issues with your subscription or payment, please contact us:\n\n📧 ${supportEmail}\n\nWe will review your case and issue a refund if needed.`,
+            `Payment Support\n\nIf you have any issues with your subscription or payment, please contact us: ${supportEmail}\n\nWe will review your case and issue a refund if needed.`,
           );
         } catch (err) {
           logger.error({ err, chatId }, 'Failed to send paysupport message');

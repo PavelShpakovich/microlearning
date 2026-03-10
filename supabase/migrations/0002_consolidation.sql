@@ -228,7 +228,7 @@ insert into public.subscription_plans
    cards_per_month, max_themes, community_themes, max_community_themes, features)
 values
   ('free',
-   'Free',    'Get started with microlearning',
+   'Free',    'Get started with Clario',
    0,    0,    50,   5,    false, 0,
    '{"features":["50 cards per month","Up to 5 themes"]}'),
 

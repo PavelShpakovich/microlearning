@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   keywords: [
     'AI flashcards',
     'flashcard generator',
-    'microlearning',
     'study app',
     'spaced learning',
     'Telegram study bot',

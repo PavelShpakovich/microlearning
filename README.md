@@ -1,4 +1,4 @@
-# Microlearning — Flashcard App
+# Clario — Flashcard App
 
 A production-ready flashcard app built with **Next.js 15**, **Supabase**, and a unified **LLM adapter** (Groq / OpenAI / Anthropic / Ollama). Users create themes, upload learning materials, and study AI-generated flashcards. Supports Telegram Mini App integration.
 

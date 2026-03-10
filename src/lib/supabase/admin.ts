@@ -6,7 +6,7 @@ import type { Database } from '@/lib/supabase/types';
 /**
  * Privileged Supabase client using the service_role key.
  *
- * ⚠️  SERVER-ONLY — the `server-only` import at the top prevents this module
+ * SERVER-ONLY — the `server-only` import at the top prevents this module
  * from ever being bundled into the client. It bypasses RLS everywhere.
  *
  * Use only in:

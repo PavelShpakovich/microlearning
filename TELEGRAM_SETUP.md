@@ -1,6 +1,6 @@
 # Telegram Mini App Configuration Guide
 
-This document explains how to configure and run the Microlearning application as a Telegram Mini App (TMA).
+This document explains how to configure and run the Clario application as a Telegram Mini App (TMA).
 
 ## 1. Create a Telegram Bot
 
@@ -17,7 +17,7 @@ Telegram needs to know where to send messages (like `/start`).
 
 1.  Deploy your application (or use a tool like `ngrok` for local development).
 2.  Set the webhook URL by opening this link in your browser:
-    `https://api.telegram.org/bot8661617727:AAEHCzkVZNaMWDB2zxIb6YQ4PtkFD3y3HSU/setWebhook?url=https://microlearning-nu.vercel.app/api/telegram/webhook`
+    `https://api.telegram.org/bot<BOT_TOKEN>/setWebhook?url=<YOUR_APP_URL>/api/telegram/webhook`
 3.  You should see a JSON response: `{"ok":true,"result":true,"description":"Webhook was set"}`.
 
 ## 3. Configure the Mini App (BotFather Settings)

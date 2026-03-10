@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** A single microlearning info card as validated from LLM output. */
+/** A single info card as validated from LLM output. */
 const normalizedCardSchema = z.object({
   title: z.string().trim().min(1, 'title is empty').max(100, 'title too long'),
   body: z.string().trim().min(20, 'body too short (≥20 chars)').max(8000, 'body too long'),

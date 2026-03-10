@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, Send } from 'lucide-react';
+import { Check, ChevronRight, Send } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 import { isTelegramWebApp } from '@/components/telegram-provider';
 
@@ -167,8 +167,9 @@ export function SettingsClient({
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-4">
             {telegramId ? (
-              <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                ✓ {t('settings.telegramConnected')}
+              <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                <Check className="h-4 w-4" />
+                {t('settings.telegramConnected')}
               </span>
             ) : (
               <Button onClick={() => void onConnectTelegram()} disabled={isConnecting}>

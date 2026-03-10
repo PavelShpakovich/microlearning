@@ -2,7 +2,7 @@ import type { GenerateInput } from '@/lib/llm/schema';
 
 const PROMPTS = {
   en: {
-    system: `You are an expert educational content creator specializing in microlearning.
+    system: `You are an expert educational content creator specializing in flashcard-based learning.
 Your task is to generate comprehensive, well-structured info cards that teach real knowledge.
 
 Rules:
@@ -72,7 +72,7 @@ Rules:
 };
 
 /**
- * Builds the system + user prompt for microlearning info card generation.
+ * Builds the system + user prompt for info card generation.
  * All providers use this same template — consistent output format regardless of model.
  */
 export function buildPrompt(input: GenerateInput): { system: string; user: string } {
