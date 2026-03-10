@@ -88,15 +88,35 @@ export async function POST(req: Request) {
       const payload = payment.invoice_payload;
       const chatId = update.message.chat.id;
 
+      const chargeId: string = payment.telegram_payment_charge_id;
+      const isRecurring: boolean = !!payment.is_recurring;
+      const isFirstRecurring: boolean = !!payment.is_first_recurring;
+      const subscriptionExpirationDate: number | undefined = payment.subscription_expiration_date;
+
       logger.info(
         {
           telegramUserId: userId,
-          telegramPaymentChargeId: payment.telegram_payment_charge_id,
+          telegramPaymentChargeId: chargeId,
           totalAmount: payment.total_amount,
           currency: payment.currency,
+          isRecurring,
+          isFirstRecurring,
+          subscriptionExpirationDate,
         },
         'Successful payment received',
       );
+
+      // ── Idempotency guard: skip if this charge was already processed ──
+      const { data: existingPayment } = await supabaseAdmin
+        .from('payment_history')
+        .select('id')
+        .eq('telegram_payment_charge_id', chargeId)
+        .maybeSingle();
+
+      if (existingPayment) {
+        logger.info({ chargeId }, 'Duplicate payment webhook — already processed, skipping');
+        return NextResponse.json({ ok: true });
+      }
 
       // Parse invoice payload — format: "<userId>|<planId>"
       let planId: string;
@@ -138,41 +158,96 @@ export async function POST(req: Request) {
 
       const dbUserId = profile.id;
 
-      // Update subscription
+      // Calculate period end — prefer Telegram's subscription_expiration_date
       const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      const periodEnd = subscriptionExpirationDate
+        ? new Date(subscriptionExpirationDate * 1000)
+        : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-      const { error: updateError } = await supabaseAdmin.from('user_subscriptions').upsert(
-        {
-          user_id: dbUserId,
-          plan_id: planId,
-          status: 'active',
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
-        },
-        { onConflict: 'user_id' },
-      );
+      // ── Record payment in history (idempotency + audit trail) ─────────
+      const { error: historyError } = await supabaseAdmin.from('payment_history').insert({
+        user_id: dbUserId,
+        telegram_payment_charge_id: chargeId,
+        plan_id: planId,
+        amount: payment.total_amount,
+        currency: payment.currency || 'XTR',
+        is_first_recurring: isFirstRecurring,
+        is_recurring: isRecurring,
+        subscription_expiration_date: periodEnd.toISOString(),
+      });
 
-      if (updateError) {
-        logger.error(
-          { err: updateError, userId: dbUserId, planId },
-          'Failed to update subscription after payment',
-        );
-        return NextResponse.json({ ok: true });
+      if (historyError) {
+        // Unique constraint violation = duplicate — safe to skip
+        if (historyError.code === '23505') {
+          logger.info({ chargeId }, 'Duplicate charge_id insert — skipping');
+          return NextResponse.json({ ok: true });
+        }
+        logger.error({ err: historyError }, 'Failed to insert payment_history');
       }
 
-      // Reset usage for the new billing period
-      const { error: deleteUsageError } = await supabaseAdmin
-        .from('user_usage')
-        .delete()
-        .eq('user_id', dbUserId);
+      // ── Update subscription ───────────────────────────────────────────
+      // For first payment or non-recurring: store the charge_id on the subscription
+      // (needed for editUserStarSubscription cancel/re-enable).
+      // For renewals: extend the period without overwriting the first charge_id.
+      if (isRecurring && !isFirstRecurring) {
+        // Renewal: extend existing subscription period
+        const { error: updateError } = await supabaseAdmin
+          .from('user_subscriptions')
+          .update({
+            plan_id: planId,
+            status: 'active',
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            auto_renew: true,
+            updated_at: now.toISOString(),
+          })
+          .eq('user_id', dbUserId);
 
-      if (deleteUsageError) {
-        logger.warn(
-          { err: deleteUsageError, userId: dbUserId },
-          'Failed to reset usage (non-critical)',
+        if (updateError) {
+          logger.error(
+            { err: updateError, userId: dbUserId, planId },
+            'Failed to extend subscription on renewal',
+          );
+          return NextResponse.json({ ok: true });
+        }
+      } else {
+        // First payment (or first recurring): upsert with charge_id
+        const { error: upsertError } = await supabaseAdmin.from('user_subscriptions').upsert(
+          {
+            user_id: dbUserId,
+            plan_id: planId,
+            status: 'active',
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            auto_renew: true,
+            telegram_payment_charge_id: chargeId,
+            updated_at: now.toISOString(),
+          },
+          { onConflict: 'user_id' },
         );
+
+        if (upsertError) {
+          logger.error(
+            { err: upsertError, userId: dbUserId, planId },
+            'Failed to upsert subscription after payment',
+          );
+          return NextResponse.json({ ok: true });
+        }
+      }
+
+      // Reset usage for the new billing period (only on first payment, not renewals)
+      if (!isRecurring || isFirstRecurring) {
+        const { error: deleteUsageError } = await supabaseAdmin
+          .from('user_usage')
+          .delete()
+          .eq('user_id', dbUserId);
+
+        if (deleteUsageError) {
+          logger.warn(
+            { err: deleteUsageError, userId: dbUserId },
+            'Failed to reset usage (non-critical)',
+          );
+        }
       }
 
       logger.info(
@@ -180,16 +255,20 @@ export async function POST(req: Request) {
           userId: dbUserId,
           planId,
           currentPeriodEnd: periodEnd.toISOString(),
+          isRecurring,
+          isFirstRecurring,
+          chargeId,
         },
         'Subscription updated successfully after payment',
       );
 
       // Send confirmation message to user in Telegram
       try {
-        await sendTelegramMessage(
-          chatId,
-          `Payment successful! Your plan has been upgraded to ${planName}. You now have access to all premium features.`,
-        );
+        const message =
+          isRecurring && !isFirstRecurring
+            ? `Your ${planName} subscription has been renewed. Next renewal: ${periodEnd.toLocaleDateString()}.`
+            : `Payment successful! Your plan has been upgraded to ${planName}. You now have access to all premium features.`;
+        await sendTelegramMessage(chatId, message);
       } catch (err) {
         logger.warn({ err, chatId }, 'Failed to send confirmation message');
       }

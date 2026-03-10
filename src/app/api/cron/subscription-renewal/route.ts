@@ -25,19 +25,41 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const now = new Date();
 
   // ── A: Expire overdue subscriptions ──────────────────────────────────
-  const { data: expired, error: expireError } = await supabaseAdmin
+  // For auto_renew=true subscriptions, allow a 3-day grace period after
+  // current_period_end — Telegram may still be processing the recurring charge.
+  // For auto_renew=false (cancelled), expire as soon as the period ends.
+
+  // A1: Expire cancelled subscriptions (no grace period)
+  const { data: expiredCancelled, error: cancelledError } = await supabaseAdmin
     .from('user_subscriptions')
     .update({ status: 'expired' })
-    .eq('status', 'active')
+    .eq('status', 'cancelled')
+    .eq('auto_renew', false)
     .lt('current_period_end', now.toISOString())
     .select('user_id');
 
-  if (expireError) {
-    logger.error({ error: expireError }, 'Cron: failed to expire subscriptions');
-    return NextResponse.json({ error: 'Failed to expire subscriptions' }, { status: 500 });
+  if (cancelledError) {
+    logger.error({ error: cancelledError }, 'Cron: failed to expire cancelled subscriptions');
   }
 
-  const expiredUserIds = (expired ?? []).map((r) => r.user_id);
+  // A2: Expire auto-renew subscriptions that are 3+ days overdue (payment failed)
+  const gracePeriodEnd = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const { data: expiredAutoRenew, error: autoRenewError } = await supabaseAdmin
+    .from('user_subscriptions')
+    .update({ status: 'expired', auto_renew: false })
+    .eq('status', 'active')
+    .eq('auto_renew', true)
+    .lt('current_period_end', gracePeriodEnd.toISOString())
+    .select('user_id');
+
+  if (autoRenewError) {
+    logger.error({ error: autoRenewError }, 'Cron: failed to expire overdue auto-renew subs');
+  }
+
+  const expiredUserIds = [
+    ...(expiredCancelled ?? []).map((r) => r.user_id),
+    ...(expiredAutoRenew ?? []).map((r) => r.user_id),
+  ];
   let usageDeleted = 0;
 
   if (expiredUserIds.length > 0) {
@@ -59,7 +81,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     'Cron: subscription expiry job done',
   );
 
-  // ── B: Remind users expiring in next 3 days ──────────────────────────
+  // ── B: Remind users expiring in next 3 days (only non-auto-renewing) ─
+  // Auto-renewing users don't need reminders — Telegram charges automatically.
   if (!env.TELEGRAM_BOT_TOKEN) {
     logger.info('Cron: TELEGRAM_BOT_TOKEN not set — skipping renewal reminders');
     return NextResponse.json({ expired: expiredUserIds.length, reminded: 0 });
@@ -70,7 +93,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const { data: expiringSoon, error: remindError } = await supabaseAdmin
     .from('user_subscriptions')
     .select('user_id, plan_id, current_period_end')
-    .eq('status', 'active')
+    .in('status', ['active', 'cancelled'])
+    .eq('auto_renew', false)
     .gt('current_period_end', now.toISOString())
     .lte('current_period_end', in3Days.toISOString());
 

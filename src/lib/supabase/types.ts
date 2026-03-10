@@ -207,6 +207,45 @@ export type Database = {
           },
         ];
       };
+      payment_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          telegram_payment_charge_id: string;
+          plan_id: string;
+          amount: number;
+          currency: string;
+          is_first_recurring: boolean;
+          is_recurring: boolean;
+          subscription_expiration_date: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          telegram_payment_charge_id: string;
+          plan_id: string;
+          amount: number;
+          currency?: string;
+          is_first_recurring?: boolean;
+          is_recurring?: boolean;
+          subscription_expiration_date?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          telegram_payment_charge_id?: string;
+          plan_id?: string;
+          amount?: number;
+          currency?: string;
+          is_first_recurring?: boolean;
+          is_recurring?: boolean;
+          subscription_expiration_date?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -379,6 +418,7 @@ export type Database = {
           status: string;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
+          telegram_payment_charge_id: string | null;
           updated_at: string | null;
           user_id: string;
         };
@@ -392,6 +432,7 @@ export type Database = {
           status?: string;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
+          telegram_payment_charge_id?: string | null;
           updated_at?: string | null;
           user_id: string;
         };
@@ -405,6 +446,7 @@ export type Database = {
           status?: string;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
+          telegram_payment_charge_id?: string | null;
           updated_at?: string | null;
           user_id?: string;
         };

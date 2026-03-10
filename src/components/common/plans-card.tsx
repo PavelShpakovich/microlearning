@@ -30,6 +30,8 @@ interface PlanTileProps {
   isDowngrade: boolean;
   isRequesting: boolean;
   canUpgrade: boolean;
+  isCancelled: boolean;
+  expiresAt: string | null;
   onSelect: () => void;
 }
 
@@ -41,6 +43,8 @@ function PlanTile({
   isDowngrade,
   isRequesting,
   canUpgrade,
+  isCancelled,
+  expiresAt,
   onSelect,
 }: PlanTileProps) {
   const t = useTranslations();
@@ -73,9 +77,18 @@ function PlanTile({
       </ul>
 
       {isCurrent ? (
-        <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-          <Check className="w-3.5 h-3.5" />
-          {t('plans.currentPlan')}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+            <Check className="w-3.5 h-3.5" />
+            {t('plans.currentPlan')}
+          </div>
+          {isCancelled && expiresAt && (
+            <p className="text-xs text-muted-foreground">
+              {t('subscriptions.activeUntil', {
+                date: new Date(expiresAt).toLocaleDateString(),
+              })}
+            </p>
+          )}
         </div>
       ) : isUpgrade ? (
         <Button
@@ -100,15 +113,20 @@ function PlanTile({
           size="sm"
           variant="ghost"
           onClick={onSelect}
-          disabled={isRequesting}
+          disabled={isRequesting || isCancelled}
           className="w-full text-xs"
         >
           {isRequesting ? (
             <Loader2 className="w-3 h-3 animate-spin" />
+          ) : isCancelled ? (
+            <>
+              <Check className="w-3 h-3 mr-1" />
+              {t('subscriptions.cancellationPending')}
+            </>
           ) : (
             <>
               <ArrowDownLeft className="w-3 h-3 mr-1" />
-              {t('plans.downgrade')}
+              {t('plans.cancelRenewal')}
             </>
           )}
         </Button>
@@ -145,20 +163,20 @@ export function PlansCard() {
 
     setRequesting(planId);
     try {
-      // Call API to cancel the current subscription and revert to free
+      // Call API to cancel the subscription renewal
       const response = await fetch('/api/profile/telegram-subscription', {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to downgrade subscription');
+        throw new Error('Failed to cancel subscription');
       }
 
-      toast.success(t('subscriptions.downgradeSuccess') || 'Plan downgraded to Free');
+      toast.success(t('subscriptions.cancelSuccess'));
       // Trigger subscription refresh
       if (refetch) await refetch();
     } catch {
-      toast.error(t('errors.generic') || 'Failed to downgrade subscription');
+      toast.error(t('errors.generic') || 'Failed to cancel subscription');
     } finally {
       setRequesting(null);
     }
@@ -264,6 +282,8 @@ export function PlansCard() {
                 isDowngrade={idx < currentPlanIndex}
                 isRequesting={requesting === plan.id}
                 canUpgrade={isTelegramWebApp() || plan.id === 'free'}
+                isCancelled={status?.subscriptionStatus === 'cancelled'}
+                expiresAt={status?.expiresAt ?? null}
                 onSelect={() => handlePlanSelect(plan)}
               />
             ))}

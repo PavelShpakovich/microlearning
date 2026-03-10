@@ -25,6 +25,9 @@ interface TelegramInvoicePayload {
     label: string;
     amount: number; // In smallest units (Telegram Stars)
   }>;
+  // Recurring subscription period in seconds. Must be 2592000 (30 days).
+  // When set, Telegram auto-charges the user every period.
+  subscription_period: number;
 }
 
 /**
@@ -58,6 +61,9 @@ export async function createTelegramInvoiceLink(
         amount: starsPrice,
       },
     ],
+    // Enable recurring billing — Telegram auto-charges every 30 days.
+    // Currently 2592000 (30 days) is the only allowed value.
+    subscription_period: 2592000,
   };
 
   const apiUrl = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/createInvoiceLink`;
@@ -134,4 +140,73 @@ export async function getPlanDetails(
   }`;
 
   return { name, description, cardsPerMonth };
+}
+
+/**
+ * Cancel or re-enable a Telegram Stars subscription.
+ *
+ * Uses the first payment's telegram_payment_charge_id.
+ * API Reference: https://core.telegram.org/bots/api#edituserstarsubscription
+ */
+export async function editTelegramSubscription(
+  telegramUserId: number,
+  telegramPaymentChargeId: string,
+  isCanceled: boolean,
+): Promise<boolean> {
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN not configured');
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/editUserStarSubscription`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: telegramUserId,
+        telegram_payment_charge_id: telegramPaymentChargeId,
+        is_canceled: isCanceled,
+      }),
+    },
+  );
+
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(`editUserStarSubscription failed: ${data.description || JSON.stringify(data)}`);
+  }
+
+  return true;
+}
+
+/**
+ * Refund a Telegram Stars payment.
+ *
+ * API Reference: https://core.telegram.org/bots/api#refundstarpayment
+ */
+export async function refundStarPayment(
+  telegramUserId: number,
+  telegramPaymentChargeId: string,
+): Promise<boolean> {
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN not configured');
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/refundStarPayment`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: telegramUserId,
+        telegram_payment_charge_id: telegramPaymentChargeId,
+      }),
+    },
+  );
+
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(`refundStarPayment failed: ${data.description || JSON.stringify(data)}`);
+  }
+
+  return true;
 }

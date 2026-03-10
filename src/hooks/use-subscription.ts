@@ -26,6 +26,8 @@ export interface SubscriptionStatus {
   isPaid: boolean;
   expiresAt: string | null;
   inTelegram: boolean;
+  autoRenew: boolean;
+  subscriptionStatus: 'active' | 'cancelled' | 'expired' | 'none';
 
   // Backward compatibility with components expecting nested objects
   plan: {
