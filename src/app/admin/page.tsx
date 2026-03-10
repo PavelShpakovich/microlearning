@@ -230,7 +230,7 @@ function PlanBadge({ plan }: { plan: string }) {
 }
 
 function formatUserIdentifier(user: AdminUser): string {
-  if (user.telegramId) return `TG: ${user.telegramId}`;
+  if (user.telegramId) return `ID: ${user.telegramId}`;
   return user.email;
 }
 
