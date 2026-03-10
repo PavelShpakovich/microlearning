@@ -76,10 +76,10 @@ export const GET = withApiHandler(async () => {
 
   // Determine effective plan: a subscription counts if it's active OR
   // cancelled-but-not-yet-expired (user keeps access until period end).
-  const periodEnd = subscription?.current_period_end
+  const subscriptionPeriodEnd = subscription?.current_period_end
     ? new Date(subscription.current_period_end)
     : null;
-  const isPeriodActive = periodEnd != null && periodEnd > now;
+  const isPeriodActive = subscriptionPeriodEnd != null && subscriptionPeriodEnd > now;
   const isActive =
     subscription != null &&
     (subscription.status === 'active' || subscription.status === 'cancelled') &&
@@ -164,7 +164,7 @@ export const GET = withApiHandler(async () => {
       cardsLimit,
       cardsRemaining,
       periodStart,
-      periodEnd: periodEndStr,
+      periodEnd: periodEnd,
     },
 
     themesUsed: themesUsed ?? 0,
