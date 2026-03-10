@@ -30,7 +30,6 @@ export default async function SettingsPage() {
   return (
     <Suspense fallback={<SettingsSkeleton />}>
       <SettingsClient
-        userEmail={isStub ? '' : authEmail}
         initialProfile={profile}
         userName={session.user.name ?? null}
         isStub={isStub}

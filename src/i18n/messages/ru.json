@@ -71,6 +71,7 @@
     "internalError": "Внутренняя ошибка сервера"
   },
   "dashboard": {
+    "greeting": "Привет, {name}!",
     "heading": "Мои темы",
     "description": "{count} {count, plural, one {тема} few {темы} other {тем}}",
     "descriptionWithLimit": "{count} / {limit} тем",

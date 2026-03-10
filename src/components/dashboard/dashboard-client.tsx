@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeList } from './theme-list';
 import { UsageBanner } from '@/components/common/usage-banner';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useDisplayName } from '@/hooks/use-display-name';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
@@ -31,6 +32,7 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const t = useTranslations();
   const { status: subscriptionStatus } = useSubscription();
+  const displayName = useDisplayName();
   const [themes, setThemes] = useState(initialThemes);
   const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
   const [showDeleteAllThemes, setShowDeleteAllThemes] = useState(false);
@@ -125,6 +127,11 @@ export function DashboardClient({
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <div>
+          {displayName && (
+            <p className="text-sm text-muted-foreground mb-1">
+              {t('dashboard.greeting', { name: displayName })}
+            </p>
+          )}
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             {t('dashboard.heading')}
           </h1>

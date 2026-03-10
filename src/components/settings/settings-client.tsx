@@ -18,7 +18,6 @@ import { isTelegramWebApp } from '@/components/telegram-provider';
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 interface SettingsClientProps {
-  userEmail: string;
   initialProfile: {
     display_name: string | null;
     telegram_id: string | null;
@@ -32,12 +31,7 @@ interface SettingsClientProps {
 import { signOut } from 'next-auth/react';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 
-export function SettingsClient({
-  userEmail,
-  initialProfile,
-  userName,
-  isStub = false,
-}: SettingsClientProps) {
+export function SettingsClient({ initialProfile, userName, isStub = false }: SettingsClientProps) {
   const t = useTranslations();
   const [displayName, setDisplayName] = useState(initialProfile?.display_name || userName || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -187,11 +181,6 @@ export function SettingsClient({
         </CardHeader>
         <CardContent className="space-y-6">
           <>
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('settings.email')}</Label>
-              <Input id="email" value={userEmail} disabled />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="displayName">{t('settings.displayName')}</Label>
               <Input

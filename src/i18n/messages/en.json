@@ -71,6 +71,7 @@
     "internalError": "Internal server error"
   },
   "dashboard": {
+    "greeting": "Hi, {name}!",
     "heading": "My Themes",
     "description": "{count} {count, plural, one {theme} other {themes}}",
     "descriptionWithLimit": "{count} / {limit} themes",
