@@ -50,7 +50,7 @@ function BotSetupCard() {
 
   return (
     <Card className="p-6 mb-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col items-center justify-between gap-2">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Bot className="h-5 w-5" />
@@ -223,7 +223,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
             <p className="font-medium text-sm truncate">{user.email}</p>
             <p className="text-xs text-muted-foreground truncate">{user.displayName}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-col items-center gap-2 shrink-0">
             <PlanBadge plan={selectedPlan} />
             {isAdminState && (
               <Badge variant="secondary" className="text-xs">
