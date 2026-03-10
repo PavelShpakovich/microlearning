@@ -6,19 +6,19 @@ An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unifi
 
 ## Tech Stack
 
-| Layer           | Tech                                                    |
-| --------------- | ------------------------------------------------------- |
-| Framework       | Next.js 15, App Router, TypeScript strict               |
-| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                        |
-| Session         | NextAuth.js (JWT cookie)                                |
-| LLM             | Groq / OpenAI / Anthropic / Ollama (unified adapter)    |
-| Validation      | Zod                                                     |
-| Ingestion       | PDF, DOCX, URL scraping, YouTube transcript, plain text |
-| Payments        | Telegram Stars                                          |
-| i18n            | next-intl (English + Russian)                           |
-| Logging         | pino                                                    |
-| Tests           | Jest + Testing Library                                  |
-| Deploy          | Vercel                                                  |
+| Layer           | Tech                                                 |
+| --------------- | ---------------------------------------------------- |
+| Framework       | Next.js 15, App Router, TypeScript strict            |
+| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                     |
+| Session         | NextAuth.js (JWT cookie)                             |
+| LLM             | Groq / OpenAI / Anthropic / Ollama (unified adapter) |
+| Validation      | Zod                                                  |
+| Ingestion       | PDF, DOCX, URL scraping, plain text                  |
+| Payments        | Telegram Stars                                       |
+| i18n            | next-intl (English + Russian)                        |
+| Logging         | pino                                                 |
+| Tests           | Jest + Testing Library                               |
+| Deploy          | Vercel                                               |
 
 ---
 
@@ -101,7 +101,7 @@ Web users (legacy) can still log in with email + password and link their Telegra
 
 1. **Open the Mini App** in Telegram — auto-authenticated via HMAC.
 2. **Create a theme** — e.g. "TypeScript", "Spanish Vocabulary".
-3. **Add sources** — upload a PDF/DOCX, paste a URL, enter text, or paste a YouTube URL.
+3. **Add sources** — upload a PDF/DOCX, paste a URL, or enter text.
 4. **Study** — flashcards are AI-generated and served in sessions; more are generated on-demand when your queue runs low.
 
 ### Subscriptions & Payments
