@@ -91,7 +91,9 @@ function AnalyticsCard() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t('analyticsTitle')}</h2>
         <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
-          <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RotateCcw
+            className={`h-4 w-4 ${loading ? 'animate-[spin_1s_linear_infinite_reverse]' : ''}`}
+          />
         </Button>
       </div>
 
@@ -188,7 +190,7 @@ function BotSetupCard() {
 
   return (
     <Card className="p-6 mb-6">
-      <div className="flex flex-col items-center justify-between gap-2">
+      <div className="flex flex-col gap-2">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Bot className="h-5 w-5" />
@@ -196,7 +198,7 @@ function BotSetupCard() {
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t('botSetupDescription')}</p>
         </div>
-        <Button onClick={runSetup} disabled={loading} className="shrink-0">
+        <Button onClick={runSetup} disabled={loading} className="shrink-0 self-end">
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {loading ? t('botSetupRunning') : t('botSetupRun')}
         </Button>
