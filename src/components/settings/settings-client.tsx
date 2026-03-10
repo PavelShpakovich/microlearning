@@ -144,7 +144,11 @@ export function SettingsClient({ initialProfile, userName, isStub = false }: Set
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={() => void onSave()} disabled={isSaving}>
+              <Button
+                className="w-full sm:w-auto"
+                onClick={() => void onSave()}
+                disabled={isSaving}
+              >
                 {isSaving ? t('settings.saving') : t('settings.saveProfile')}
               </Button>
             </div>
@@ -173,6 +177,7 @@ export function SettingsClient({ initialProfile, userName, isStub = false }: Set
 
             <div className="flex justify-end">
               <Button
+                className="w-full sm:w-auto"
                 onClick={() => void onSavePassword()}
                 disabled={isSavingPassword || newPassword.length < 6}
                 variant="secondary"

@@ -48,7 +48,7 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
         }`}
       >
         {isThemesExhausted ? <Lock className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-        <div className="flex items-start justify-between gap-4 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 w-full">
           <div>
             <AlertTitle>
               {isThemesExhausted
@@ -84,7 +84,7 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
       }`}
     >
       {isExhausted ? <Lock className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-      <div className="flex items-start justify-between gap-4 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 w-full">
         <div>
           <AlertTitle>
             {isExhausted

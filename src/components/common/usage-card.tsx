@@ -98,15 +98,14 @@ export function UsageCard() {
                 </span>
               </div>
               <UsageProgressBar pct={pct} />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>
-                {isExhausted
-                  ? t('usage.noCardsLeft')
-                  : t('usage.cardsLeft', { count: status.usage.cardsRemaining })}
-              </span>
-              {periodEnd && <span>{t('usage.periodRenews', { date: periodEnd })}</span>}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {isExhausted
+                    ? t('usage.noCardsLeft')
+                    : t('usage.cardsLeft', { count: status.usage.cardsRemaining })}
+                </span>
+                {periodEnd && <span>{t('usage.periodRenews', { date: periodEnd })}</span>}
+              </div>
             </div>
 
             {isExhausted && (
@@ -142,10 +141,12 @@ export function UsageCard() {
                         </span>
                       </div>
                       <UsageProgressBar pct={themesPct} />
-                      <div className="text-xs text-muted-foreground">
-                        {isThemesExhausted
-                          ? t('usage.noThemesLeft')
-                          : t('usage.themesLeft', { count: themesRemaining })}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {isThemesExhausted
+                            ? t('usage.noThemesLeft')
+                            : t('usage.themesLeft', { count: themesRemaining })}
+                        </span>
                       </div>
                     </div>
                   </>

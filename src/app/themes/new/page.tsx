@@ -174,7 +174,7 @@ export default function NewThemePage() {
                 <label className="text-sm font-medium text-foreground">
                   {t('themes.generationMode')}
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
                   {/* Auto Generate card */}
                   <div
                     role="button"

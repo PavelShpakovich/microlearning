@@ -29,7 +29,7 @@ export function InfoCard({ card, fontSize = 1 }: InfoCardProps) {
     <div className="w-full flex flex-col bg-background relative" data-card-id={card.id}>
       {/* Content — flows naturally, no inner scroll */}
       <div className={`px-5 py-6 pt-6 md:px-10 md:py-8 md:pt-10 ${cfg.container}`}>
-        <div className="max-w-3xl mx-auto pb-28 md:pb-28">
+        <div className="max-w-3xl mx-auto pb-28">
           {/* Title */}
           <h1 className={`${cfg.title} font-bold text-foreground mb-4 md:mb-6 leading-snug`}>
             {card.title}

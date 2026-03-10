@@ -17,7 +17,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
       <Button
         variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
         size="icon"
-        className="h-7 w-7"
+        className="h-8 w-8"
         onClick={() => onViewChange('grid')}
         aria-label={t('dashboard.gridView')}
       >
@@ -26,7 +26,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
       <Button
         variant={viewMode === 'list' ? 'secondary' : 'ghost'}
         size="icon"
-        className="h-7 w-7"
+        className="h-8 w-8"
         onClick={() => onViewChange('list')}
         aria-label={t('dashboard.listView')}
       >

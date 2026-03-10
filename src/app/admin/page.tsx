@@ -98,7 +98,7 @@ function AnalyticsCard() {
       </div>
 
       {loading && !data ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
           ))}
@@ -106,7 +106,7 @@ function AnalyticsCard() {
       ) : data ? (
         <div className="space-y-4">
           {/* Primary stat tiles */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatTile
               label={t('analyticsTotalUsers')}
               value={data.totalUsers.toLocaleString()}
