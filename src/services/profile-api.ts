@@ -40,21 +40,6 @@ class ProfileApi {
     return (await response.json()) as ProfileResponse;
   }
 
-  async updateUiLanguage(uiLanguage: 'en' | 'ru'): Promise<ProfileResponse> {
-    const response = await fetch('/api/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uiLanguage }),
-    });
-
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string; message?: string };
-      throw new Error(data.error || data.message || 'Failed to update language');
-    }
-
-    return (await response.json()) as ProfileResponse;
-  }
-
   async updatePassword(password: string): Promise<void> {
     const response = await fetch('/api/profile/password', {
       method: 'PATCH',

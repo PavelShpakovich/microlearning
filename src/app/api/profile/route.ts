@@ -10,7 +10,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(100).optional(),
-  uiLanguage: z.enum(['en', 'ru']).optional(),
 });
 
 export const GET = withApiHandler(async () => {
@@ -19,7 +18,7 @@ export const GET = withApiHandler(async () => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, telegram_id, ui_language')
+    .select('display_name, telegram_id')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -34,9 +33,8 @@ export const GET = withApiHandler(async () => {
       .insert({
         id: user.id,
         display_name: fallbackDisplayName,
-        ui_language: 'en',
       })
-      .select('display_name, telegram_id, ui_language')
+      .select('display_name, telegram_id')
       .single();
 
     if (createError ?? !createdProfile) {
@@ -82,22 +80,20 @@ export const PATCH = withApiHandler(async (req) => {
     });
   }
 
-  const { displayName, uiLanguage } = body.data;
+  const { displayName } = body.data;
 
   const updateData: {
     id: string;
     display_name?: string;
-    ui_language?: string;
   } = {
     id: user.id,
   };
   if (displayName) updateData.display_name = displayName;
-  if (uiLanguage) updateData.ui_language = uiLanguage;
 
   const { data: updatedProfile, error } = await supabase
     .from('profiles')
     .upsert(updateData, { onConflict: 'id' })
-    .select('display_name, telegram_id, ui_language')
+    .select('display_name, telegram_id')
     .single();
 
   if (error ?? !updatedProfile) {
