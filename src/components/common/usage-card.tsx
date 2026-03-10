@@ -76,7 +76,7 @@ export function UsageCard() {
         ) : (
           <>
             <div className="flex flex-col gap-1 text-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center gap-1">
                 <span className="text-muted-foreground">
                   {t('usage.planLabel', { plan: planName ?? '' })}
                 </span>
@@ -127,7 +127,7 @@ export function UsageCard() {
                   <>
                     <div className="border-t border-border" />
                     <div className="flex flex-col gap-1 text-sm">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col items-center gap-1">
                         <span className="text-muted-foreground">{t('usage.themesLabel')}</span>
                         <span
                           className={`font-medium tabular-nums ${
