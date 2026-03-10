@@ -5,6 +5,17 @@
     "english": "English",
     "russian": "Русский"
   },
+  "welcome": {
+    "title": "Welcome to Clario",
+    "subtitle": "Turn any topic into AI-generated flashcards in seconds.",
+    "step1Label": "Create a theme",
+    "step1Desc": "Pick a topic to organise your flashcards.",
+    "step2Label": "Add sources, if you want",
+    "step2Desc": "Paste text, enter a URL, or upload a document.",
+    "step3Label": "Generate and study",
+    "step3Desc": "AI creates cards almost instantly.",
+    "cta": "Get started"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "settings": "Settings",

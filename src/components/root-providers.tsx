@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 import { TelegramLoader } from '@/components/telegram-loader';
 import { TelegramConnectPrompt } from '@/components/providers/telegram-connect-prompt';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
+import { WelcomeModal } from '@/components/common/welcome-modal';
 
 interface RootProvidersProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export function RootProviders({ children, locale, messages }: RootProvidersProps
             <TelegramLoader>{children}</TelegramLoader>
           </SubscriptionProvider>
           <TelegramConnectPrompt />
+          <WelcomeModal />
           <Toaster position="bottom-right" />
         </ThemeProvider>
       </NextIntlClientProvider>
