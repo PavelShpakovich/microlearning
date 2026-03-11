@@ -94,7 +94,9 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  {resolvedTheme === 'dark' ? (
+                  {theme === 'system' ? (
+                    <Monitor className="w-4 h-4" />
+                  ) : theme === 'dark' ? (
                     <Moon className="w-4 h-4" />
                   ) : (
                     <Sun className="w-4 h-4" />
@@ -178,7 +180,9 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  {resolvedTheme === 'dark' ? (
+                  {theme === 'system' ? (
+                    <Monitor className="w-4 h-4" />
+                  ) : theme === 'dark' ? (
                     <Moon className="w-4 h-4" />
                   ) : (
                     <Sun className="w-4 h-4" />
