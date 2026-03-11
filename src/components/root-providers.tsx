@@ -3,7 +3,6 @@
 import { NextIntlClientProvider } from 'next-intl';
 import type { AbstractIntlMessages } from 'next-intl';
 import { SessionProvider } from 'next-auth/react';
-import type { Session } from 'next-auth';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { TelegramLoader } from '@/components/telegram-loader';
@@ -14,12 +13,11 @@ interface RootProvidersProps {
   children: React.ReactNode;
   locale: string;
   messages: AbstractIntlMessages;
-  session?: Session | null;
 }
 
-export function RootProviders({ children, locale, messages, session }: RootProvidersProps) {
+export function RootProviders({ children, locale, messages }: RootProvidersProps) {
   return (
-    <SessionProvider session={session}>
+    <SessionProvider>
       <NextIntlClientProvider locale={locale} messages={messages}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <SubscriptionProvider>

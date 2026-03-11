@@ -31,13 +31,12 @@ import {
   Globe,
   LayoutDashboard,
 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 
 export function Header() {
   const t = useTranslations();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const displayName = useDisplayName();
   const { locale, setLanguage } = useUiLanguage();
@@ -48,25 +47,6 @@ export function Header() {
   if (isTelegramWebApp()) {
     if (pathname.startsWith('/study')) return null;
     return <TgSettingsBar />;
-  }
-
-  // Skip rendering unauthenticated header while session is loading to avoid flash
-  if (isLoading) {
-    return (
-      <header className="border-b bg-background sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
-          <div className="w-h-16 h-h-16 flex items-center">
-            <Skeleton className="h-8 w-16" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-16" />
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-20" />
-          </div>
-        </div>
-      </header>
-    );
   }
 
   if (!isAuthenticated) {

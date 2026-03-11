@@ -3,7 +3,6 @@ import Script from 'next/script';
 import { Suspense } from 'react';
 import { headers, cookies } from 'next/headers';
 import { Analytics } from '@vercel/analytics/next';
-import { auth } from '@/auth';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import './globals.css';
@@ -81,8 +80,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     messages = (await import('@/i18n/messages/en.json')).default;
   }
 
-  const session = await auth();
-
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
@@ -105,7 +102,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
         <Suspense fallback={<div />}>
-          <RootProviders locale={locale} messages={messages} session={session}>
+          <RootProviders locale={locale} messages={messages}>
             <Header />
             {children}
           </RootProviders>
