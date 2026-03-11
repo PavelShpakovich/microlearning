@@ -30,6 +30,7 @@ import {
   Sun,
   Globe,
   LayoutDashboard,
+  Monitor,
 } from 'lucide-react';
 
 const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
@@ -37,7 +38,7 @@ const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL;
 export function Header() {
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const displayName = useDisplayName();
   const { locale, setLanguage } = useUiLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +56,7 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src={theme === 'dark' ? '/logo.png' : '/logo-dark.png'}
+              src={resolvedTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
               alt="Logo"
               width={64}
               height={64}
@@ -89,13 +90,37 @@ export function Header() {
             </DropdownMenu>
 
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  {resolvedTheme === 'dark' ? (
+                    <Moon className="w-4 h-4" />
+                  ) : (
+                    <Sun className="w-4 h-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setTheme('light')}
+                  className={theme === 'light' ? 'bg-muted' : ''}
+                >
+                  <Sun className="w-4 h-4 mr-2" /> Light
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('dark')}
+                  className={theme === 'dark' ? 'bg-muted' : ''}
+                >
+                  <Moon className="w-4 h-4 mr-2" /> Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('system')}
+                  className={theme === 'system' ? 'bg-muted' : ''}
+                >
+                  <Monitor className="w-4 h-4 mr-2" /> System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button size="sm" asChild>
               <a href={BOT_URL} target="_blank" rel="noopener noreferrer">
@@ -113,7 +138,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1 md:py-2 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src={theme === 'dark' ? '/logo.png' : '/logo-dark.png'}
+            src={resolvedTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
             alt="Logo"
             width={64}
             height={64}
@@ -149,14 +174,37 @@ export function Header() {
             </DropdownMenu>
 
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="gap-2"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  {resolvedTheme === 'dark' ? (
+                    <Moon className="w-4 h-4" />
+                  ) : (
+                    <Sun className="w-4 h-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setTheme('light')}
+                  className={theme === 'light' ? 'bg-muted' : ''}
+                >
+                  <Sun className="w-4 h-4 mr-2" /> Light
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('dark')}
+                  className={theme === 'dark' ? 'bg-muted' : ''}
+                >
+                  <Moon className="w-4 h-4 mr-2" /> Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('system')}
+                  className={theme === 'system' ? 'bg-muted' : ''}
+                >
+                  <Monitor className="w-4 h-4 mr-2" /> System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User Dropdown */}
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

@@ -19,7 +19,7 @@ export function RootProviders({ children, locale, messages }: RootProvidersProps
   return (
     <SessionProvider>
       <NextIntlClientProvider locale={locale} messages={messages}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SubscriptionProvider>
             <TelegramLoader>{children}</TelegramLoader>
           </SubscriptionProvider>

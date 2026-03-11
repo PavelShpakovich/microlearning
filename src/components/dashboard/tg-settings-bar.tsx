@@ -1,6 +1,6 @@
 'use client';
 
-import { Globe, Moon, Settings, ShieldCheck, Sun, Sparkles } from 'lucide-react';
+import { Globe, Moon, Settings, ShieldCheck, Sun, Sparkles, Monitor } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function TgSettingsBar() {
   const t = useTranslations();
-  const { theme: colorTheme, setTheme: setColorTheme } = useTheme();
+  const { theme: colorTheme, setTheme: setColorTheme, resolvedTheme } = useTheme();
   const { locale, setLanguage } = useUiLanguage();
   const { user, isLoading } = useAuth();
   const { status: subscription, isLoading: subLoading } = useSubscription();
@@ -40,7 +40,7 @@ export function TgSettingsBar() {
       <Link href="/dashboard" className="shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={colorTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
+          src={resolvedTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
           alt="Logo"
           className="h-8 w-auto object-contain"
         />
@@ -84,13 +84,21 @@ export function TgSettingsBar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setColorTheme(colorTheme === 'dark' ? 'light' : 'dark')}
-          title={colorTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          onClick={() => {
+            const next =
+              colorTheme === 'light' ? 'dark' : colorTheme === 'dark' ? 'system' : 'light';
+            setColorTheme(next);
+          }}
+          title={
+            colorTheme === 'system' ? 'System' : colorTheme === 'dark' ? 'Dark Mode' : 'Light Mode'
+          }
         >
-          {colorTheme === 'dark' ? (
-            <Sun className="h-3.5 w-3.5" />
-          ) : (
+          {colorTheme === 'system' ? (
+            <Monitor className="h-3.5 w-3.5" />
+          ) : resolvedTheme === 'dark' ? (
             <Moon className="h-3.5 w-3.5" />
+          ) : (
+            <Sun className="h-3.5 w-3.5" />
           )}
         </Button>
 
