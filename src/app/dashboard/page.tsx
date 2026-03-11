@@ -10,6 +10,8 @@ export const metadata = {
   description: 'Manage your learning themes and generate AI flashcards.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const session = await auth();
 

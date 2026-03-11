@@ -9,6 +9,8 @@ export const metadata = {
   description: 'View your current usage and manage your subscription plan.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function PlanPage() {
   const session = await auth();
 

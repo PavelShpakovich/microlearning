@@ -100,9 +100,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Cache components for better server-side caching
-  cacheComponents: true,
-
   // Experimental features for better performance
   experimental: {
     // Note: after() from next/server is stable in Next.js 15+ and does not need

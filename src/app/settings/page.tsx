@@ -11,6 +11,8 @@ export const metadata = {
   description: 'Manage your Clario profile, preferences, and account settings.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const session = await auth();
 

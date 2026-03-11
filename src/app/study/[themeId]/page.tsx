@@ -12,6 +12,8 @@ export const metadata = {
   description: 'Study your AI-generated flashcards.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function StudyPage({ params }: StudyPageProps) {
   const session = await auth();
 

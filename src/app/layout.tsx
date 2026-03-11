@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Suspense } from 'react';
-import { headers, cookies } from 'next/headers';
 import { Analytics } from '@vercel/analytics/next';
+import { getLocale, getMessages } from 'next-intl/server';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import './globals.css';
@@ -62,23 +62,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Determine locale: URL-based (set by i18n middleware for public pages) takes
-  // priority, then cookie fallback (for authenticated TG-only routes).
-  const headersList = await headers();
-  const cookieStore = await cookies();
-  const { defaultLocale, locales } = await import('@/i18n/config');
-
-  const fromHeader = headersList.get('x-next-intl-locale');
-  const fromCookie = cookieStore.get('NEXT_LOCALE')?.value;
-  const raw = fromHeader ?? fromCookie ?? defaultLocale;
-  const locale = (locales as readonly string[]).includes(raw) ? raw : defaultLocale;
-
-  let messages = {};
-  try {
-    messages = (await import(`@/i18n/messages/${locale}.json`)).default;
-  } catch {
-    messages = (await import('@/i18n/messages/en.json')).default;
-  }
+  // next-intl resolves locale from the URL segment (static [locale] routes)
+  // or falls back to the NEXT_LOCALE cookie (dynamic authenticated routes).
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
