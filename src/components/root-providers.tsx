@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback, createContext, useContext } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import type { AbstractIntlMessages } from 'next-intl';
 import { SessionProvider } from 'next-auth/react';
@@ -15,18 +16,47 @@ interface RootProvidersProps {
   messages: AbstractIntlMessages;
 }
 
-export function RootProviders({ children, locale, messages }: RootProvidersProps) {
+interface LocaleSwitchContextType {
+  switchLocale: (newLocale: string) => Promise<void>;
+}
+
+const LocaleSwitchContext = createContext<LocaleSwitchContextType>({
+  switchLocale: async () => {},
+});
+
+export function useLocaleSwitch() {
+  return useContext(LocaleSwitchContext);
+}
+
+export function RootProviders({
+  children,
+  locale: initialLocale,
+  messages: initialMessages,
+}: RootProvidersProps) {
+  const [locale, setLocale] = useState(initialLocale);
+  const [messages, setMessages] = useState(initialMessages);
+
+  const switchLocale = useCallback(async (newLocale: string) => {
+    const newMessages = (await import(`@/i18n/messages/${newLocale}.json`)) as {
+      default: AbstractIntlMessages;
+    };
+    setLocale(newLocale);
+    setMessages(newMessages.default);
+  }, []);
+
   return (
     <SessionProvider>
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SubscriptionProvider>
-            <TelegramLoader>{children}</TelegramLoader>
-          </SubscriptionProvider>
-          <WelcomeModal />
-          <Toaster position="bottom-right" />
-        </ThemeProvider>
-      </NextIntlClientProvider>
+      <LocaleSwitchContext.Provider value={{ switchLocale }}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <SubscriptionProvider>
+              <TelegramLoader>{children}</TelegramLoader>
+            </SubscriptionProvider>
+            <WelcomeModal />
+            <Toaster position="bottom-right" />
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </LocaleSwitchContext.Provider>
     </SessionProvider>
   );
 }
