@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Suspense } from 'react';
 import { headers, cookies } from 'next/headers';
+import { Analytics } from '@vercel/analytics/next';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import './globals.css';
@@ -90,6 +91,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
          * as "not inside Telegram" and redirects to /login.
          */}
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <Script id="yandex-metrica" strategy="afterInteractive">{`
+          (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+          (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+          ym(107270131, "init", { clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true });
+        `}</Script>
       </head>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
         <Suspense fallback={<div />}>
@@ -98,6 +107,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </RootProviders>
         </Suspense>
+        <Analytics />
+        <noscript>
+          <div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://mc.yandex.ru/watch/107270131"
+              style={{ position: 'absolute', left: '-9999px' }}
+              alt=""
+            />
+          </div>
+        </noscript>
       </body>
     </html>
   );
