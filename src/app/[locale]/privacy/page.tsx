@@ -1,16 +1,45 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { LandingFooter } from '@/components/layout/landing-footer';
+import { routing } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description:
-    'Read the Clario Privacy Policy to understand how we collect, use, and protect your data.',
-  robots: { index: true, follow: true },
-};
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
 
-export default async function PrivacyPage() {
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isRu = locale === 'ru';
+  const canonical = isRu ? `${APP_URL}/ru/privacy` : `${APP_URL}/privacy`;
+
+  return {
+    title: isRu ? 'Политика конфиденциальности' : 'Privacy Policy',
+    description: isRu
+      ? 'Прочитайте Политику конфиденциальности Clario — как мы собираем, используем и защищаем ваши данные.'
+      : 'Read the Clario Privacy Policy to understand how we collect, use, and protect your data.',
+    alternates: {
+      canonical,
+      languages: {
+        en: `${APP_URL}/privacy`,
+        ru: `${APP_URL}/ru/privacy`,
+        'x-default': `${APP_URL}/privacy`,
+      },
+    },
+    robots: { index: true, follow: true },
+  };
+}
+
+export default async function PrivacyPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   const t = await getTranslations('privacy');
   const supportEmail = process.env.SUPPORT_EMAIL ?? 'support@example.com';
 

@@ -1,29 +1,24 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
-import { locales, defaultLocale } from './config';
+import { routing } from './routing';
 
-export default getRequestConfig(async () => {
-  let locale = defaultLocale;
+export default getRequestConfig(async ({ requestLocale }) => {
+  // For [locale] routes: locale comes from the URL segment via middleware.
+  // For authenticated routes (no [locale] prefix): fall back to the NEXT_LOCALE cookie.
+  let locale = await requestLocale;
 
-  // Try to get locale from cookies (user preference or guest preference)
-  const cookieStore = await cookies();
-  const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
-
-  if (localeCookie && (locales as readonly string[]).includes(localeCookie)) {
-    locale = localeCookie as typeof defaultLocale;
-  } else {
-    // Fallback to default
-    locale = defaultLocale;
+  if (!locale || !(routing.locales as readonly string[]).includes(locale)) {
+    const cookieStore = await cookies();
+    const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
+    if (localeCookie && (routing.locales as readonly string[]).includes(localeCookie)) {
+      locale = localeCookie as (typeof routing.locales)[number];
+    } else {
+      locale = routing.defaultLocale;
+    }
   }
 
-  // Ensure locale is valid
-  const validLocale = (locales as readonly string[]).includes(locale) ? locale : defaultLocale;
-
-  // Import messages for the current locale
-  const messages = (await import(`./messages/${validLocale}.json`)).default;
-
   return {
-    locale: validLocale,
-    messages,
+    locale,
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });

@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Suspense } from 'react';
+import { headers, cookies } from 'next/headers';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import './globals.css';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clario.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
 
 export const viewport: Viewport = {
   viewportFit: 'cover',
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     template: '%s | Clario',
   },
   description:
-    'Clario turns any topic, document, or URL into AI-generated flashcards in seconds. Study smarter on the web or in Telegram.',
+    'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
   keywords: [
     'AI flashcards',
     'flashcard generator',
@@ -39,13 +40,15 @@ export const metadata: Metadata = {
     siteName: 'Clario',
     title: 'Clario — AI Flashcard Generator',
     description:
-      'Clario turns any topic, document, or URL into AI-generated flashcards in seconds. Study smarter on the web or in Telegram.',
+      'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Clario — AI Flashcard Generator',
     description:
-      'Clario turns any topic, document, or URL into AI-generated flashcards in seconds. Study smarter on the web or in Telegram.',
+      'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,
@@ -57,33 +60,27 @@ export const metadata: Metadata = {
   },
 };
 
-async function RootProvidersWrapper({ children }: { children: React.ReactNode }) {
-  const { cookies } = await import('next/headers');
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Determine locale: URL-based (set by i18n middleware for public pages) takes
+  // priority, then cookie fallback (for authenticated TG-only routes).
+  const headersList = await headers();
+  const cookieStore = await cookies();
   const { defaultLocale, locales } = await import('@/i18n/config');
 
-  const cookieStore = await cookies();
-  const locale = cookieStore.get('NEXT_LOCALE')?.value || defaultLocale;
+  const fromHeader = headersList.get('x-next-intl-locale');
+  const fromCookie = cookieStore.get('NEXT_LOCALE')?.value;
+  const raw = fromHeader ?? fromCookie ?? defaultLocale;
+  const locale = (locales as readonly string[]).includes(raw) ? raw : defaultLocale;
 
-  // Load messages for the locale
   let messages = {};
   try {
-    const validLocale = (locales as readonly string[]).includes(locale) ? locale : defaultLocale;
-    messages = await import(`@/i18n/messages/${validLocale}.json`).then((m) => m.default);
-  } catch (error) {
-    console.error('Failed to load messages:', error);
-    messages = await import('@/i18n/messages/en.json').then((m) => m.default);
+    messages = (await import(`@/i18n/messages/${locale}.json`)).default;
+  } catch {
+    messages = (await import('@/i18n/messages/en.json')).default;
   }
 
   return (
-    <RootProviders locale={locale} messages={messages}>
-      {children}
-    </RootProviders>
-  );
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/*
          * Load the Telegram Mini App SDK before hydration so that
@@ -96,10 +93,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
         <Suspense fallback={<div />}>
-          <RootProvidersWrapper>
+          <RootProviders locale={locale} messages={messages}>
             <Header />
             {children}
-          </RootProvidersWrapper>
+          </RootProviders>
         </Suspense>
       </body>
     </html>

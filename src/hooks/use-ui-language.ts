@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { locales } from '@/i18n/config';
 
 type Locale = (typeof locales)[number];
+
+const PUBLIC_PAGE_BASES = ['/', '/privacy', '/terms'];
 
 function readLocaleCookie(): Locale {
   if (typeof document === 'undefined') return 'en';
@@ -16,11 +18,23 @@ function readLocaleCookie(): Locale {
 export function useUiLanguage() {
   const [locale, setLocale] = useState<Locale>(readLocaleCookie);
   const router = useRouter();
+  const pathname = usePathname();
 
   const setLanguage = (newLocale: Locale) => {
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
     setLocale(newLocale);
-    router.refresh();
+
+    // On public pages, navigate to the locale-prefixed URL so the URL reflects
+    // the language and Google can crawl both versions.
+    const stripped = pathname.replace(/^\/ru\b/, '') || '/';
+    const isPublicPage = PUBLIC_PAGE_BASES.includes(stripped);
+
+    if (isPublicPage) {
+      const newPath = newLocale === 'ru' ? `/ru${stripped === '/' ? '' : stripped}` : stripped;
+      router.push(newPath || '/');
+    } else {
+      router.refresh();
+    }
   };
 
   return {

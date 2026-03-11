@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from './src/i18n/routing';
 
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = [
-  '/', // Landing / home page
-  '/privacy',
-  '/terms',
-  '/tg', // Telegram Mini App entry point
-];
+// Handles locale detection + x-next-intl-locale header for public pages only
+const intlMiddleware = createIntlMiddleware(routing);
+
+// Base public page paths (without locale prefix)
+const PUBLIC_PAGE_BASES = ['/', '/privacy', '/terms'];
+
+/** Returns true for any public page path, with or without /ru prefix */
+function isPublicPage(pathname: string): boolean {
+  const stripped = pathname.replace(/^\/ru\b/, '') || '/';
+  return PUBLIC_PAGE_BASES.includes(stripped);
+}
 
 // API routes that don't require authentication
 const PUBLIC_API_ROUTES = [
@@ -25,13 +31,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow all public page routes (exact match or sub-path, e.g. /auth/callback)
-  if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'))) {
+  // /tg: Telegram Mini App entry — no i18n, no auth check needed in middleware
+  if (pathname === '/tg' || pathname.startsWith('/tg/')) {
     return NextResponse.next();
   }
 
-  // Single auth check: NextAuth JWT covers both email and Telegram users.
-  // Both flows produce a next-auth.session-token cookie — no dual-system needed.
+  // Public pages: run i18n middleware (handles locale prefix + sets x-next-intl-locale header)
+  if (isPublicPage(pathname)) {
+    return intlMiddleware(request);
+  }
+
+  // Protected routes: auth check
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,

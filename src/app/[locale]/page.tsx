@@ -1,6 +1,7 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
-import { getTranslations } from 'next-intl/server';
 import { LandingFooter } from '@/components/layout/landing-footer';
 import { Accordion } from '@/components/ui/accordion';
 import { Upload, Sparkles, BrainCircuit, MessageSquare } from 'lucide-react';
@@ -11,8 +12,55 @@ import { StepItem } from '@/components/landing/step-item';
 import { PlanCard } from '@/components/landing/plan-card';
 import { FaqItem } from '@/components/landing/faq-item';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { routing } from '@/i18n/routing';
 
-export default async function HomePage() {
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isRu = locale === 'ru';
+  const canonical = isRu ? `${APP_URL}/ru` : APP_URL;
+
+  const titleEn = 'Clario — AI Flashcard Generator';
+  const descEn =
+    'Turn any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.';
+  const titleRu = 'Clario — ИИ-генератор карточек для обучения';
+  const descRu =
+    'Превратите любую тему, документ или URL в карточки для обучения за секунды. Учитесь умнее в Telegram.';
+
+  return {
+    title: isRu ? titleRu : titleEn,
+    description: isRu ? descRu : descEn,
+    alternates: {
+      canonical,
+      languages: {
+        en: APP_URL,
+        ru: `${APP_URL}/ru`,
+        'x-default': APP_URL,
+      },
+    },
+    openGraph: {
+      title: isRu ? titleRu : titleEn,
+      description: isRu ? descRu : descEn,
+      url: canonical,
+      locale: isRu ? 'ru_RU' : 'en_US',
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario' }],
+    },
+  };
+}
+
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   const session = await auth();
   if (session) redirect('/dashboard');
 
@@ -36,7 +84,6 @@ export default async function HomePage() {
     return [themes, tl('featureCards', { count: cards }), tl('featureCommunity')];
   }
 
-  // Map plan IDs to localised names
   const planNames: Record<string, string> = {
     free: t('plan1Name'),
     basic: t('plan2Name'),
@@ -73,8 +120,43 @@ export default async function HomePage() {
     { q: t('faq5Question'), a: t('faq5Answer') },
   ];
 
+  // JSON-LD structured data
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+
+  const appSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Clario',
+    applicationCategory: 'EducationApplication',
+    operatingSystem: 'Telegram',
+    description: t('heroSubheadline'),
+    url: APP_URL,
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appSchema) }}
+      />
+
       {/* ── Hero ── */}
       <HeroSection
         tagline={t('heroTagline')}
