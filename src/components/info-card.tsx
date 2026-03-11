@@ -47,9 +47,9 @@ export function InfoCard({ card, fontSize = 1 }: InfoCardProps) {
             prose-li:text-foreground/80 prose-li:leading-relaxed prose-li:my-0.5
             prose-code:text-foreground prose-code:bg-muted prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.875em] prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
             prose-blockquote:border-l-[3px] prose-blockquote:border-primary/40 prose-blockquote:bg-primary/5 prose-blockquote:rounded-r-lg prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:not-italic prose-blockquote:text-foreground/70
-            prose-table:rounded-xl prose-table:overflow-hidden
-            prose-th:bg-muted prose-th:font-semibold
-            prose-td:border-border
+            prose-table:w-full
+            prose-th:bg-muted prose-th:font-semibold prose-th:border prose-th:border-border prose-th:px-3 prose-th:py-2
+            prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2
           `}
           >
             <ReactMarkdown
@@ -61,6 +61,12 @@ export function InfoCard({ card, fontSize = 1 }: InfoCardProps) {
                     <pre className="text-sm leading-relaxed p-0">{children}</pre>
                   </div>
                 ),
+                table: ({ children }) => (
+                  <div className="not-prose my-4 overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full text-sm border-collapse">{children}</table>
+                  </div>
+                ),
+                thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
                 code: ({ className, children, ...props }) => {
                   const isBlock = !!className?.includes('language-');
                   if (isBlock) {
