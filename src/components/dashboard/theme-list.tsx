@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Database } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export function ThemeList({
     return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <BookOpen className="mb-4 h-12 w-12 text-muted-foreground" />
+          <FolderOpen className="mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="text-lg font-semibold text-foreground">
             {isOwner ? t('dashboard.emptyTitle') : t('dashboard.noCommunityThemes')}
           </h3>

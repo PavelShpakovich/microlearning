@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Trash2, Globe, Lock, BookOpen, Pencil } from 'lucide-react';
+import { Trash2, Globe, Lock, GraduationCap, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Database } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -135,7 +135,7 @@ export function ThemeCard({
               {/* Study Button */}
               <Link href={`/study/${theme.id}`}>
                 <Button variant="default" size="sm" className="h-7 px-2">
-                  <BookOpen className={`h-3.5 w-3.5 ${!isOwner ? 'mr-1' : ''}`} />
+                  <GraduationCap className={`h-3.5 w-3.5 ${!isOwner ? 'mr-1' : ''}`} />
                   {!isOwner && t('buttons.study')}
                 </Button>
               </Link>
@@ -240,7 +240,7 @@ export function ThemeCard({
           /* For non-owners, just the Study button */
           <Link href={`/study/${theme.id}`} className="block">
             <Button className="w-full" variant="default" size="sm">
-              <BookOpen className="h-4 w-4 mr-2" />
+              <GraduationCap className="h-4 w-4 mr-2" />
               {t('buttons.study')}
             </Button>
           </Link>
