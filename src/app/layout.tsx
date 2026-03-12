@@ -15,51 +15,64 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
-  title: {
-    default: 'Clario — AI Flashcard Generator',
-    template: '%s | Clario',
-  },
-  description:
-    'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
-  keywords: [
-    'AI flashcards',
-    'flashcard generator',
-    'study app',
-    'spaced learning',
-    'Telegram study bot',
-    'AI learning',
-    'knowledge cards',
-  ],
-  authors: [{ name: 'Clario' }],
-  creator: 'Clario',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: APP_URL,
-    siteName: 'Clario',
-    title: 'Clario — AI Flashcard Generator',
-    description:
-      'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Clario — AI Flashcard Generator',
-    description:
-      'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.',
-    images: ['/opengraph-image'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const isRu = locale === 'ru';
+
+  const title = isRu
+    ? 'Clario — ИИ-генератор карточек для обучения'
+    : 'Clario — AI Flashcard Generator';
+  const description = isRu
+    ? 'Превратите любую тему, документ или URL в карточки для обучения за секунды. Учитесь умнее в Telegram.'
+    : 'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.';
+
+  return {
+    metadataBase: new URL(APP_URL),
+    title: {
+      default: title,
+      template: '%s | Clario',
+    },
+    description,
+    keywords: [
+      'AI flashcards',
+      'flashcard generator',
+      'study app',
+      'spaced learning',
+      'Telegram study bot',
+      'AI learning',
+      'knowledge cards',
+    ],
+    authors: [{ name: 'Clario' }],
+    creator: 'Clario',
+    openGraph: {
+      type: 'website',
+      locale: isRu ? 'ru_RU' : 'en_US',
+      url: APP_URL,
+      siteName: 'Clario',
+      title,
+      description,
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/opengraph-image'],
+    },
+    icons: {
+      icon: [{ url: '/favicon.ico' }, { url: '/logo-dark.png', type: 'image/png' }],
+      apple: { url: '/logo-dark.png', type: 'image/png' },
+    },
+    robots: {
       index: true,
       follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
     },
-  },
-};
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // next-intl resolves locale from the URL segment (static [locale] routes)
