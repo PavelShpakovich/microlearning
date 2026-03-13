@@ -9,9 +9,9 @@ import { HeroSection } from '@/components/landing/hero-section';
 import { SectionHeader } from '@/components/landing/section-header';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StepItem } from '@/components/landing/step-item';
-import { PlanCard } from '@/components/landing/plan-card';
+// import { PlanCard } from '@/components/landing/plan-card';
 import { FaqItem } from '@/components/landing/faq-item';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+// import { supabaseAdmin } from '@/lib/supabase/admin';
 import { routing } from '@/i18n/routing';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
@@ -67,37 +67,37 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations('landing');
 
   // Fetch plan data from DB
-  const { data: dbPlans } = await supabaseAdmin
-    .from('subscription_plans')
-    .select('id, name, cards_per_month, max_themes, stars_price')
-    .order('stars_price', { ascending: true });
+  // const { data: dbPlans } = await supabaseAdmin
+  //   .from('subscription_plans')
+  //   .select('id, name, cards_per_month, max_themes, stars_price')
+  //   .order('stars_price', { ascending: true });
 
-  type DbPlan = NonNullable<typeof dbPlans>[number];
+  // type DbPlan = NonNullable<typeof dbPlans>[number];
 
-  function buildFeatures(plan: DbPlan, tl: typeof t): string[] {
-    const cards = plan.cards_per_month.toLocaleString();
-    const themes =
-      plan.max_themes === null
-        ? tl('featureUnlimitedThemes')
-        : tl('featureThemes', { count: plan.max_themes });
-    if (plan.id === 'free') return [themes, tl('featureCards', { count: cards })];
-    return [themes, tl('featureCards', { count: cards }), tl('featureCommunity')];
-  }
+  // function buildFeatures(plan: DbPlan, tl: typeof t): string[] {
+  //   const cards = plan.cards_per_month.toLocaleString();
+  //   const themes =
+  //     plan.max_themes === null
+  //       ? tl('featureUnlimitedThemes')
+  //       : tl('featureThemes', { count: plan.max_themes });
+  //   if (plan.id === 'free') return [themes, tl('featureCards', { count: cards })];
+  //   return [themes, tl('featureCards', { count: cards }), tl('featureCommunity')];
+  // }
 
-  const planNames: Record<string, string> = {
-    free: t('plan1Name'),
-    basic: t('plan2Name'),
-    pro: t('plan3Name'),
-    max: t('plan4Name'),
-  };
+  // const planNames: Record<string, string> = {
+  //   free: t('plan1Name'),
+  //   basic: t('plan2Name'),
+  //   pro: t('plan3Name'),
+  //   max: t('plan4Name'),
+  // };
 
-  const plans = (dbPlans ?? []).map((plan) => ({
-    id: plan.id,
-    name: planNames[plan.id] ?? plan.name,
-    starsPrice: plan.stars_price,
-    features: buildFeatures(plan, t),
-    popular: plan.id === 'basic',
-  }));
+  // const plans = (dbPlans ?? []).map((plan) => ({
+  //   id: plan.id,
+  //   name: planNames[plan.id] ?? plan.name,
+  //   starsPrice: plan.stars_price,
+  //   features: buildFeatures(plan, t),
+  //   popular: plan.id === 'basic',
+  // }));
 
   const features = [
     { icon: Upload, title: t('feature1Title'), desc: t('feature1Desc') },
@@ -190,7 +190,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* ── Pricing ── */}
-      <section className="py-20 px-4 bg-background">
+      {/* <section className="py-20 px-4 bg-background">
         <div className="max-w-7xl mx-auto">
           <SectionHeader title={t('pricingTitle')} subtitle={t('pricingSubtitle')} />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -209,7 +209,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── FAQ ── */}
       <section className="py-20 px-4 bg-muted/30">
