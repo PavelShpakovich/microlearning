@@ -15,10 +15,12 @@ export function HeroSection({ tagline, headline, subheadline, ctaGetStarted }: H
       <span className="inline-block mb-4 text-xs font-semibold tracking-widest uppercase text-primary">
         {tagline}
       </span>
-      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl mb-6">
+      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl mb-6 text-balance">
         {headline}
       </h1>
-      <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mb-10">{subheadline}</p>
+      <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mb-10 text-balance">
+        {subheadline}
+      </p>
       <div className="flex flex-col sm:flex-row gap-4">
         <Button size="lg" asChild>
           <a href={BOT_URL} target="_blank" rel="noopener noreferrer">

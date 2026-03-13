@@ -66,7 +66,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
             {t('backToHome')}
           </Link>
 
-          <h1 className="text-4xl font-bold mb-2">{t('pageTitle')}</h1>
+          <h1 className="text-4xl font-bold mb-2 text-balance">{t('pageTitle')}</h1>
           <p className="text-sm text-muted-foreground mb-10">{t('lastUpdated')}</p>
 
           <div className="prose prose-gray dark:prose-invert max-w-none">

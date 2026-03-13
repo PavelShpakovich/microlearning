@@ -191,12 +191,12 @@ export default function NewThemePage() {
                       }
                     }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 w-full">
                       <Wand2
-                        className={`h-4 w-4 ${autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`h-4 w-4 shrink-0 ${autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
                       />
                       <span
-                        className={`text-sm font-semibold ${autoGenerate ? 'text-foreground' : 'text-foreground'}`}
+                        className={`text-sm font-semibold min-w-0 break-words ${autoGenerate ? 'text-foreground' : 'text-foreground'}`}
                       >
                         {t('buttons.autoGenerate')}
                       </span>
@@ -242,11 +242,11 @@ export default function NewThemePage() {
                         : 'border-border hover:border-foreground/30'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 w-full">
                       <PenLine
-                        className={`h-4 w-4 ${!autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`h-4 w-4 shrink-0 ${!autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
                       />
-                      <span className={`text-sm font-semibold text-foreground`}>
+                      <span className={`text-sm font-semibold min-w-0 break-words text-foreground`}>
                         {t('buttons.manual')}
                       </span>
                     </div>

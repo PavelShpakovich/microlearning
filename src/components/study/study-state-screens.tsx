@@ -42,8 +42,12 @@ function StudyScreenLayout({ icon, title, description, children }: StudyScreenLa
         <div className="space-y-4">
           {icon}
           <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground text-balance">
+              {title}
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed text-balance">
+              {description}
+            </p>
           </div>
         </div>
         <div className="flex flex-col gap-3">{children}</div>

@@ -38,10 +38,10 @@ export function ThemeList({
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
           <FolderOpen className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-lg font-semibold text-foreground text-balance">
             {isOwner ? t('dashboard.emptyTitle') : t('dashboard.noCommunityThemes')}
           </h3>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-muted-foreground text-balance">
             {isOwner ? t('dashboard.emptyDescription') : t('dashboard.communityEmptyDescription')}
           </p>
           {isOwner && (

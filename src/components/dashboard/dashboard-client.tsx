@@ -132,10 +132,10 @@ export function DashboardClient({
               {t('dashboard.greeting', { name: displayName })}
             </p>
           )}
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground text-balance">
             {t('dashboard.heading')}
           </h1>
-          <p className="mt-1 text-sm md:text-base text-muted-foreground">
+          <p className="mt-1 text-sm md:text-base text-muted-foreground text-balance">
             {maxThemes !== null
               ? t('dashboard.descriptionWithLimit', { count: themes.length, limit: maxThemes })
               : t('dashboard.description', { count: themes.length })}

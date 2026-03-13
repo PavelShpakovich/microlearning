@@ -11,8 +11,8 @@ export function StepItem({ number, title, desc }: StepItemProps) {
         {number}
       </div>
       <div>
-        <h3 className="font-semibold text-xl mb-1">{title}</h3>
-        <p className="text-muted-foreground leading-relaxed">{desc}</p>
+        <h3 className="font-semibold text-xl mb-1 text-balance">{title}</h3>
+        <p className="text-muted-foreground leading-relaxed text-balance">{desc}</p>
       </div>
     </div>
   );
