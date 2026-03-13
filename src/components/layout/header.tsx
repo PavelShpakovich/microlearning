@@ -45,9 +45,9 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  // In Telegram Mini App context, show settings bar on all pages except study
+  // In Telegram Mini App context, show settings bar on all pages except study and the /tg auth entry page
   if (isTelegramWebApp()) {
-    if (pathname.startsWith('/study')) return null;
+    if (pathname.startsWith('/study') || pathname === '/tg') return null;
     return <TgSettingsBar />;
   }
 
