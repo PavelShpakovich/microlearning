@@ -83,5 +83,24 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     'Cron: subscription expiry job done',
   );
 
-  return NextResponse.json({ expired: expiredUserIds.length, reminded: 0, overdueAutoRenew: 0 });
+  // ── B: Purge consumed and expired Telegram link tokens ───────────────
+  // Tokens are short-lived (15 min TTL) — keep nothing older than 24 h.
+  const tokenCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const { error: tokenError, count: tokensDeleted } = await supabaseAdmin
+    .from('telegram_link_tokens')
+    .delete({ count: 'exact' })
+    .or(`consumed_at.not.is.null,expires_at.lt.${tokenCutoff}`);
+
+  if (tokenError) {
+    logger.warn({ error: tokenError }, 'Cron: failed to purge telegram_link_tokens');
+  } else {
+    logger.info({ tokensDeleted }, 'Cron: telegram_link_tokens purged');
+  }
+
+  return NextResponse.json({
+    expired: expiredUserIds.length,
+    reminded: 0,
+    overdueAutoRenew: 0,
+    tokensDeleted: tokensDeleted ?? 0,
+  });
 }
