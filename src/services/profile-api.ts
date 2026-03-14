@@ -21,8 +21,10 @@ type TelegramLinkResponse = {
 };
 
 class ProfileApi {
-  async getProfile(): Promise<ProfileResponse> {
-    const response = await fetch('/api/profile');
+  async getProfile(noCache = false): Promise<ProfileResponse> {
+    const response = await fetch('/api/profile', {
+      cache: noCache ? 'no-store' : 'default',
+    });
 
     if (!response.ok) {
       const data = (await response.json()) as { error?: string; message?: string };

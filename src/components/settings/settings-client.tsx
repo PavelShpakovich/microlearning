@@ -108,15 +108,15 @@ export function SettingsClient({
       window.open(result.deepLink, '_blank', 'noopener,noreferrer');
       toast.success(t('settings.telegramConnectOpened'));
 
-      // Poll up to 60 s — reload the page as soon as telegram_id appears.
+      // Poll up to 3 min — reload the page as soon as telegram_id appears.
       const start = Date.now();
       const poll = setInterval(async () => {
-        if (Date.now() - start > 60_000) {
+        if (Date.now() - start > 180_000) {
           clearInterval(poll);
           return;
         }
         try {
-          const profile = await profileApi.getProfile();
+          const profile = await profileApi.getProfile(true);
           if (profile.telegram_id) {
             clearInterval(poll);
             window.location.reload();
