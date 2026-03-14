@@ -109,6 +109,14 @@ export default function TelegramEntryPage() {
       }
       document.cookie = `NEXT_LOCALE=${resolvedLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
 
+      // If the locale just changed we need a hard reload so next-intl picks it
+      // up from the new cookie (it's bound server-side and won't change mid-render).
+      const currentLocale = document.documentElement.lang || 'en';
+      if (currentLocale !== resolvedLocale) {
+        window.location.reload();
+        return;
+      }
+
       pendingInitData.current = initData;
       pendingStartParam.current = startParam;
 
