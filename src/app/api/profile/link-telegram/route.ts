@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { ValidationError } from '@/lib/errors';
@@ -12,8 +13,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
  * Public — called from the Telegram Mini App before the user confirms linking.
  * Returns the email of the web account tied to the token.
  */
-export const GET = withApiHandler(async (req: NextRequest) => {
-  const raw = req.nextUrl.searchParams.get('token');
+export const GET = withApiHandler(async (req) => {
+  const nextReq = req as NextRequest;
+  const raw = nextReq.nextUrl.searchParams.get('token');
   if (!raw) throw new ValidationError({ message: 'Missing token' });
 
   const { data } = await supabaseAdmin
