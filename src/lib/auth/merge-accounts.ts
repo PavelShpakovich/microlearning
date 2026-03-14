@@ -142,28 +142,18 @@ export async function mergeAccounts(fromUserId: string, toUserId: string): Promi
   // ── 6. Merge profile flags ───────────────────────────────────────────────
   const { data: fromProfile } = await supabaseAdmin
     .from('profiles')
-    .select('is_admin, streak_count, last_study_date, display_name')
+    .select('is_admin, display_name')
     .eq('id', fromUserId)
     .maybeSingle();
 
   const { data: toProfile } = await supabaseAdmin
     .from('profiles')
-    .select('is_admin, streak_count, last_study_date, display_name')
+    .select('is_admin, display_name')
     .eq('id', toUserId)
     .maybeSingle();
 
   if (fromProfile && toProfile) {
     const mergedIsAdmin = fromProfile.is_admin || toProfile.is_admin;
-    const mergedStreak = Math.max(
-      (fromProfile.streak_count as number) ?? 0,
-      (toProfile.streak_count as number) ?? 0,
-    );
-    const mergedStudyDate =
-      fromProfile.last_study_date && toProfile.last_study_date
-        ? fromProfile.last_study_date > toProfile.last_study_date
-          ? fromProfile.last_study_date
-          : toProfile.last_study_date
-        : (fromProfile.last_study_date ?? toProfile.last_study_date);
 
     // Use the stub's display_name if the web account's looks auto-generated
     const toName = (toProfile.display_name as string) ?? '';
@@ -175,8 +165,6 @@ export async function mergeAccounts(fromUserId: string, toUserId: string): Promi
       .from('profiles')
       .update({
         is_admin: mergedIsAdmin,
-        streak_count: mergedStreak,
-        last_study_date: mergedStudyDate ?? null,
         display_name: mergedDisplayName || null,
       })
       .eq('id', toUserId);
