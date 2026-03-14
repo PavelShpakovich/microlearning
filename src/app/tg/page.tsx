@@ -82,24 +82,43 @@ export default function TelegramEntryPage() {
       tg.ready();
       tg.expand();
 
-      // Auto-set UI language based on Telegram user's language_code
-      const telegramLanguage = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-      if (telegramLanguage) {
-        const supportedLocales: Record<string, string> = { ru: 'ru', en: 'en' };
-        const locale = supportedLocales[telegramLanguage] || 'en';
-        document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
-      }
-
+      const supportedLocales: Record<string, string> = { ru: 'ru', en: 'en' };
       const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+
+      // Determine locale: prefer the one encoded in the startParam (from the web app),
+      // then fall back to the Telegram user's language_code.
+      let resolvedLocale: string;
+      let tokenForLookup: string | null = null;
+      if (startParam) {
+        const rest = startParam.replace(/^link_/, '');
+        const localeMatch = rest.match(/_([a-z]{2})$/);
+        const paramLocale = localeMatch?.[1] ?? null;
+        if (paramLocale && supportedLocales[paramLocale]) {
+          resolvedLocale = paramLocale;
+          tokenForLookup = rest.slice(0, -(paramLocale.length + 1));
+        } else {
+          resolvedLocale =
+            supportedLocales[window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code ?? ''] ??
+            'en';
+          tokenForLookup = rest;
+        }
+      } else {
+        resolvedLocale =
+          supportedLocales[window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code ?? ''] ??
+          'en';
+      }
+      document.cookie = `NEXT_LOCALE=${resolvedLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
+
       pendingInitData.current = initData;
       pendingStartParam.current = startParam;
 
       if (startParam) {
         // Link flow — fetch the email tied to this token and ask for confirmation.
         setIsLinkingFlow(true);
-        const token = startParam.replace(/^link_/, '');
         try {
-          const res = await fetch(`/api/profile/link-telegram?token=${encodeURIComponent(token)}`);
+          const res = await fetch(
+            `/api/profile/link-telegram?token=${encodeURIComponent(tokenForLookup!)}`,
+          );
           const json = (await res.json()) as { email?: string; error?: string };
           if (!res.ok) throw new Error(json.error ?? t('telegram.authenticationFailed'));
           setConfirmEmail(json.email ?? '');

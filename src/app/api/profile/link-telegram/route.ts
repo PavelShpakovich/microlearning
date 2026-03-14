@@ -32,7 +32,7 @@ export const GET = withApiHandler(async (req) => {
   return NextResponse.json({ email: authUser.user?.email ?? null });
 });
 
-export const POST = withApiHandler(async () => {
+export const POST = withApiHandler(async (req) => {
   const { user } = await requireAuth();
 
   if (!env.NEXT_PUBLIC_TELEGRAM_BOT_URL) {
@@ -44,9 +44,14 @@ export const POST = withApiHandler(async () => {
     return NextResponse.json({ success: true, alreadyLinked: true, telegramId });
   }
 
+  // Read the web app's current locale from the cookie so it carries over into TG.
+  const cookieHeader = req.headers.get('cookie') ?? '';
+  const localeMatch = cookieHeader.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
+  const locale = localeMatch?.[1] ?? null;
+
   const token = await createTelegramLinkToken(user.id);
   const deepLink = new URL(env.NEXT_PUBLIC_TELEGRAM_BOT_URL);
-  deepLink.searchParams.set('startapp', buildTelegramStartParam(token));
+  deepLink.searchParams.set('startapp', buildTelegramStartParam(token, locale));
 
   return NextResponse.json({
     success: true,

@@ -4,8 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 const TELEGRAM_LINK_PREFIX = 'link_';
 const TELEGRAM_LINK_TTL_MINUTES = 15;
 
-export function buildTelegramStartParam(token: string): string {
-  return `${TELEGRAM_LINK_PREFIX}${token}`;
+export function buildTelegramStartParam(token: string, locale?: string | null): string {
+  const base = `${TELEGRAM_LINK_PREFIX}${token}`;
+  return locale ? `${base}_${locale}` : base;
 }
 
 export function parseTelegramStartParam(startParam: string | null | undefined): string | null {
