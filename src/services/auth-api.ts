@@ -2,7 +2,7 @@ class AuthApi {
   async exchangeTelegramInitData(
     initData: string,
     startParam?: string | null,
-  ): Promise<{ sessionToken: string }> {
+  ): Promise<{ sessionToken: string; wasLinked?: boolean }> {
     const response = await fetch('/api/auth/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -14,7 +14,7 @@ class AuthApi {
       throw new Error(data.error || `Server error ${response.status}`);
     }
 
-    return (await response.json()) as { sessionToken: string };
+    return (await response.json()) as { sessionToken: string; wasLinked?: boolean };
   }
 }
 

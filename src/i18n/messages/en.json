@@ -251,7 +251,9 @@
     "confirmLinkTitle": "Link Telegram account",
     "confirmLinkBody": "This will link your Telegram account to the Clario account {email}. Only continue if this is your account.",
     "confirmLinkConfirm": "Yes, link my account",
-    "confirmLinkCancel": "Cancel"
+    "confirmLinkCancel": "Cancel",
+    "linkSuccessTitle": "Account linked!",
+    "linkSuccessBody": "Your Telegram is now connected to your Clario account. Redirecting…"
   },
   "telegramPrompt": {
     "title": "Study on Telegram too",
@@ -345,6 +347,7 @@
     "telegramConnecting": "Connecting…",
     "telegramConnectOpened": "Telegram opened — approve the link inside the bot",
     "telegramConnectFailed": "Could not start account linking",
+    "telegramLinkedSuccess": "Telegram connected successfully!",
     "webAccessCardTitle": "Set Up Web Access",
     "webAccessCardDescription": "Add an email and password so you can also sign in from any browser.",
     "webAccessCardCta": "Set Up",

@@ -246,7 +246,9 @@
     "confirmLinkTitle": "Привязка Telegram-аккаунта",
     "confirmLinkBody": "Telegram будет привязан к аккаунту Clario с адресом {email}. Продолжайте только если это ваш аккаунт.",
     "confirmLinkConfirm": "Да, привязать",
-    "confirmLinkCancel": "Отмена"
+    "confirmLinkCancel": "Отмена",
+    "linkSuccessTitle": "Аккаунт привязан!",
+    "linkSuccessBody": "Telegram успешно подключён к вашему аккаунту Clario. Перенаправляем…"
   },
   "telegramPrompt": {
     "title": "Учитесь и в Telegram",
@@ -385,6 +387,7 @@
     "telegramConnecting": "Подключение…",
     "telegramConnectOpened": "Telegram открыт — подтвердите привязку внутри бота",
     "telegramConnectFailed": "Не удалось начать привязку аккаунта",
+    "telegramLinkedSuccess": "Telegram успешно подключён!",
     "webAccessCardTitle": "Настроить веб-доступ",
     "webAccessCardDescription": "Добавьте email и пароль, чтобы также входить с любого браузера.",
     "webAccessCardCta": "Настроить",

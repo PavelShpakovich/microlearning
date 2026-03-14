@@ -8,7 +8,7 @@ import { signIn } from 'next-auth/react';
 import { authApi } from '@/services/auth-api';
 import { Button } from '@/components/ui/button';
 
-type Phase = 'detecting' | 'confirming' | 'authenticating' | 'error';
+type Phase = 'detecting' | 'confirming' | 'authenticating' | 'linked' | 'error';
 
 /**
  * Telegram Mini App entry point — /tg
@@ -41,19 +41,22 @@ export default function TelegramEntryPage() {
   const runAuth = useCallback(async () => {
     setPhase('authenticating');
     try {
-      // 1. Validate initData on the server — server verifies the Telegram
-      //    HMAC and returns a short-lived signed token.
-      const { sessionToken } = await authApi.exchangeTelegramInitData(
+      const { sessionToken, wasLinked } = await authApi.exchangeTelegramInitData(
         pendingInitData.current,
         pendingStartParam.current,
       );
 
-      // 2. Exchange for a NextAuth session (same cookie as email users).
       const result = await signIn('telegram', { sessionToken, redirect: false });
       if (!result?.ok) throw new Error(result?.error ?? 'Sign-in failed');
 
-      // 3. Hard navigate — NextAuth has already set the session cookie so
-      //    the middleware will see it on the very next request.
+      if (wasLinked) {
+        setPhase('linked');
+        setTimeout(() => {
+          window.location.href = callbackUrl;
+        }, 3000);
+        return;
+      }
+
       window.location.href = callbackUrl;
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');
@@ -145,6 +148,26 @@ export default function TelegramEntryPage() {
 
     void init();
   }, [router, t, runAuth]);
+
+  if (phase === 'linked') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center gap-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+          <svg
+            className="h-8 w-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 className="text-lg font-semibold">{t('telegram.linkSuccessTitle')}</h1>
+        <p className="text-sm text-muted-foreground">{t('telegram.linkSuccessBody')}</p>
+      </main>
+    );
+  }
 
   if (phase === 'confirming') {
     return (

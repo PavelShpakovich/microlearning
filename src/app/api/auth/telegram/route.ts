@@ -74,11 +74,11 @@ export const POST = withApiHandler(async (req) => {
   const linkToken = parseTelegramStartParam(body.data.startParam);
 
   let userId: string;
+  let wasLinked = false;
   const existingUserId = await resolveUserIdByTelegramId(telegramId);
 
-  if (existingUserId) {
-    userId = existingUserId;
-  } else if (linkToken) {
+  if (linkToken) {
+    // Link-flow takes priority over any existing association.
     const linkedUserId = await consumeTelegramLinkToken(linkToken);
     if (!linkedUserId) {
       throw new AuthError({ message: 'Telegram linking link is invalid or expired' });
@@ -86,17 +86,35 @@ export const POST = withApiHandler(async (req) => {
 
     userId = linkedUserId;
 
-    const { error: upsertErr } = await supabaseAdmin.from('profiles').upsert(
-      {
-        id: userId,
-        telegram_id: telegramId,
-      },
-      { onConflict: 'id' },
-    );
+    // If this telegram_id was previously linked to a different (stub) account,
+    // clean it up so ensureTelegramIdentityLink won't conflict.
+    if (existingUserId && existingUserId !== linkedUserId) {
+      logger.info(
+        { existingUserId, linkedUserId, telegramId },
+        'telegram-auth: re-linking telegram from stub to web account',
+      );
+      await supabaseAdmin
+        .from('account_identities')
+        .delete()
+        .eq('provider', 'telegram')
+        .eq('provider_user_id', telegramId);
+      await supabaseAdmin
+        .from('profiles')
+        .update({ telegram_id: null })
+        .eq('id', existingUserId)
+        .eq('telegram_id', telegramId);
+    }
 
+    const { error: upsertErr } = await supabaseAdmin
+      .from('profiles')
+      .upsert({ id: userId, telegram_id: telegramId }, { onConflict: 'id' });
     if (upsertErr) {
       throw new AuthError({ message: 'Failed to update linked profile', cause: upsertErr });
     }
+
+    wasLinked = true;
+  } else if (existingUserId) {
+    userId = existingUserId;
   } else {
     // No profile row yet — the user might still exist in auth.users if the
     // profiles table was reset while auth.users was preserved.
@@ -205,5 +223,5 @@ export const POST = withApiHandler(async (req) => {
   const secret = env.NEXTAUTH_SECRET;
   const sig = createHmac('sha256', secret).update(payload).digest('base64url');
 
-  return NextResponse.json({ sessionToken: `${payload}.${sig}`, needsEmail: false });
+  return NextResponse.json({ sessionToken: `${payload}.${sig}`, needsEmail: false, wasLinked });
 });

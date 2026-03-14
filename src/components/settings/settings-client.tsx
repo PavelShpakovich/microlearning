@@ -119,6 +119,7 @@ export function SettingsClient({
           const profile = await profileApi.getProfile(true);
           if (profile.telegram_id) {
             clearInterval(poll);
+            toast.success(t('settings.telegramLinkedSuccess'));
             window.location.reload();
           }
         } catch {
