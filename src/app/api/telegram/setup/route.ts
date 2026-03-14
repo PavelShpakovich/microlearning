@@ -3,7 +3,6 @@ import { requireAuth } from '@/lib/api/auth';
 import { AuthError } from '@/lib/errors';
 import { withApiHandler } from '@/lib/api/handler';
 import { env } from '@/lib/env';
-import { supabaseAdmin } from '@/lib/supabase/admin';
 
 /**
  * POST /api/telegram/setup
@@ -11,9 +10,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
  * Admin-only: Register the Telegram webhook and verify bot configuration.
  * Call this once after deployment or whenever the webhook URL changes.
  *
- * Sets up the webhook to receive:
- * - pre_checkout_query (user taps "Pay")
- * - message (including successful_payment)
+ * Sets up the webhook to receive regular bot messages.
  */
 export const POST = withApiHandler(async () => {
   const { user } = await requireAuth();
@@ -37,7 +34,7 @@ export const POST = withApiHandler(async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: webhookUrl,
-        allowed_updates: ['message', 'pre_checkout_query'],
+        allowed_updates: ['message'],
         drop_pending_updates: false,
         ...(env.TELEGRAM_WEBHOOK_SECRET ? { secret_token: env.TELEGRAM_WEBHOOK_SECRET } : {}),
       }),
@@ -83,7 +80,7 @@ export const POST = withApiHandler(async () => {
     result?: { id: number; first_name: string; username: string; can_join_groups: boolean };
   };
 
-  // Register bot commands so the menu shows /start and /paysupport
+  // Register bot commands so the menu shows only companion actions.
   const setCommandsResponse = await fetch(
     `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/setMyCommands`,
     {
@@ -92,7 +89,7 @@ export const POST = withApiHandler(async () => {
       body: JSON.stringify({
         commands: [
           { command: 'start', description: 'Open the Mini App' },
-          { command: 'paysupport', description: 'Payment support / refund help' },
+          { command: 'support', description: 'Get support' },
         ],
       }),
     },
@@ -105,14 +102,6 @@ export const POST = withApiHandler(async () => {
     console.warn('setMyCommands failed:', setCommandsData.description);
   }
 
-  // Fetch current Stars prices from DB
-  const { data: planPrices } = await supabaseAdmin
-    .from('subscription_plans')
-    .select('id, stars_price')
-    .neq('id', 'free');
-
-  const prices = Object.fromEntries((planPrices ?? []).map((p) => [p.id, p.stars_price]));
-
   return NextResponse.json({
     ok: true,
     webhook: {
@@ -121,7 +110,6 @@ export const POST = withApiHandler(async () => {
     },
     bot: getMeData.result,
     commands: setCommandsData.ok ? 'registered' : 'failed',
-    prices,
   });
 });
 
@@ -169,20 +157,11 @@ export const GET = withApiHandler(async () => {
   const currentUrl = webhookInfo.result?.url ?? '';
   const isRegistered = currentUrl === expectedWebhookUrl;
 
-  // Fetch current Stars prices from DB
-  const { data: planPrices } = await supabaseAdmin
-    .from('subscription_plans')
-    .select('id, stars_price')
-    .neq('id', 'free');
-
-  const prices = Object.fromEntries((planPrices ?? []).map((p) => [p.id, p.stars_price]));
-
   return NextResponse.json({
     ok: true,
     isRegistered,
     expectedUrl: expectedWebhookUrl,
     webhook: webhookInfo.result,
     bot: getMeData.result,
-    prices,
   });
 });

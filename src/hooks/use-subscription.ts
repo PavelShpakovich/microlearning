@@ -10,47 +10,18 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import type { AvailablePlan } from '@/app/api/profile/telegram-subscription/route';
+import { useSession } from 'next-auth/react';
+import type { AvailablePlan, SubscriptionStatusResponse } from '@/lib/billing/subscription-types';
 
 /**
- * Telegram Stars subscription status hook.
+ * Shared subscription status hook.
  *
  * All consumers share a single SubscriptionProvider context.
- * A refetch() from any component (e.g. after a successful payment)
- * instantly updates UsageCard, UsageBanner, PlansCard, etc.
+ * A refetch() from any component instantly updates UsageCard,
+ * UsageBanner, PlansCard, etc.
  */
 
-export interface SubscriptionStatus {
-  // Plan information
-  planId: 'free' | 'basic' | 'pro' | 'max';
-  isPaid: boolean;
-  expiresAt: string | null;
-  inTelegram: boolean;
-  autoRenew: boolean;
-  subscriptionStatus: 'active' | 'cancelled' | 'expired' | 'none';
-
-  // Backward compatibility with components expecting nested objects
-  plan: {
-    planId: 'free' | 'basic' | 'pro' | 'max';
-    cardsPerMonth: number;
-    themesLimit: number | null;
-    maxThemes: number | null;
-    communityThemes: boolean;
-  };
-
-  // Usage tracking
-  usage: {
-    cardsGenerated: number;
-    cardsLimit: number;
-    cardsRemaining: number;
-    periodStart: string;
-    periodEnd: string;
-  };
-
-  // Theme usage
-  themesUsed: number;
-
-  // All available plans for display (from DB + env Stars prices)
+export interface SubscriptionStatus extends SubscriptionStatusResponse {
   availablePlans: AvailablePlan[];
 }
 
@@ -58,12 +29,13 @@ interface SubscriptionResponse {
   status: SubscriptionStatus | null;
   isLoading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<SubscriptionStatus | null>;
 }
 
 const SubscriptionContext = createContext<SubscriptionResponse | null>(null);
 
 function useFetchSubscription(): SubscriptionResponse {
+  const { status: authStatus } = useSession();
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,10 +48,10 @@ function useFetchSubscription(): SubscriptionResponse {
     };
   }, []);
 
-  const fetchSubscription = useCallback(async () => {
+  const fetchSubscription = useCallback(async (): Promise<SubscriptionStatus | null> => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/profile/telegram-subscription');
+      const response = await fetch('/api/profile/subscription');
       if (!response.ok) {
         throw new Error(`Failed to fetch subscription: ${response.statusText}`);
       }
@@ -88,19 +60,25 @@ function useFetchSubscription(): SubscriptionResponse {
         setStatus(data);
         setError(null);
       }
+      return data;
     } catch (err) {
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : 'Unknown error');
         setStatus(null);
       }
+      return null;
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    if (authStatus !== 'authenticated') {
+      setIsLoading(false);
+      return;
+    }
     void fetchSubscription();
-  }, [fetchSubscription]);
+  }, [fetchSubscription, authStatus]);
 
   return { status, isLoading, error, refetch: fetchSubscription };
 }

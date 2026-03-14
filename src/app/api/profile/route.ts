@@ -7,6 +7,7 @@ import { ValidationError, AppError, AuthError } from '@/lib/errors';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/cache-utils';
 import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getTelegramIdForUser } from '@/lib/auth/account-identities';
 
 const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(100).optional(),
@@ -60,7 +61,11 @@ export const GET = withApiHandler(async () => {
     return response;
   }
 
-  const response = NextResponse.json(profile);
+  const telegramId = await getTelegramIdForUser(user.id);
+  const response = NextResponse.json({
+    ...profile,
+    telegram_id: telegramId ?? profile.telegram_id,
+  });
 
   // Add cache headers
   Object.entries(getCacheHeaders(CACHE_PRESETS.userProfile)).forEach(([key, value]) =>

@@ -1,45 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { LandingFooter } from '@/components/layout/landing-footer';
-import { routing } from '@/i18n/routing';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
+export const metadata: Metadata = {
+  title: 'Условия использования',
+  description:
+    'Прочитайте Условия использования Clario — правила и условия пользования платформой.',
+  alternates: { canonical: `${APP_URL}/terms` },
+  robots: { index: true, follow: true },
+};
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const isRu = locale === 'ru';
-  const canonical = isRu ? `${APP_URL}/ru/terms` : `${APP_URL}/terms`;
-
-  return {
-    title: isRu ? 'Условия использования' : 'Terms of Service',
-    description: isRu
-      ? 'Прочитайте Условия использования Clario — правила и условия пользования платформой.'
-      : 'Read the Clario Terms of Service to understand the rules and conditions for using our platform.',
-    alternates: {
-      canonical,
-      languages: {
-        en: `${APP_URL}/terms`,
-        ru: `${APP_URL}/ru/terms`,
-        'x-default': `${APP_URL}/terms`,
-      },
-    },
-    robots: { index: true, follow: true },
-  };
-}
-
-export default async function TermsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-
+export default async function TermsPage() {
   const t = await getTranslations('terms');
   const supportEmail = process.env.SUPPORT_EMAIL ?? 'support@example.com';
 

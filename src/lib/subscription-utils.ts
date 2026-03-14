@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getPlanLimits } from '@/lib/plan-limits';
+import { areSubscriptionsEnabled, getEffectivePlanId } from '@/lib/feature-flags';
 
 /**
  * Utilities for subscription operations (replaces deleted SubscriptionService)
@@ -44,7 +45,8 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
     subscription.status !== 'active' ||
     (subscription.current_period_end != null && new Date(subscription.current_period_end) < now);
 
-  const planId = (isExpired ? 'free' : (subscription?.plan_id ?? 'free')) as PlanId;
+  const rawPlanId = (isExpired ? 'free' : (subscription?.plan_id ?? 'free')) as PlanId;
+  const planId = getEffectivePlanId(rawPlanId, 'free');
   const limits = await getPlanLimits(planId);
 
   // Get current usage
@@ -64,7 +66,7 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
     cardsLimit: limits.cardsPerMonth,
     cardsGenerated,
     cardsRemaining,
-    isPaid: !isExpired && planId !== 'free',
+    isPaid: areSubscriptionsEnabled() && !isExpired && planId !== 'free',
     canGenerate: cardsRemaining > 0,
     usage: {
       cardsGenerated,
@@ -102,7 +104,8 @@ export async function getUserPlan(userId: string): Promise<{
     (subscription.current_period_end != null &&
       new Date(subscription.current_period_end) < new Date());
 
-  const planId = (isExpired ? 'free' : (subscription?.plan_id ?? 'free')) as PlanId;
+  const rawPlanId = (isExpired ? 'free' : (subscription?.plan_id ?? 'free')) as PlanId;
+  const planId = getEffectivePlanId(rawPlanId, 'free');
   const limits = await getPlanLimits(planId);
 
   return {
@@ -149,7 +152,7 @@ async function getUserPlanId(userId: string): Promise<PlanId> {
     .eq('user_id', userId)
     .maybeSingle();
 
-  return (subscription?.plan_id ?? 'free') as PlanId;
+  return getEffectivePlanId((subscription?.plan_id ?? 'free') as PlanId, 'free');
 }
 
 /**

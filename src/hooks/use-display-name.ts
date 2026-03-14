@@ -6,6 +6,7 @@ import { profileApi } from '@/services/profile-api';
 
 // Module-level cache so all hook instances share state
 let cachedName: string | null = null;
+let fetchFailed = false;
 const listeners = new Set<(name: string) => void>();
 
 /** Call this after saving the profile to push the new name to all subscribers instantly */
@@ -30,7 +31,7 @@ export function useDisplayName() {
 
   // Fetch display name from API on mount if not yet cached
   useEffect(() => {
-    if (cachedName || !session?.user?.id) return;
+    if (cachedName || fetchFailed || !session?.user?.id) return;
 
     let cancelled = false;
 
@@ -43,7 +44,8 @@ export function useDisplayName() {
         if (name) setDisplayName(name);
       })
       .catch(() => {
-        // Silently fall back to session name
+        // Prevent retries on auth failure — fall back to session name
+        fetchFailed = true;
       });
 
     return () => {

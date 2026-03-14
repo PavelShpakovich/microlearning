@@ -6,11 +6,8 @@ import { logger } from '@/lib/logger';
 /**
  * GET /api/cron/subscription-renewal
  *
- * Called daily by Vercel Cron. Two jobs in sequence:
- *   A) Expire subscriptions whose current_period_end has passed.
- *   B) Remind users whose subscription expires within 3 days (if they have a Telegram ID).
- *   C) Notify users whose Telegram auto-renew likely failed because their Stars balance
- *      was insufficient, while we are still within the 3-day grace window.
+ * Called daily by Vercel Cron.
+ * Expires subscriptions whose current_period_end has passed and clears stale usage.
  *
  * Secured with Authorization: Bearer <CRON_SECRET>.
  */
@@ -31,7 +28,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // ── A: Expire overdue subscriptions ──────────────────────────────────
   // For auto_renew=true subscriptions, allow a 3-day grace period after
-  // current_period_end — Telegram may still be processing the recurring charge.
+  // current_period_end in case a provider renewal callback is delayed.
   // For auto_renew=false (cancelled), expire as soon as the period ends.
 
   // A1: Expire subscriptions where auto-renewal was disabled (no grace period)
@@ -86,167 +83,5 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     'Cron: subscription expiry job done',
   );
 
-  // ── B: Remind users expiring in next 3 days (only non-auto-renewing) ─
-  // Auto-renewing users don't need reminders — Telegram charges automatically.
-  if (!env.TELEGRAM_BOT_TOKEN) {
-    logger.info('Cron: TELEGRAM_BOT_TOKEN not set — skipping renewal reminders');
-    return NextResponse.json({ expired: expiredUserIds.length, reminded: 0, overdueAutoRenew: 0 });
-  }
-
-  const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-
-  const { data: expiringSoon, error: remindError } = await supabaseAdmin
-    .from('user_subscriptions')
-    .select('user_id, plan_id, current_period_end')
-    .in('status', ['active', 'cancelled'])
-    .eq('auto_renew', false)
-    .gt('current_period_end', now.toISOString())
-    .lte('current_period_end', in3Days.toISOString());
-
-  if (remindError) {
-    logger.error({ error: remindError }, 'Cron: failed to query expiring subscriptions');
-    return NextResponse.json({ expired: expiredUserIds.length, reminded: 0, overdueAutoRenew: 0 });
-  }
-
-  // ── C: Notify users whose paid period already ended but auto-renew is still on ─
-  // This usually means Telegram could not complete the recurring Stars charge.
-  // We keep a short grace period in DB, but the user should top up and renew manually.
-  const { data: overdueAutoRenew, error: overdueError } = await supabaseAdmin
-    .from('user_subscriptions')
-    .select('user_id, plan_id, current_period_end')
-    .eq('status', 'active')
-    .eq('auto_renew', true)
-    .lte('current_period_end', now.toISOString())
-    .gt('current_period_end', gracePeriodEnd.toISOString());
-
-  if (overdueError) {
-    logger.error({ error: overdueError }, 'Cron: failed to query overdue auto-renew subscriptions');
-  }
-
-  const userIds = Array.from(
-    new Set([
-      ...(expiringSoon ?? []).map((s) => s.user_id),
-      ...(overdueAutoRenew ?? []).map((s) => s.user_id),
-    ]),
-  );
-
-  if (userIds.length === 0) {
-    return NextResponse.json({ expired: expiredUserIds.length, reminded: 0, overdueAutoRenew: 0 });
-  }
-
-  // Fetch Telegram IDs for these users from profiles
-  const { data: profiles, error: profilesError } = await supabaseAdmin
-    .from('profiles')
-    .select('id, telegram_id')
-    .in('id', userIds)
-    .not('telegram_id', 'is', null);
-
-  if (profilesError) {
-    logger.error({ error: profilesError }, 'Cron: failed to fetch profiles for reminders');
-    return NextResponse.json({ expired: expiredUserIds.length, reminded: 0 });
-  }
-
-  const telegramMap = new Map(
-    (profiles ?? [])
-      .filter((p) => p.telegram_id != null)
-      .map((p) => [p.id, p.telegram_id as string]),
-  );
-
-  const appUrl = env.NEXT_PUBLIC_APP_URL;
-  let reminded = 0;
-  let overdueAutoRenewNotified = 0;
-
-  for (const sub of expiringSoon) {
-    const telegramIdStr = telegramMap.get(sub.user_id);
-    if (!telegramIdStr) continue;
-    const telegramId = Number(telegramIdStr);
-    if (isNaN(telegramId)) continue;
-
-    const expiresAt = new Date(sub.current_period_end);
-    const daysLeft = Math.max(
-      1,
-      Math.round((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
-    );
-    const planName = sub.plan_id.charAt(0).toUpperCase() + sub.plan_id.slice(1);
-
-    const text =
-      `⭐ Your *${planName}* plan expires in *${daysLeft} day${daysLeft !== 1 ? 's' : ''}*.\n\n` +
-      `Open the app to renew and keep your progress going!`;
-
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: telegramId,
-          text,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: 'Renew subscription', web_app: { url: `${appUrl}/settings/plan` } }],
-            ],
-          },
-        }),
-      });
-
-      if (res.ok) {
-        reminded++;
-      } else {
-        const err = await res.json().catch(() => ({}));
-        logger.warn({ err, telegramId }, 'Cron: failed to send reminder message');
-      }
-    } catch (e) {
-      logger.warn({ e, telegramId }, 'Cron: exception sending reminder message');
-    }
-  }
-
-  for (const sub of overdueAutoRenew ?? []) {
-    const telegramIdStr = telegramMap.get(sub.user_id);
-    if (!telegramIdStr) continue;
-    const telegramId = Number(telegramIdStr);
-    if (isNaN(telegramId)) continue;
-
-    const planName = sub.plan_id.charAt(0).toUpperCase() + sub.plan_id.slice(1);
-    const text =
-      `We couldn't renew your *${planName}* plan automatically. ` +
-      `Your Telegram Stars balance may be too low.\n\n` +
-      `Your paid access is currently paused. Top up Stars and renew in the app to restore access.`;
-
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: telegramId,
-          text,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: 'Top up and renew', web_app: { url: `${appUrl}/settings/plan` } }],
-            ],
-          },
-        }),
-      });
-
-      if (res.ok) {
-        overdueAutoRenewNotified++;
-      } else {
-        const err = await res.json().catch(() => ({}));
-        logger.warn({ err, telegramId }, 'Cron: failed to send overdue auto-renew message');
-      }
-    } catch (e) {
-      logger.warn({ e, telegramId }, 'Cron: exception sending overdue auto-renew message');
-    }
-  }
-
-  logger.info(
-    { expired: expiredUserIds.length, reminded, overdueAutoRenew: overdueAutoRenewNotified },
-    'Cron: renewal reminder job done',
-  );
-
-  return NextResponse.json({
-    expired: expiredUserIds.length,
-    reminded,
-    overdueAutoRenew: overdueAutoRenewNotified,
-  });
+  return NextResponse.json({ expired: expiredUserIds.length, reminded: 0, overdueAutoRenew: 0 });
 }

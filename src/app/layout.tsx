@@ -79,6 +79,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // or falls back to the NEXT_LOCALE cookie (dynamic authenticated routes).
   const locale = await getLocale();
   const messages = await getMessages();
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const now = new Date();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -102,7 +104,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
         <Suspense fallback={<div />}>
-          <RootProviders locale={locale} messages={messages}>
+          <RootProviders locale={locale} messages={messages} timeZone={timeZone} now={now}>
             <Header />
             {children}
           </RootProviders>

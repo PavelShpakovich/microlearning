@@ -77,7 +77,7 @@ export const PATCH = withApiHandler(async (req) => {
       const plan = await getUserPlan(user.id);
       if (!plan.communityThemes) {
         throw new PlanLimitError({
-          message: 'Sharing themes publicly requires a paid plan. Upgrade to enable this feature.',
+          message: 'Public theme sharing is currently unavailable for this account.',
         });
       }
     }

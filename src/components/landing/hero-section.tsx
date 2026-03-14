@@ -1,15 +1,21 @@
+import { Link } from '@/navigation';
 import { Button } from '@/components/ui/button';
-
-const BOT_URL = process.env.NEXT_PUBLIC_TELEGRAM_BOT_URL ?? 'https://t.me/clario_bot';
 
 interface HeroSectionProps {
   tagline: string;
   headline: string;
   subheadline: string;
   ctaGetStarted: string;
+  ctaLogin: string;
 }
 
-export function HeroSection({ tagline, headline, subheadline, ctaGetStarted }: HeroSectionProps) {
+export function HeroSection({
+  tagline,
+  headline,
+  subheadline,
+  ctaGetStarted,
+  ctaLogin,
+}: HeroSectionProps) {
   return (
     <section className="flex flex-col items-center justify-center text-center px-4 py-24 sm:py-32 bg-linear-to-b from-background to-muted/30">
       <span className="inline-block mb-4 text-xs font-semibold tracking-widest uppercase text-primary">
@@ -23,9 +29,10 @@ export function HeroSection({ tagline, headline, subheadline, ctaGetStarted }: H
       </p>
       <div className="flex flex-col sm:flex-row gap-4">
         <Button size="lg" asChild>
-          <a href={BOT_URL} target="_blank" rel="noopener noreferrer">
-            {ctaGetStarted}
-          </a>
+          <Link href="/register">{ctaGetStarted}</Link>
+        </Button>
+        <Button size="lg" variant="outline" asChild>
+          <Link href="/login">{ctaLogin}</Link>
         </Button>
       </div>
     </section>

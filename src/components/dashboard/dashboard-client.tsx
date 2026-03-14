@@ -16,6 +16,7 @@ import { ThemeList } from './theme-list';
 import { UsageBanner } from '@/components/common/usage-banner';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useDisplayName } from '@/hooks/use-display-name';
+import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
@@ -45,6 +46,7 @@ export function DashboardClient({
   const atThemeLimit = maxThemes !== null && themes.length >= maxThemes;
   // null while loading → default true to avoid flash of locked state for paid users
   const canAccessCommunity = subscriptionStatus ? subscriptionStatus.plan.communityThemes : true;
+  const canShowUpsell = areSubscriptionsEnabled() && isPaidInformationVisible();
 
   useEffect(() => {
     setThemes(initialThemes);
@@ -188,12 +190,14 @@ export function DashboardClient({
                   {t('dashboard.communityLockedDescription')}
                 </p>
               </div>
-              <Button asChild size="sm">
-                <Link href="/settings/plan">
-                  <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
-                  {t('dashboard.communityLockedCta')}
-                </Link>
-              </Button>
+              {canShowUpsell && (
+                <Button asChild size="sm">
+                  <Link href="/settings/plan">
+                    <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+                    {t('dashboard.communityLockedCta')}
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </TabsContent>

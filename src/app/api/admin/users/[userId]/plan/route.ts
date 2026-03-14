@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/api/auth';
 import { changePlan } from '@/lib/subscription-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
 
 const changePlanSchema = z.object({
   planId: z.enum(['free', 'basic', 'pro', 'max']),
@@ -18,6 +19,10 @@ export const PUT = withApiHandler(async (req: Request, ctx?: unknown) => {
   const adminCheck = await requireAdmin();
   if (adminCheck instanceof NextResponse) return adminCheck;
   const { user } = adminCheck;
+
+  if (!areSubscriptionsEnabled() || !isPaidInformationVisible()) {
+    throw new ValidationError({ message: 'Plan management is unavailable before launch' });
+  }
 
   const { params } = (ctx as { params: Promise<Record<string, string>> } | undefined) || {};
   const { userId } = (await params) || {};
@@ -40,16 +45,16 @@ export const PUT = withApiHandler(async (req: Request, ctx?: unknown) => {
     // Change the plan
     await changePlan(userId, planId as 'free' | 'basic' | 'pro' | 'max');
 
-    logger.info({ adminId: user.id, userId, newPlan: planId }, 'Admin changed user plan');
+    logger.info({ adminId: user.id, userId, newPlan: planId }, 'Admin changed user plan access');
 
     return NextResponse.json({
       success: true,
-      message: `Plan changed to ${planId}`,
+      message: `Plan access updated to ${planId}`,
       userId,
       planId,
     });
   } catch (error) {
-    logger.error({ error, userId, adminId: user.id }, 'Failed to change user plan');
-    return NextResponse.json({ error: 'Failed to change plan' }, { status: 500 });
+    logger.error({ error, userId, adminId: user.id }, 'Failed to change user plan access');
+    return NextResponse.json({ error: 'Failed to update plan access' }, { status: 500 });
   }
 });

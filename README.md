@@ -1,6 +1,6 @@
 # Clario — AI Flashcard App
 
-An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unified **LLM adapter**. Users access the app through the **Telegram Mini App** — they create themes, upload learning materials, and study AI-generated flashcards.
+An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unified **LLM adapter**. Users primarily work in the web app, while the **Telegram Mini App** acts as a companion surface for quick access and study.
 
 ---
 
@@ -14,7 +14,7 @@ An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unifi
 | LLM             | Groq / OpenAI / Anthropic / Ollama (unified adapter) |
 | Validation      | Zod                                                  |
 | Ingestion       | PDF, DOCX, URL scraping, plain text                  |
-| Payments        | Telegram Stars                                       |
+| Payments        | WEBPAY preparation + feature-flagged subscriptions   |
 | i18n            | next-intl (English + Russian)                        |
 | Logging         | pino                                                 |
 | Tests           | Jest + Testing Library                               |
@@ -80,7 +80,7 @@ Migrations are in `supabase/migrations/` and must be applied in order.
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) or open the mini app inside Telegram.
+Open [http://localhost:3000](http://localhost:3000). Telegram remains available as a companion Mini App once the bot is configured.
 
 ---
 
@@ -88,25 +88,23 @@ Open [http://localhost:3000](http://localhost:3000) or open the mini app inside 
 
 ### Authentication
 
-The app is **Telegram-first**. Web login/registration is disabled by default (`WEB_AUTH_ENABLED: false` in `src/lib/feature-flags.ts`).
+The app is **web-first with Telegram as companion**.
 
-- Users open the app via the Telegram Mini App
-- `initData` from `window.Telegram.WebApp` is HMAC-verified on the server (`/api/auth/telegram`)
-- A stub Supabase account is created on first visit (`telegram_{id}@noreply.*`)
+- Users can sign in on the web with email + password
+- `initData` from `window.Telegram.WebApp` is still HMAC-verified on the server (`/api/auth/telegram`)
+- Telegram accounts can be linked to existing web accounts from Settings
 - NextAuth issues a 30-day JWT cookie scoped to that user
-
-Web users (legacy) can still log in with email + password and link their Telegram account from Settings.
 
 ### Core Flow
 
-1. **Open the Mini App** in Telegram — auto-authenticated via HMAC.
+1. **Open the web app** or launch the Telegram companion Mini App.
 2. **Create a theme** — e.g. "TypeScript", "Spanish Vocabulary".
 3. **Add sources** — upload a PDF/DOCX, paste a URL, or enter text.
 4. **Study** — flashcards are AI-generated and served in sessions; more are generated on-demand when your queue runs low.
 
 ### Subscriptions & Payments
 
-Plans are enforced via Supabase and checked server-side. Payments are processed through **Telegram Stars** (`/api/telegram/` webhook). Plans: Free → Starter → Pro → Max.
+Plans are enforced server-side. Paid subscriptions and prices remain hidden behind feature flags until launch, while future billing is being prepared for **WEBPAY** in **BYN**.
 
 ---
 
@@ -185,7 +183,7 @@ src/
 │   │   ├── profile/          # Profile updates
 │   │   ├── session/          # Study session management
 │   │   ├── sources/          # Source upload & ingestion
-│   │   ├── telegram/         # Telegram Stars payment webhook
+│   │   ├── telegram/         # Telegram companion bot + webhook
 │   │   └── themes/           # Theme CRUD
 │   ├── admin/                # Admin panel
 │   ├── dashboard/            # Theme list

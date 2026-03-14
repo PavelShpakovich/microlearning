@@ -1,6 +1,4 @@
-import { createNavigation } from 'next-intl/navigation';
-import { routing } from './i18n/routing';
-
-// Locale-aware navigation helpers for public pages.
-// Use these instead of next/navigation in components rendered under [locale]/.
-export const { Link, redirect, useRouter, usePathname, getPathname } = createNavigation(routing);
+// Locale-based URL routing removed — all routes are flat (/).
+// These re-exports keep the same import paths in auth/landing components.
+export { default as Link } from 'next/link';
+export { redirect, useRouter, usePathname } from 'next/navigation';

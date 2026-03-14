@@ -1,18 +1,28 @@
 import type { Database } from '@/lib/supabase/types';
 import { auth } from '@/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getTelegramIdForUser } from '@/lib/auth/account-identities';
 
 type Theme = Database['public']['Tables']['themes']['Row'];
 
 export async function fetchUserProfile() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  const { data: profiles } = await supabaseAdmin
-    .from('profiles')
-    .select('display_name, telegram_id')
-    .eq('id', session.user.id)
-    .limit(1);
-  return profiles?.[0] || null;
+  const [{ data: profiles }, telegramId] = await Promise.all([
+    supabaseAdmin
+      .from('profiles')
+      .select('display_name, telegram_id')
+      .eq('id', session.user.id)
+      .limit(1),
+    getTelegramIdForUser(session.user.id),
+  ]);
+
+  if (!profiles?.[0]) return null;
+
+  return {
+    ...profiles[0],
+    telegram_id: telegramId ?? profiles[0].telegram_id,
+  };
 }
 
 /**

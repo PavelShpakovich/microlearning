@@ -5,6 +5,7 @@ import { fetchUserProfile } from '@/lib/data-fetchers';
 import { SettingsClient } from '@/components/settings/settings-client';
 import { SettingsSkeleton } from '@/components/skeletons';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
 export const metadata = {
   title: 'Settings',
@@ -27,13 +28,14 @@ export default async function SettingsPage() {
     supabaseAdmin.auth.admin.getUserById(session.user.id),
   ]);
   const authEmail = authUserData.user?.email ?? '';
-  const isStub = authEmail.startsWith('telegram_') && authEmail.includes('@noreply');
+  const isStub = isTelegramStubEmail(authEmail);
 
   return (
     <Suspense fallback={<SettingsSkeleton />}>
       <SettingsClient
         initialProfile={profile}
         userName={session.user.name ?? null}
+        userEmail={authEmail}
         isStub={isStub}
       />
     </Suspense>

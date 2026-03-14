@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 import { isTelegramWebApp } from '@/components/telegram-provider';
+import { areSubscriptionsEnabled } from '@/lib/feature-flags';
 
 interface SettingsClientProps {
   initialProfile: {
@@ -22,6 +23,7 @@ interface SettingsClientProps {
   } | null;
   /** OAuth / NextAuth display name as an additional fallback */
   userName?: string | null;
+  userEmail?: string | null;
   /** True if the user is a Telegram-first stub (no email credentials set up yet) */
   isStub?: boolean;
 }
@@ -29,19 +31,82 @@ interface SettingsClientProps {
 import { signOut } from 'next-auth/react';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 
-export function SettingsClient({ initialProfile, userName, isStub = false }: SettingsClientProps) {
+export function SettingsClient({
+  initialProfile,
+  userName,
+  userEmail,
+  isStub = false,
+}: SettingsClientProps) {
   const t = useTranslations();
   const [displayName, setDisplayName] = useState(initialProfile?.display_name || userName || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const [newPassword, setNewPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [webAccessEmail, setWebAccessEmail] = useState(
+    userEmail && !userEmail.includes('@noreply') ? userEmail : '',
+  );
+  const [webAccessPassword, setWebAccessPassword] = useState('');
+  const [webAccessConfirmPassword, setWebAccessConfirmPassword] = useState('');
+  const [isSettingUpWebAccess, setIsSettingUpWebAccess] = useState(false);
+  const [isStartingTelegramLink, setIsStartingTelegramLink] = useState(false);
 
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const telegramId = initialProfile?.telegram_id ?? null;
-  void telegramId;
+  const canShowBilling = areSubscriptionsEnabled();
+
+  const onSetupWebAccess = async () => {
+    if (!webAccessEmail.includes('@')) {
+      toast.error(t('validation.invalidEmail'));
+      return;
+    }
+
+    if (webAccessPassword.length < 6) {
+      toast.error(t('validation.passwordTooShort'));
+      return;
+    }
+
+    if (webAccessPassword !== webAccessConfirmPassword) {
+      toast.error(t('validation.passwordsDoNotMatch'));
+      return;
+    }
+
+    try {
+      setIsSettingUpWebAccess(true);
+      await profileApi.setupWebAccess(webAccessEmail, webAccessPassword);
+      toast.success(t('auth.passwordUpdated'));
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('auth.error'));
+    } finally {
+      setIsSettingUpWebAccess(false);
+    }
+  };
+
+  const onConnectTelegram = async () => {
+    try {
+      setIsStartingTelegramLink(true);
+      const result = await profileApi.startTelegramLink();
+
+      if (result.alreadyLinked) {
+        toast.success(t('settings.telegramConnected'));
+        return;
+      }
+
+      if (!result.deepLink) {
+        throw new Error(t('settings.telegramConnectFailed'));
+      }
+
+      window.open(result.deepLink, '_blank', 'noopener,noreferrer');
+      toast.success(t('settings.telegramConnectOpened'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('settings.telegramConnectFailed'));
+    } finally {
+      setIsStartingTelegramLink(false);
+    }
+  };
 
   const onSave = async () => {
     const normalizedName = displayName.trim();
@@ -112,18 +177,100 @@ export function SettingsClient({ initialProfile, userName, isStub = false }: Set
     <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       <BackLink />
 
-      {/* ── Plan & Billing ── */}
       <Link href="/settings/plan" className="block group">
         <Card className="transition-colors hover:border-foreground/30">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
-              <CardTitle className="text-base">{t('settings.planCardTitle')}</CardTitle>
-              <CardDescription>{t('settings.planCardDescription')}</CardDescription>
+              <CardTitle className="text-base">
+                {canShowBilling ? t('settings.planCardTitle') : t('settings.usageCardTitle')}
+              </CardTitle>
+              <CardDescription>
+                {canShowBilling
+                  ? t('settings.planCardDescription')
+                  : t('settings.usageCardDescription')}
+              </CardDescription>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
           </CardHeader>
         </Card>
       </Link>
+
+      {isStub && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.webAccessCardTitle')}</CardTitle>
+            <CardDescription>{t('settings.webAccessCardDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="webAccessEmail">{t('auth.email')}</Label>
+              <Input
+                id="webAccessEmail"
+                type="email"
+                value={webAccessEmail}
+                onChange={(event) => setWebAccessEmail(event.target.value)}
+                placeholder={t('auth.emailPlaceholder')}
+                disabled={isSettingUpWebAccess}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="webAccessPassword">{t('auth.password')}</Label>
+              <Input
+                id="webAccessPassword"
+                type="password"
+                value={webAccessPassword}
+                onChange={(event) => setWebAccessPassword(event.target.value)}
+                placeholder={t('auth.passwordPlaceholder')}
+                disabled={isSettingUpWebAccess}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="webAccessConfirmPassword">{t('auth.confirmPassword')}</Label>
+              <Input
+                id="webAccessConfirmPassword"
+                type="password"
+                value={webAccessConfirmPassword}
+                onChange={(event) => setWebAccessConfirmPassword(event.target.value)}
+                placeholder={t('auth.passwordPlaceholder')}
+                disabled={isSettingUpWebAccess}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                className="w-full sm:w-auto"
+                onClick={() => void onSetupWebAccess()}
+                disabled={isSettingUpWebAccess}
+              >
+                {isSettingUpWebAccess ? t('auth.saving') : t('settings.webAccessCardCta')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.telegramCardTitle')}</CardTitle>
+          <CardDescription>{t('settings.telegramCardDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground">
+            {telegramId ? t('settings.telegramConnected') : t('settings.telegramBotDescription')}
+          </div>
+          <Button
+            variant={telegramId ? 'secondary' : 'default'}
+            onClick={() => void onConnectTelegram()}
+            disabled={Boolean(telegramId) || isStartingTelegramLink}
+          >
+            {telegramId
+              ? t('settings.telegramConnected')
+              : isStartingTelegramLink
+                ? t('settings.telegramConnecting')
+                : t('settings.telegramConnectCta')}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.profileTitle')}</CardTitle>

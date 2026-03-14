@@ -55,7 +55,7 @@ class AdminApi {
   }
 
   /**
-   * Change a user's subscription plan
+   * Change a user's plan access.
    */
   async changePlan(userId: string, planId: PlanId): Promise<ChangePlanResponse> {
     const res = await fetch(`/api/admin/users/${userId}/plan`, {
@@ -67,10 +67,14 @@ class AdminApi {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to change plan');
+      throw new Error(data.error || 'Failed to update plan access');
     }
 
     return data;
+  }
+
+  async updatePlanAccess(userId: string, planId: PlanId): Promise<ChangePlanResponse> {
+    return this.changePlan(userId, planId);
   }
 
   /**

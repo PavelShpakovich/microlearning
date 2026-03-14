@@ -27,6 +27,7 @@ export default function TelegramEntryPage() {
   const t = useTranslations();
   const [phase, setPhase] = useState<Phase>('detecting');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLinkingFlow, setIsLinkingFlow] = useState(false);
 
   useEffect(() => {
     const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -70,9 +71,12 @@ export default function TelegramEntryPage() {
       setPhase('authenticating');
 
       try {
+        const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+        setIsLinkingFlow(Boolean(startParam));
+
         // 1. Validate initData on the server — server verifies the Telegram
         //    HMAC and returns a short-lived signed token.
-        const { sessionToken } = await authApi.exchangeTelegramInitData(initData);
+        const { sessionToken } = await authApi.exchangeTelegramInitData(initData, startParam);
 
         // 2. Exchange for a NextAuth session (same cookie as email users).
         //    This eliminates the Supabase browser-client race condition.
@@ -107,7 +111,11 @@ export default function TelegramEntryPage() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       <p className="text-sm text-gray-500">
-        {phase === 'detecting' ? t('telegram.starting') : t('telegram.signingYouIn')}
+        {phase === 'detecting'
+          ? t('telegram.starting')
+          : isLinkingFlow
+            ? t('telegram.linking')
+            : t('telegram.signingYouIn')}
       </p>
     </main>
   );

@@ -33,52 +33,38 @@ export type Database = {
   };
   public: {
     Tables: {
-      billing_history: {
+      account_identities: {
         Row: {
-          amount_cents: number;
-          created_at: string | null;
-          currency: string | null;
+          created_at: string;
           id: string;
-          period_type: string;
-          status: string | null;
-          stripe_invoice_id: string | null;
-          subscription_id: string;
-          updated_at: string | null;
+          metadata: Json;
+          provider: string;
+          provider_email: string | null;
+          provider_user_id: string;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
-          amount_cents: number;
-          created_at?: string | null;
-          currency?: string | null;
+          created_at?: string;
           id?: string;
-          period_type: string;
-          status?: string | null;
-          stripe_invoice_id?: string | null;
-          subscription_id: string;
-          updated_at?: string | null;
+          metadata?: Json;
+          provider: string;
+          provider_email?: string | null;
+          provider_user_id: string;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
-          amount_cents?: number;
-          created_at?: string | null;
-          currency?: string | null;
+          created_at?: string;
           id?: string;
-          period_type?: string;
-          status?: string | null;
-          stripe_invoice_id?: string | null;
-          subscription_id?: string;
-          updated_at?: string | null;
+          metadata?: Json;
+          provider?: string;
+          provider_email?: string | null;
+          provider_user_id?: string;
+          updated_at?: string;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'billing_history_subscription_id_fkey';
-            columns: ['subscription_id'];
-            isOneToOne: false;
-            referencedRelation: 'user_subscriptions';
-            referencedColumns: ['id'];
-          },
-        ];
+        Relationships: [];
       };
       bookmarked_cards: {
         Row: {
@@ -207,42 +193,102 @@ export type Database = {
           },
         ];
       };
-      payment_history: {
+      payment_transactions: {
         Row: {
-          id: string;
-          user_id: string;
-          telegram_payment_charge_id: string;
-          plan_id: string;
-          amount: number;
-          currency: string;
-          is_first_recurring: boolean;
-          is_recurring: boolean;
-          subscription_expiration_date: string | null;
+          amount_minor: number;
           created_at: string;
+          currency: string;
+          external_customer_id: string | null;
+          external_subscription_id: string | null;
+          external_transaction_id: string;
+          id: string;
+          kind: string;
+          period_end: string | null;
+          period_start: string | null;
+          plan_id: string | null;
+          provider: string;
+          raw_payload: Json;
+          status: string;
+          subscription_id: string | null;
+          updated_at: string;
+          user_id: string;
         };
         Insert: {
-          id?: string;
-          user_id: string;
-          telegram_payment_charge_id: string;
-          plan_id: string;
-          amount: number;
-          currency?: string;
-          is_first_recurring?: boolean;
-          is_recurring?: boolean;
-          subscription_expiration_date?: string | null;
+          amount_minor: number;
           created_at?: string;
+          currency: string;
+          external_customer_id?: string | null;
+          external_subscription_id?: string | null;
+          external_transaction_id: string;
+          id?: string;
+          kind?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          plan_id?: string | null;
+          provider: string;
+          raw_payload?: Json;
+          status?: string;
+          subscription_id?: string | null;
+          updated_at?: string;
+          user_id: string;
         };
         Update: {
-          id?: string;
-          user_id?: string;
-          telegram_payment_charge_id?: string;
-          plan_id?: string;
-          amount?: number;
-          currency?: string;
-          is_first_recurring?: boolean;
-          is_recurring?: boolean;
-          subscription_expiration_date?: string | null;
+          amount_minor?: number;
           created_at?: string;
+          currency?: string;
+          external_customer_id?: string | null;
+          external_subscription_id?: string | null;
+          external_transaction_id?: string;
+          id?: string;
+          kind?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          plan_id?: string | null;
+          provider?: string;
+          raw_payload?: Json;
+          status?: string;
+          subscription_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'payment_transactions_plan_id_fkey';
+            columns: ['plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscription_plans';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'payment_transactions_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_subscriptions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      telegram_link_tokens: {
+        Row: {
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          token: string;
+          user_id: string;
+        };
+        Insert: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at: string;
+          token: string;
+          user_id: string;
+        };
+        Update: {
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          token?: string;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -348,26 +394,41 @@ export type Database = {
         Row: {
           cards_per_month: number;
           community_themes: boolean;
+          currency: string;
           id: string;
+          is_public: boolean;
           max_themes: number | null;
           name: string;
-          stars_price: number;
+          price_minor: number | null;
+          sort_order: number;
+          webpay_plan_id: string | null;
+          webpay_product_id: string | null;
         };
         Insert: {
           cards_per_month: number;
           community_themes?: boolean;
+          currency?: string;
           id: string;
+          is_public?: boolean;
           max_themes?: number | null;
           name: string;
-          stars_price?: number;
+          price_minor?: number | null;
+          sort_order?: number;
+          webpay_plan_id?: string | null;
+          webpay_product_id?: string | null;
         };
         Update: {
           cards_per_month?: number;
           community_themes?: boolean;
+          currency?: string;
           id?: string;
+          is_public?: boolean;
           max_themes?: number | null;
           name?: string;
-          stars_price?: number;
+          price_minor?: number | null;
+          sort_order?: number;
+          webpay_plan_id?: string | null;
+          webpay_product_id?: string | null;
         };
         Relationships: [];
       };
@@ -410,6 +471,9 @@ export type Database = {
       user_subscriptions: {
         Row: {
           auto_renew: boolean | null;
+          billing_customer_id: string | null;
+          billing_provider: string | null;
+          billing_subscription_id: string | null;
           created_at: string | null;
           current_period_end: string;
           current_period_start: string;
@@ -418,12 +482,14 @@ export type Database = {
           status: string;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
-          telegram_payment_charge_id: string | null;
           updated_at: string | null;
           user_id: string;
         };
         Insert: {
           auto_renew?: boolean | null;
+          billing_customer_id?: string | null;
+          billing_provider?: string | null;
+          billing_subscription_id?: string | null;
           created_at?: string | null;
           current_period_end?: string;
           current_period_start?: string;
@@ -432,12 +498,14 @@ export type Database = {
           status?: string;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
-          telegram_payment_charge_id?: string | null;
           updated_at?: string | null;
           user_id: string;
         };
         Update: {
           auto_renew?: boolean | null;
+          billing_customer_id?: string | null;
+          billing_provider?: string | null;
+          billing_subscription_id?: string | null;
           created_at?: string | null;
           current_period_end?: string;
           current_period_start?: string;
@@ -446,7 +514,6 @@ export type Database = {
           status?: string;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
-          telegram_payment_charge_id?: string | null;
           updated_at?: string | null;
           user_id?: string;
         };
@@ -662,4 +729,4 @@ export type BookmarkedCardRow = Tables<'bookmarked_cards'>;
 export type SubscriptionPlanRow = Tables<'subscription_plans'>;
 export type UserSubscriptionRow = Tables<'user_subscriptions'>;
 export type UserUsageRow = Tables<'user_usage'>;
-export type BillingHistoryRow = Tables<'billing_history'>;
+export type PaymentTransactionRow = Tables<'payment_transactions'>;

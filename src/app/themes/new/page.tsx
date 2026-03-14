@@ -196,7 +196,7 @@ export default function NewThemePage() {
                         className={`h-4 w-4 shrink-0 ${autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
                       />
                       <span
-                        className={`text-sm font-semibold min-w-0 break-words ${autoGenerate ? 'text-foreground' : 'text-foreground'}`}
+                        className={`text-sm font-semibold min-w-0 wrap-break-word ${autoGenerate ? 'text-foreground' : 'text-foreground'}`}
                       >
                         {t('buttons.autoGenerate')}
                       </span>
@@ -246,7 +246,9 @@ export default function NewThemePage() {
                       <PenLine
                         className={`h-4 w-4 shrink-0 ${!autoGenerate ? 'text-primary' : 'text-muted-foreground'}`}
                       />
-                      <span className={`text-sm font-semibold min-w-0 break-words text-foreground`}>
+                      <span
+                        className={`text-sm font-semibold min-w-0 wrap-break-word text-foreground`}
+                      >
                         {t('buttons.manual')}
                       </span>
                     </div>

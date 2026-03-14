@@ -1,30 +1,35 @@
 /**
  * Client-side service for subscription management.
  *
- * All methods call the /api/profile/telegram-subscription endpoints.
+ * All methods call the generic subscription endpoints.
  * NOTE: DELETE cancels **auto-renewal** only — the subscription stays active
  * until the current period ends, then expires.
  */
 
 class SubscriptionApi {
-  /**
-   * Creates a Telegram Stars invoice link for the given plan.
-   * Must be called inside a Telegram Mini App context.
-   */
-  async createInvoiceLink(planId: string, starsPrice: number): Promise<string> {
-    const response = await fetch('/api/telegram/invoice', {
+  async createCheckout(planId: string): Promise<{
+    url?: string;
+    method?: 'GET' | 'POST';
+    fields?: Record<string, string>;
+    message?: string;
+  }> {
+    const response = await fetch('/api/subscription/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId, starsPrice }),
+      body: JSON.stringify({ planId }),
     });
 
     if (!response.ok) {
       const data = (await response.json()) as { error?: string };
-      throw new Error(data.error ?? 'Failed to create invoice');
+      throw new Error(data.error ?? 'Failed to start checkout');
     }
 
-    const { invoiceLink } = (await response.json()) as { invoiceLink: string };
-    return invoiceLink;
+    return (await response.json()) as {
+      url?: string;
+      method?: 'GET' | 'POST';
+      fields?: Record<string, string>;
+      message?: string;
+    };
   }
 
   /**
@@ -32,7 +37,7 @@ class SubscriptionApi {
    * The subscription remains active until current_period_end.
    */
   async cancelRenewal(): Promise<void> {
-    const response = await fetch('/api/profile/telegram-subscription', {
+    const response = await fetch('/api/profile/subscription', {
       method: 'DELETE',
     });
 
@@ -46,7 +51,7 @@ class SubscriptionApi {
    * Re-enables auto-renewal for a subscription where it was previously disabled.
    */
   async reEnableRenewal(): Promise<void> {
-    const response = await fetch('/api/profile/telegram-subscription', {
+    const response = await fetch('/api/profile/subscription', {
       method: 'PATCH',
     });
 

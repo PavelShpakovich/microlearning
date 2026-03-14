@@ -3,7 +3,11 @@ import Credentials from 'next-auth/providers/credentials';
 import { decode as nextAuthJwtDecode, encode as nextAuthJwtEncode } from 'next-auth/jwt';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
+import { ensureSupabaseIdentityLink } from '@/lib/auth/account-identities';
 import { env } from '@/lib/env';
+import { createSupabaseAuthClient } from '@/lib/supabase/auth-client';
+import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
 declare module 'next-auth' {
   interface User {
@@ -24,6 +28,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     userId: string;
     displayName?: string;
+    email?: string;
     isAdmin?: boolean;
     isStub?: boolean;
   }
@@ -73,6 +78,64 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     Credentials({
+      id: 'password',
+      name: 'Email and Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email?.trim().toLowerCase();
+        const password = credentials?.password;
+
+        if (!email || !password) {
+          throw new Error('Email and password are required');
+        }
+
+        const authClient = createSupabaseAuthClient();
+        const { data, error } = await authClient.auth.signInWithPassword({ email, password });
+
+        if (error || !data.user) {
+          return null;
+        }
+
+        await ensureSupabaseIdentityLink(data.user.id, data.user.email ?? email);
+
+        const fallbackDisplayName = deriveDisplayNameFromEmail(data.user.email ?? email);
+        let { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('display_name, is_admin')
+          .eq('id', data.user.id)
+          .maybeSingle<{ display_name: string | null; is_admin: boolean | null }>();
+
+        if (!profile) {
+          const { data: createdProfile } = await supabaseAdmin
+            .from('profiles')
+            .upsert(
+              {
+                id: data.user.id,
+                display_name: fallbackDisplayName,
+              },
+              { onConflict: 'id' },
+            )
+            .select('display_name, is_admin')
+            .single();
+
+          profile = createdProfile;
+        }
+
+        const authEmail = data.user.email ?? email;
+
+        return {
+          id: data.user.id,
+          name: profile?.display_name || fallbackDisplayName,
+          email: authEmail,
+          isAdmin: profile?.is_admin || false,
+          isStub: isTelegramStubEmail(authEmail),
+        };
+      },
+    }),
+    Credentials({
       id: 'telegram',
       name: 'Telegram',
       credentials: {
@@ -106,6 +169,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: userId,
           name: profile?.display_name || displayName,
+          email: undefined,
           isStub: isStub ?? false,
         };
       },
@@ -120,6 +184,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.userId = user.id;
         token.displayName = user.name || undefined;
+        token.email = user.email || undefined;
         token.isAdmin = user.isAdmin || false;
         token.isStub = user.isStub ?? false;
       } else if (token.userId) {
@@ -141,8 +206,10 @@ export const authOptions: NextAuthOptions = {
             try {
               const { data } = await supabaseAdmin.auth.admin.getUserById(token.userId);
               if (data.user?.email) {
+                token.email = data.user.email;
                 const adminEmails = env.ADMIN_EMAILS.split(',').map((e) => e.trim());
                 isAdmin = adminEmails.includes(data.user.email);
+                token.isStub = isTelegramStubEmail(data.user.email);
               }
             } catch {
               // If error, keep existing isAdmin
@@ -161,7 +228,11 @@ export const authOptions: NextAuthOptions = {
         if (token.displayName) {
           session.user.name = token.displayName;
         }
+        if (token.email) {
+          session.user.email = token.email;
+        }
         session.user.isAdmin = token.isAdmin || false;
+        session.user.isStub = token.isStub || false;
       }
       return session;
     },

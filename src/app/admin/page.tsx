@@ -22,7 +22,6 @@ import {
   Bot,
   Users,
   CreditCard,
-  Star,
   LayoutGrid,
 } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
@@ -31,6 +30,17 @@ import { toast } from 'sonner';
 import { AdminTableSkeleton } from '@/components/skeletons';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { adminApi, type AdminUser, type AdminAnalytics } from '@/services/admin-api';
+import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
+
+const SHOW_PAID_INFO = areSubscriptionsEnabled() && isPaidInformationVisible();
+
+function formatByn(amountMinor: number, currency: string) {
+  return new Intl.NumberFormat('ru-BY', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amountMinor / 100);
+}
 
 // ---------------------------------------------------------------------------
 // Analytics Card
@@ -106,29 +116,37 @@ function AnalyticsCard() {
       ) : data ? (
         <div className="space-y-4">
           {/* Primary stat tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 ${SHOW_PAID_INFO ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3`}
+          >
             <StatTile
               label={t('analyticsTotalUsers')}
               value={data.totalUsers.toLocaleString()}
               icon={Users}
               sub={t('analyticsNewThisMonth', { count: data.newUsersThisMonth })}
             />
-            <StatTile
-              label={t('analyticsPaidSubscribers')}
-              value={data.activeSubscribers.toLocaleString()}
-              icon={CreditCard}
-              sub={
-                data.cancelledInPeriod > 0
-                  ? t('analyticsCancelling', { count: data.cancelledInPeriod })
-                  : undefined
-              }
-            />
-            <StatTile
-              label={t('analyticsRevenueMonth')}
-              value={`${data.revenueThisMonthStars.toLocaleString()} XTR`}
-              icon={Star}
-              sub={t('analyticsAllTime', { amount: data.totalRevenueStars.toLocaleString() })}
-            />
+            {SHOW_PAID_INFO && (
+              <>
+                <StatTile
+                  label={t('analyticsPaidSubscribers')}
+                  value={data.activeSubscribers.toLocaleString()}
+                  icon={CreditCard}
+                  sub={
+                    data.cancelledInPeriod > 0
+                      ? t('analyticsCancelling', { count: data.cancelledInPeriod })
+                      : undefined
+                  }
+                />
+                <StatTile
+                  label={t('analyticsRevenueMonth')}
+                  value={formatByn(data.revenueThisMonthMinor, data.revenueCurrency)}
+                  icon={CreditCard}
+                  sub={t('analyticsAllTime', {
+                    amount: formatByn(data.totalRevenueMinor, data.revenueCurrency),
+                  })}
+                />
+              </>
+            )}
             <StatTile
               label={t('analyticsCardsGenerated')}
               value={data.cardsGeneratedThisMonth.toLocaleString()}
@@ -138,7 +156,7 @@ function AnalyticsCard() {
           </div>
 
           {/* Plan distribution */}
-          {Object.keys(data.planDistribution).length > 0 && (
+          {SHOW_PAID_INFO && Object.keys(data.planDistribution).length > 0 && (
             <div>
               <p className="text-xs text-muted-foreground mb-2">{t('analyticsPlanDistribution')}</p>
               <div className="flex flex-wrap gap-3">
@@ -376,7 +394,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
             <p className="text-xs text-muted-foreground truncate">{user.displayName}</p>
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
-            <PlanBadge plan={selectedPlan} />
+            {SHOW_PAID_INFO && <PlanBadge plan={selectedPlan} />}
             {isAdminState && (
               <Badge variant="secondary" className="text-xs">
                 Admin
@@ -388,17 +406,19 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           {t('colCardsUsed')}: {user.cardsUsed}/{user.cardsPerMonth}
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="basic">Starter</SelectItem>
-              <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="max">Max</SelectItem>
-            </SelectContent>
-          </Select>
+          {SHOW_PAID_INFO && (
+            <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="basic">Starter</SelectItem>
+                <SelectItem value="pro">Pro</SelectItem>
+                <SelectItem value="max">Max</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <AdminToggle
             t={t}
             loading={loading}
@@ -453,25 +473,29 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
       <tr className="border-b hover:bg-muted/40">
         <td className="px-4 py-3 text-sm">{formatUserIdentifier(user)}</td>
         <td className="px-4 py-3 text-sm">{user.displayName}</td>
-        <td className="px-4 py-3">
-          <PlanBadge plan={selectedPlan} />
-        </td>
+        {SHOW_PAID_INFO && (
+          <td className="px-4 py-3">
+            <PlanBadge plan={selectedPlan} />
+          </td>
+        )}
         <td className="px-4 py-3 text-sm text-center">
           {user.cardsUsed}/{user.cardsPerMonth}
         </td>
-        <td className="px-4 py-3">
-          <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="basic">Starter</SelectItem>
-              <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="max">Max</SelectItem>
-            </SelectContent>
-          </Select>
-        </td>
+        {SHOW_PAID_INFO && (
+          <td className="px-4 py-3">
+            <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="basic">Starter</SelectItem>
+                <SelectItem value="pro">Pro</SelectItem>
+                <SelectItem value="max">Max</SelectItem>
+              </SelectContent>
+            </Select>
+          </td>
+        )}
         <td className="px-4 py-3">
           <AdminToggle
             t={t}
@@ -563,9 +587,13 @@ function AdminTableContent() {
             <tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-left font-semibold">{t('colEmail')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colDisplayName')}</th>
-              <th className="px-4 py-3 text-left font-semibold">{t('colPlan')}</th>
+              {SHOW_PAID_INFO && (
+                <th className="px-4 py-3 text-left font-semibold">{t('colPlan')}</th>
+              )}
               <th className="px-4 py-3 text-left font-semibold">{t('colCardsUsed')}</th>
-              <th className="px-4 py-3 text-left font-semibold">{t('colChangePlan')}</th>
+              {SHOW_PAID_INFO && (
+                <th className="px-4 py-3 text-left font-semibold">{t('colChangePlan')}</th>
+              )}
               <th className="px-4 py-3 text-left font-semibold">{t('colAdmin')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('resetUsage')}</th>
             </tr>

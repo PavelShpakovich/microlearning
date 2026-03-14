@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles, CheckCircle2, Lock, BookOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
 import { Button } from '@/components/ui/button';
 import { revalidateDashboard } from '@/actions/revalidate';
 
@@ -164,15 +165,18 @@ export function StudyEmptyScreen({
 
 export function StudyLimitReachedScreen() {
   const t = useTranslations();
+  const canShowPlans = areSubscriptionsEnabled() && isPaidInformationVisible();
   return (
     <StudyScreenLayout
       icon={<Lock className="w-10 h-10 text-muted-foreground mx-auto" strokeWidth={1.5} />}
       title={t('study.limitReachedTitle')}
       description={t('study.limitReachedDescription')}
     >
-      <Button asChild className="w-full">
-        <Link href="/settings/plan">{t('study.limitReachedCta')}</Link>
-      </Button>
+      {canShowPlans && (
+        <Button asChild className="w-full">
+          <Link href="/settings/plan">{t('study.limitReachedCta')}</Link>
+        </Button>
+      )}
       <BackToDashboardButton />
     </StudyScreenLayout>
   );

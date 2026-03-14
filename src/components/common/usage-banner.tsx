@@ -7,6 +7,7 @@ import { LOW_CARDS_THRESHOLD } from '@/lib/constants';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
 
 interface UsageBannerProps {
   /** Pass live local theme count to keep banner in sync without an extra API call. */
@@ -35,6 +36,7 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
   // Card banners take priority; theme banner only shows when card banner is silent
   const showCardBanner = isExhausted || isLow;
   const showThemeBanner = !showCardBanner && (isThemesExhausted || isThemesLow);
+  const canShowUpgrade = areSubscriptionsEnabled() && isPaidInformationVisible();
 
   if (!showCardBanner && !showThemeBanner) return null;
 
@@ -56,20 +58,24 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
                 : t('usage.themeNearLimitBannerTitle', { count: themesRemaining })}
             </AlertTitle>
             <AlertDescription>
-              {t('usage.themeUsage', { used: themesUsed, limit: maxThemes! })}
+              {canShowUpgrade
+                ? t('usage.themeUsage', { used: themesUsed, limit: maxThemes! })
+                : t('usage.futurePlansHint')}
             </AlertDescription>
           </div>
-          <Button
-            asChild
-            size="sm"
-            variant={isThemesExhausted ? 'destructive' : 'outline'}
-            className="shrink-0 h-7 text-xs"
-          >
-            <Link href="/settings/plan">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              {t('usage.upgradeCta')}
-            </Link>
-          </Button>
+          {canShowUpgrade && (
+            <Button
+              asChild
+              size="sm"
+              variant={isThemesExhausted ? 'destructive' : 'outline'}
+              className="shrink-0 h-7 text-xs"
+            >
+              <Link href="/settings/plan">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                {t('usage.upgradeCta')}
+              </Link>
+            </Button>
+          )}
         </div>
       </Alert>
     );
@@ -92,20 +98,24 @@ export function UsageBanner({ themesUsed: themesUsedProp }: UsageBannerProps = {
               : t('usage.lowCardsBannerTitle', { count: usage.cardsRemaining })}
           </AlertTitle>
           <AlertDescription>
-            {t('usage.periodUsage', { generated: usage.cardsGenerated, limit: usage.cardsLimit })}
+            {canShowUpgrade
+              ? t('usage.periodUsage', { generated: usage.cardsGenerated, limit: usage.cardsLimit })
+              : t('usage.futurePlansHint')}
           </AlertDescription>
         </div>
-        <Button
-          asChild
-          size="sm"
-          variant={isExhausted ? 'destructive' : 'outline'}
-          className="shrink-0 h-7 text-xs"
-        >
-          <Link href="/settings#plan">
-            <ArrowUpRight className="h-3 w-3 mr-1" />
-            {t('usage.upgradeCta')}
-          </Link>
-        </Button>
+        {canShowUpgrade && (
+          <Button
+            asChild
+            size="sm"
+            variant={isExhausted ? 'destructive' : 'outline'}
+            className="shrink-0 h-7 text-xs"
+          >
+            <Link href="/settings#plan">
+              <ArrowUpRight className="h-3 w-3 mr-1" />
+              {t('usage.upgradeCta')}
+            </Link>
+          </Button>
+        )}
       </div>
     </Alert>
   );

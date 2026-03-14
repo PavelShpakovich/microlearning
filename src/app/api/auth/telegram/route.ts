@@ -6,9 +6,16 @@ import { AuthError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import {
+  ensureSupabaseIdentityLink,
+  ensureTelegramIdentityLink,
+  resolveUserIdByTelegramId,
+} from '@/lib/auth/account-identities';
+import { consumeTelegramLinkToken, parseTelegramStartParam } from '@/lib/auth/telegram-link';
 
 const bodySchema = z.object({
   initData: z.string().min(1),
+  startParam: z.string().optional(),
 });
 
 interface TelegramUser {
@@ -64,18 +71,32 @@ export const POST = withApiHandler(async (req) => {
 
   const telegramUser = validateTelegramInitData(body.data.initData, env.TELEGRAM_BOT_TOKEN);
   const telegramId = String(telegramUser.id);
-
-  // Look up existing user by telegram_id in profiles table
-  const { data: existingProfile } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('telegram_id', telegramId)
-    .maybeSingle();
+  const linkToken = parseTelegramStartParam(body.data.startParam);
 
   let userId: string;
+  const existingUserId = await resolveUserIdByTelegramId(telegramId);
 
-  if (existingProfile) {
-    userId = existingProfile.id;
+  if (existingUserId) {
+    userId = existingUserId;
+  } else if (linkToken) {
+    const linkedUserId = await consumeTelegramLinkToken(linkToken);
+    if (!linkedUserId) {
+      throw new AuthError({ message: 'Telegram linking link is invalid or expired' });
+    }
+
+    userId = linkedUserId;
+
+    const { error: upsertErr } = await supabaseAdmin.from('profiles').upsert(
+      {
+        id: userId,
+        telegram_id: telegramId,
+      },
+      { onConflict: 'id' },
+    );
+
+    if (upsertErr) {
+      throw new AuthError({ message: 'Failed to update linked profile', cause: upsertErr });
+    }
   } else {
     // No profile row yet — the user might still exist in auth.users if the
     // profiles table was reset while auth.users was preserved.
@@ -136,6 +157,8 @@ export const POST = withApiHandler(async (req) => {
       logger.info({ telegramId, userId }, 'telegram-auth: created new auth user');
     }
 
+    await ensureSupabaseIdentityLink(userId, email);
+
     // ── Step 3: ensure the profile row exists ──────────────────────────────
     const { error: upsertErr } = await supabaseAdmin.from('profiles').upsert(
       {
@@ -150,6 +173,17 @@ export const POST = withApiHandler(async (req) => {
       logger.error({ upsertErr, userId, telegramId }, 'telegram-auth: profile upsert failed');
       throw new AuthError({ message: 'Failed to initialise user profile', cause: upsertErr });
     }
+  }
+
+  try {
+    await ensureTelegramIdentityLink(
+      userId,
+      telegramId,
+      [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' '),
+    );
+  } catch (error) {
+    logger.error({ error, userId, telegramId }, 'telegram-auth: failed to sync telegram identity');
+    throw new AuthError({ message: 'Failed to initialise Telegram identity link', cause: error });
   }
 
   // Fetch display name for the NextAuth session

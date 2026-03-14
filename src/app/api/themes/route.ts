@@ -53,7 +53,7 @@ export const POST = withApiHandler(async (req) => {
       .eq('user_id', user.id);
     if ((count ?? 0) >= plan.maxThemes) {
       throw new PlanLimitError({
-        message: `Theme limit reached — your plan allows up to ${plan.maxThemes} theme${plan.maxThemes === 1 ? '' : 's'}. Upgrade to create more.`,
+        message: `Theme limit reached — your current limit is ${plan.maxThemes} theme${plan.maxThemes === 1 ? '' : 's'}.`,
       });
     }
   }

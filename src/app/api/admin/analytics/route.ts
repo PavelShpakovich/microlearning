@@ -10,8 +10,9 @@ export interface AdminAnalytics {
   activeSubscribers: number;
   cancelledInPeriod: number;
   planDistribution: Record<string, number>;
-  totalRevenueStars: number;
-  revenueThisMonthStars: number;
+  totalRevenueMinor: number;
+  revenueThisMonthMinor: number;
+  revenueCurrency: string;
   cardsGeneratedThisMonth: number;
 }
 
@@ -68,11 +69,20 @@ export const GET = withApiHandler(async () => {
       .in('status', ['active', 'cancelled'])
       .gt('current_period_end', now.toISOString()),
 
-    // Total revenue (Stars) all time
-    supabaseAdmin.from('payment_history').select('amount'),
+    // Total paid revenue all time
+    supabaseAdmin
+      .from('payment_transactions')
+      .select('amount_minor, currency')
+      .eq('provider', 'webpay')
+      .eq('status', 'paid'),
 
     // Revenue this month
-    supabaseAdmin.from('payment_history').select('amount').gte('created_at', monthStart),
+    supabaseAdmin
+      .from('payment_transactions')
+      .select('amount_minor, currency')
+      .eq('provider', 'webpay')
+      .eq('status', 'paid')
+      .gte('created_at', monthStart),
 
     // Cards generated this month (all users)
     supabaseAdmin.from('user_usage').select('cards_generated').gte('period_start', monthStart),
@@ -107,11 +117,16 @@ export const GET = withApiHandler(async () => {
     activeSubscribers: activeSubsRes.count ?? 0,
     cancelledInPeriod: cancelledSubsRes.count ?? 0,
     planDistribution,
-    totalRevenueStars: (totalRevenueRes.data ?? []).reduce((sum, r) => sum + (r.amount ?? 0), 0),
-    revenueThisMonthStars: (monthRevenueRes.data ?? []).reduce(
-      (sum, r) => sum + (r.amount ?? 0),
+    totalRevenueMinor: (totalRevenueRes.data ?? []).reduce(
+      (sum, r) => sum + (r.amount_minor ?? 0),
       0,
     ),
+    revenueThisMonthMinor: (monthRevenueRes.data ?? []).reduce(
+      (sum, r) => sum + (r.amount_minor ?? 0),
+      0,
+    ),
+    revenueCurrency:
+      totalRevenueRes.data?.find((row) => typeof row.currency === 'string')?.currency ?? 'BYN',
     cardsGeneratedThisMonth: (cardsRes.data ?? []).reduce(
       (sum, r) => sum + (r.cards_generated ?? 0),
       0,
