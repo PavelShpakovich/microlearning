@@ -247,7 +247,11 @@
     "starting": "Starting…",
     "signingYouIn": "Signing you in…",
     "linking": "Linking accounts…",
-    "linkFailed": "Account linking failed"
+    "linkFailed": "Account linking failed",
+    "confirmLinkTitle": "Link Telegram account",
+    "confirmLinkBody": "This will link your Telegram account to the Clario account {email}. Only continue if this is your account.",
+    "confirmLinkConfirm": "Yes, link my account",
+    "confirmLinkCancel": "Cancel"
   },
   "telegramPrompt": {
     "title": "Study on Telegram too",

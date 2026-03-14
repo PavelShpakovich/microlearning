@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
@@ -8,16 +8,18 @@ import { signIn } from 'next-auth/react';
 import { authApi } from '@/services/auth-api';
 import { Button } from '@/components/ui/button';
 
-type Phase = 'detecting' | 'authenticating' | 'error';
+type Phase = 'detecting' | 'confirming' | 'authenticating' | 'error';
 
 /**
  * Telegram Mini App entry point — /tg
  *
  * Flow:
  *  1. Detect window.Telegram.WebApp (SDK must be loaded via layout Script tag).
- *  2. POST initData to /api/auth/telegram → validate HMAC server-side.
- *  3. Exchange the returned hashed_token for a NextAuth session.
- *  4. Redirect to callbackUrl (default: /dashboard).
+ *  2. If a link_<token> startParam is present, show a confirmation screen with
+ *     the email of the web account being linked (security check).
+ *  3. POST initData to /api/auth/telegram → validate HMAC server-side.
+ *  4. Exchange the returned hashed_token for a NextAuth session.
+ *  5. Redirect to callbackUrl (default: /dashboard).
  *
  * If the page is opened outside Telegram, redirect to the landing page.
  */
@@ -28,14 +30,41 @@ export default function TelegramEntryPage() {
   const [phase, setPhase] = useState<Phase>('detecting');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLinkingFlow, setIsLinkingFlow] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState('');
+
+  // Stored across the confirmation pause so runAuth can use them.
+  const pendingInitData = useRef('');
+  const pendingStartParam = useRef<string | undefined>(undefined);
+
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+
+  const runAuth = useCallback(async () => {
+    setPhase('authenticating');
+    try {
+      // 1. Validate initData on the server — server verifies the Telegram
+      //    HMAC and returns a short-lived signed token.
+      const { sessionToken } = await authApi.exchangeTelegramInitData(
+        pendingInitData.current,
+        pendingStartParam.current,
+      );
+
+      // 2. Exchange for a NextAuth session (same cookie as email users).
+      const result = await signIn('telegram', { sessionToken, redirect: false });
+      if (!result?.ok) throw new Error(result?.error ?? 'Sign-in failed');
+
+      // 3. Hard navigate — NextAuth has already set the session cookie so
+      //    the middleware will see it on the very next request.
+      window.location.href = callbackUrl;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');
+      setErrorMsg(msg);
+      setPhase('error');
+    }
+  }, [callbackUrl, t]);
 
   useEffect(() => {
-    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-
-    async function authenticate() {
+    async function init() {
       // Poll for the Telegram SDK to populate initData (up to 3 s).
-      // On a cold start (first ever open, no script cache) the SDK can take
-      // longer than a single tick to initialise even with beforeInteractive loading.
       let initData = '';
       for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 100));
@@ -56,45 +85,56 @@ export default function TelegramEntryPage() {
       // Auto-set UI language based on Telegram user's language_code
       const telegramLanguage = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
       if (telegramLanguage) {
-        // Map Telegram language codes to our supported locales
-        const supportedLocales: Record<string, string> = {
-          ru: 'ru',
-          en: 'en',
-          // Add other language codes that map to 'ru' or 'en' as needed
-        };
+        const supportedLocales: Record<string, string> = { ru: 'ru', en: 'en' };
         const locale = supportedLocales[telegramLanguage] || 'en';
-        // Set cookie for language preference
         document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}`;
       }
 
-      // ── Normal authentication flow ──────────────────────────────────────
-      setPhase('authenticating');
+      const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+      pendingInitData.current = initData;
+      pendingStartParam.current = startParam;
 
-      try {
-        const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
-        setIsLinkingFlow(Boolean(startParam));
-
-        // 1. Validate initData on the server — server verifies the Telegram
-        //    HMAC and returns a short-lived signed token.
-        const { sessionToken } = await authApi.exchangeTelegramInitData(initData, startParam);
-
-        // 2. Exchange for a NextAuth session (same cookie as email users).
-        //    This eliminates the Supabase browser-client race condition.
-        const result = await signIn('telegram', { sessionToken, redirect: false });
-        if (!result?.ok) throw new Error(result?.error ?? 'Sign-in failed');
-
-        // 3. Hard navigate — NextAuth has already set the session cookie so
-        //    the middleware will see it on the very next request.
-        window.location.href = callbackUrl;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');
-        setErrorMsg(msg);
-        setPhase('error');
+      if (startParam) {
+        // Link flow — fetch the email tied to this token and ask for confirmation.
+        setIsLinkingFlow(true);
+        const token = startParam.replace(/^link_/, '');
+        try {
+          const res = await fetch(`/api/profile/link-telegram?token=${encodeURIComponent(token)}`);
+          const json = (await res.json()) as { email?: string; error?: string };
+          if (!res.ok) throw new Error(json.error ?? t('telegram.authenticationFailed'));
+          setConfirmEmail(json.email ?? '');
+          setPhase('confirming');
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : t('telegram.authenticationFailed');
+          setErrorMsg(msg);
+          setPhase('error');
+        }
+        return;
       }
+
+      // Normal auth — no confirmation needed.
+      void runAuth();
     }
 
-    void authenticate();
-  }, [router, searchParams, t]);
+    void init();
+  }, [router, t, runAuth]);
+
+  if (phase === 'confirming') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center gap-6">
+        <h1 className="text-lg font-semibold">{t('telegram.confirmLinkTitle')}</h1>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          {t('telegram.confirmLinkBody', { email: confirmEmail })}
+        </p>
+        <div className="flex gap-3">
+          <Button onClick={() => void runAuth()}>{t('telegram.confirmLinkConfirm')}</Button>
+          <Button variant="outline" onClick={() => router.replace('/')}>
+            {t('telegram.confirmLinkCancel')}
+          </Button>
+        </div>
+      </main>
+    );
+  }
 
   if (phase === 'error') {
     return (

@@ -106,6 +106,24 @@ export function SettingsClient({
 
       window.open(result.deepLink, '_blank', 'noopener,noreferrer');
       toast.success(t('settings.telegramConnectOpened'));
+
+      // Poll up to 60 s — reload the page as soon as telegram_id appears.
+      const start = Date.now();
+      const poll = setInterval(async () => {
+        if (Date.now() - start > 60_000) {
+          clearInterval(poll);
+          return;
+        }
+        try {
+          const profile = await profileApi.getProfile();
+          if (profile.telegram_id) {
+            clearInterval(poll);
+            window.location.reload();
+          }
+        } catch {
+          // ignore transient errors
+        }
+      }, 2000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('settings.telegramConnectFailed'));
     } finally {

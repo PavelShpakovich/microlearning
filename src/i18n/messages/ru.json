@@ -242,7 +242,11 @@
     "starting": "Запуск…",
     "signingYouIn": "Вход…",
     "linking": "Привязка аккаунтов…",
-    "linkFailed": "Не удалось привязать аккаунт"
+    "linkFailed": "Не удалось привязать аккаунт",
+    "confirmLinkTitle": "Привязка Telegram-аккаунта",
+    "confirmLinkBody": "Telegram будет привязан к аккаунту Clario с адресом {email}. Продолжайте только если это ваш аккаунт.",
+    "confirmLinkConfirm": "Да, привязать",
+    "confirmLinkCancel": "Отмена"
   },
   "telegramPrompt": {
     "title": "Учитесь и в Telegram",
