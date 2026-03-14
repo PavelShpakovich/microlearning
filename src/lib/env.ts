@@ -51,13 +51,8 @@ const envSchema = z.object({
   SUPPORT_EMAIL: z.string().email().optional().default('support@example.com'),
   ADMIN_EMAILS: z.string().optional(), // Comma-separated email list
 
-  // Sentry
-  SENTRY_DSN: z.string().url().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
-
   // Resend (transactional email)
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
 
   // Cron security
   CRON_SECRET: z.string().optional(),
