@@ -59,6 +59,9 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: ['/opengraph-image'],
     },
+    alternates: {
+      canonical: APP_URL,
+    },
     icons: {
       icon: [{ url: '/favicon.ico' }, { url: '/logo-dark.png', type: 'image/png' }],
       apple: { url: '/logo-dark.png', type: 'image/png' },
