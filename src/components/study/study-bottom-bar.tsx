@@ -57,39 +57,47 @@ export function StudyBottomBar({
       className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 flex items-center gap-1.5 md:gap-3 px-3 md:px-6 py-1.5 md:py-3 bg-background/70 backdrop-blur-md border border-border rounded-full shadow-lg max-w-[90vw] overflow-x-auto no-scrollbar"
       style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* Progress */}
-      <Popover open={jumpOpen} onOpenChange={setJumpOpen}>
-        <PopoverTrigger asChild>
-          <button
-            title={t('study.jumpToCard')}
-            className="shrink-0 flex items-center gap-1 text-xs md:text-sm font-semibold text-foreground tabular-nums hover:text-primary transition-colors cursor-pointer"
-          >
-            {totalCards > 0 ? `${Math.min(currentCardIndex + 1, totalCards)}/${totalCards}` : '—'}
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-40 p-1.5 max-h-60 overflow-y-auto" align="center" side="top">
-          <div className="flex flex-col gap-0.5">
-            {Array.from({ length: totalCards }, (_, i) => (
+      {/* Progress - hidden until cards are loaded */}
+      {totalCards > 0 && (
+        <>
+          <Popover open={jumpOpen} onOpenChange={setJumpOpen}>
+            <PopoverTrigger asChild>
               <button
-                key={i}
-                onClick={() => {
-                  onScrollToCard(i);
-                  setJumpOpen(false);
-                }}
-                className={`w-full px-3 py-1.5 rounded text-sm font-medium text-left transition-colors cursor-pointer ${
-                  i === currentCardIndex
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-foreground hover:bg-muted'
-                }`}
+                title={t('study.jumpToCard')}
+                className="shrink-0 flex items-center gap-1 text-xs md:text-sm font-semibold text-foreground tabular-nums hover:text-primary transition-colors cursor-pointer"
               >
-                {t('study.cardNumber', { number: i + 1 })}
+                {`${Math.min(currentCardIndex + 1, totalCards)}/${totalCards}`}
               </button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-40 p-1.5 max-h-60 overflow-y-auto"
+              align="center"
+              side="top"
+            >
+              <div className="flex flex-col gap-0.5">
+                {Array.from({ length: totalCards }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      onScrollToCard(i);
+                      setJumpOpen(false);
+                    }}
+                    className={`w-full px-3 py-1.5 rounded text-sm font-medium text-left transition-colors cursor-pointer ${
+                      i === currentCardIndex
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {t('study.cardNumber', { number: i + 1 })}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-      <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
+          <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
+        </>
+      )}
 
       {/* Font size controls */}
       <div className="shrink-0 flex items-center gap-0.5">

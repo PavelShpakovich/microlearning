@@ -53,7 +53,7 @@ export function WelcomeModal() {
   };
 
   return (
-    <AlertDialog open={open}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center text-xl">{t('title')}</AlertDialogTitle>
