@@ -56,8 +56,8 @@ export function RootProviders({
             <div className="flex flex-col flex-1">
               <SubscriptionProvider>
                 <TelegramLoader>{children}</TelegramLoader>
+                <WelcomeModal />
               </SubscriptionProvider>
-              <WelcomeModal />
               <Toaster position="bottom-right" />
             </div>
           </ThemeProvider>
