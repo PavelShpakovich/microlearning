@@ -8,7 +8,6 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { TelegramLoader } from '@/components/telegram-loader';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
-import { WelcomeModal } from '@/components/common/welcome-modal';
 
 interface RootProvidersProps {
   children: React.ReactNode;
@@ -56,7 +55,6 @@ export function RootProviders({
             <div className="flex flex-col flex-1">
               <SubscriptionProvider>
                 <TelegramLoader>{children}</TelegramLoader>
-                <WelcomeModal />
               </SubscriptionProvider>
               <Toaster position="bottom-right" />
             </div>

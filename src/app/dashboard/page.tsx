@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { getUserThemes } from '@/lib/data-fetchers';
 import { DashboardClient } from '@/components/dashboard/dashboard-client';
 import { DashboardSkeleton } from '@/components/skeletons';
+import { WelcomeModal } from '@/components/common/welcome-modal';
 
 export const metadata = {
   title: 'Dashboard',
@@ -22,8 +23,15 @@ export default async function DashboardPage() {
   const { themes, publicThemes, cardCounts } = await getUserThemes(session.user.id);
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardClient initialThemes={themes} publicThemes={publicThemes} cardCounts={cardCounts} />
-    </Suspense>
+    <>
+      <WelcomeModal />
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardClient
+          initialThemes={themes}
+          publicThemes={publicThemes}
+          cardCounts={cardCounts}
+        />
+      </Suspense>
+    </>
   );
 }

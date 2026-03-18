@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { Layers, FileText, GraduationCap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSession } from 'next-auth/react';
-import { useSubscription } from '@/hooks/use-subscription';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,11 +23,6 @@ const steps = [
 
 export function WelcomeModal() {
   const t = useTranslations('welcome');
-  const { status } = useSession();
-  const { isLoading } = useSubscription();
-  // Lazy initializer runs once on the client — no effect needed.
-  // On SSR (typeof window === 'undefined') we default to true so the modal
-  // stays hidden during server render and avoids a hydration mismatch.
   const [hasSeen, setHasSeen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -48,7 +41,7 @@ export function WelcomeModal() {
     setHasSeen(true);
   };
 
-  const open = status === 'authenticated' && !isLoading && !hasSeen;
+  const open = !hasSeen;
 
   return (
     <AlertDialog open={open}>
