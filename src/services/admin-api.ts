@@ -5,10 +5,11 @@ export type { AdminAnalytics };
 
 export interface AdminUser {
   id: string;
-  email: string;
+  email: string | null;
   telegramId: number | null;
   displayName: string;
   isAdmin: boolean;
+  isEmailVerified: boolean;
   plan: string;
   cardsPerMonth: number;
   cardsUsed: number;
@@ -37,6 +38,12 @@ interface ToggleAdminResponse {
   message: string;
   userId: string;
   makeAdmin: boolean;
+}
+
+interface DeleteUserResponse {
+  success: boolean;
+  message: string;
+  userId: string;
 }
 
 class AdminApi {
@@ -131,6 +138,23 @@ class AdminApi {
 
     if (!res.ok) {
       throw new Error(data.error || 'Failed to toggle admin status');
+    }
+
+    return data;
+  }
+
+  /**
+   * Permanently delete a user account.
+   */
+  async deleteUser(userId: string): Promise<DeleteUserResponse> {
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to delete user');
     }
 
     return data;

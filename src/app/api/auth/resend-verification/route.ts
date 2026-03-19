@@ -31,7 +31,7 @@ export const POST = withApiHandler(async (req) => {
 
   // Only resend if the user exists and has not yet confirmed their email.
   if (user && !user.emailConfirmedAt) {
-    await sendVerificationEmail({ email, locale });
+    await sendVerificationEmail({ userId: user.id, email, locale });
   }
 
   return NextResponse.json({ success: true });

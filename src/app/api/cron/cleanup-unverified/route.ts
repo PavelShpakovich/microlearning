@@ -26,6 +26,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { error: tokenCleanupError, count: tokenDeletedCount } = await supabaseAdmin
+    .from('email_verification_tokens')
+    .delete({ count: 'exact' })
+    .or(`consumed_at.not.is.null,expires_at.lt.${new Date().toISOString()}`);
+
+  if (tokenCleanupError) {
+    logger.warn({ error: tokenCleanupError }, 'Cron cleanup-unverified: token cleanup failed');
+  }
 
   let page = 1;
   let deletedCount = 0;
@@ -64,5 +72,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   logger.info({ deletedCount, errorCount }, 'Cron cleanup-unverified: complete');
 
-  return NextResponse.json({ success: true, deletedCount, errorCount });
+  return NextResponse.json({
+    success: true,
+    deletedCount,
+    errorCount,
+    tokenDeletedCount: tokenDeletedCount ?? 0,
+  });
 }

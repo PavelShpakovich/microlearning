@@ -55,7 +55,7 @@ export const POST = withApiHandler(async (req) => {
 
   await ensureSupabaseIdentityLink(user.id, email);
 
-  await sendVerificationEmail({ email, password, locale });
+  await sendVerificationEmail({ userId: user.id, email, locale });
 
   return NextResponse.json({ success: true, needsVerification: true });
 });

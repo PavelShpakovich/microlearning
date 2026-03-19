@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Loader2,
   RotateCcw,
+  Trash2,
   Bot,
   Users,
   CreditCard,
@@ -249,7 +250,25 @@ function PlanBadge({ plan }: { plan: string }) {
 
 function formatUserIdentifier(user: AdminUser): string {
   if (user.telegramId) return `ID: ${user.telegramId}`;
-  return user.email;
+  return user.email ?? user.displayName;
+}
+
+function VerificationBadge({ user }: { user: AdminUser }) {
+  const t = useTranslations('admin');
+
+  if (!user.email) {
+    return (
+      <Badge variant="outline" className="text-xs">
+        {t('verificationUnavailable')}
+      </Badge>
+    );
+  }
+
+  return user.isEmailVerified ? (
+    <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">{t('verified')}</Badge>
+  ) : (
+    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">{t('unverified')}</Badge>
+  );
 }
 
 interface UserRowProps {
@@ -263,7 +282,9 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(user.plan);
   const [isAdminState, setIsAdminState] = useState(user.isAdmin);
-  const [pendingAction, setPendingAction] = useState<'toggleAdmin' | 'resetUsage' | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    'toggleAdmin' | 'resetUsage' | 'deleteUser' | null
+  >(null);
 
   const handlePlanChange = async (newPlan: string) => {
     setLoading(true);
@@ -307,15 +328,36 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
     }
   };
 
+  const executeDeleteUser = async () => {
+    setLoading(true);
+    try {
+      await adminApi.deleteUser(user.id);
+      toast.success(t('deleteUserSuccess'));
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to delete user', error);
+      toast.error(t('failedDeleteUser'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const executeConfirmed = async () => {
     setPendingAction(null);
     if (pendingAction === 'toggleAdmin') await executeToggleAdmin();
     if (pendingAction === 'resetUsage') await executeResetUsage();
+    if (pendingAction === 'deleteUser') await executeDeleteUser();
   };
 
   const action = isAdminState ? t('demote').toLowerCase() : t('promote').toLowerCase();
+  const dialogTitle = pendingAction === 'deleteUser' ? t('deleteConfirmTitle') : t('confirmTitle');
   const dialogDescription =
-    pendingAction === 'toggleAdmin' ? t('confirmToggleAdmin', { action }) : t('confirmResetUsage');
+    pendingAction === 'toggleAdmin'
+      ? t('confirmToggleAdmin', { action })
+      : pendingAction === 'deleteUser'
+        ? t('confirmDeleteUser', { user: formatUserIdentifier(user) })
+        : t('confirmResetUsage');
+  const confirmLabel = pendingAction === 'deleteUser' ? t('deleteConfirmAction') : t('confirm');
 
   return {
     t,
@@ -325,8 +367,11 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
     handlePlanChange,
     handleToggleAdmin: () => setPendingAction('toggleAdmin'),
     handleResetUsage: () => setPendingAction('resetUsage'),
+    handleDeleteUser: () => setPendingAction('deleteUser'),
     dialogOpen: pendingAction !== null,
+    dialogTitle,
     dialogDescription,
+    confirmLabel,
     closeDialog: () => setPendingAction(null),
     executeConfirmed,
   };
@@ -368,8 +413,11 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
     handlePlanChange,
     handleToggleAdmin,
     handleResetUsage,
+    handleDeleteUser,
     dialogOpen,
+    dialogTitle,
     dialogDescription,
+    confirmLabel,
     closeDialog,
     executeConfirmed,
   } = useUserActions(user, onRefresh);
@@ -382,9 +430,9 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           if (!open) closeDialog();
         }}
         onConfirm={() => void executeConfirmed()}
-        title={t('confirmTitle')}
+        title={dialogTitle}
         description={dialogDescription}
-        confirmLabel={t('confirm')}
+        confirmLabel={confirmLabel}
         cancelLabel={t('cancel')}
       />
       <div className="border rounded-lg p-4 space-y-3 bg-card">
@@ -395,6 +443,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
             {SHOW_PAID_INFO && <PlanBadge plan={selectedPlan} />}
+            <VerificationBadge user={user} />
             {isAdminState && (
               <Badge variant="secondary" className="text-xs">
                 Admin
@@ -435,6 +484,17 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
+          {!isSelf && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={loading}
+              title={t('deleteUser')}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </>
@@ -451,8 +511,11 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
     handlePlanChange,
     handleToggleAdmin,
     handleResetUsage,
+    handleDeleteUser,
     dialogOpen,
+    dialogTitle,
     dialogDescription,
+    confirmLabel,
     closeDialog,
     executeConfirmed,
   } = useUserActions(user, onRefresh);
@@ -465,14 +528,17 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
           if (!open) closeDialog();
         }}
         onConfirm={() => void executeConfirmed()}
-        title={t('confirmTitle')}
+        title={dialogTitle}
         description={dialogDescription}
-        confirmLabel={t('confirm')}
+        confirmLabel={confirmLabel}
         cancelLabel={t('cancel')}
       />
       <tr className="border-b hover:bg-muted/40">
         <td className="px-4 py-3 text-sm">{formatUserIdentifier(user)}</td>
         <td className="px-4 py-3 text-sm">{user.displayName}</td>
+        <td className="px-4 py-3">
+          <VerificationBadge user={user} />
+        </td>
         {SHOW_PAID_INFO && (
           <td className="px-4 py-3">
             <PlanBadge plan={selectedPlan} />
@@ -515,6 +581,19 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
+        </td>
+        <td className="px-4 py-3">
+          {!isSelf && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={loading}
+              title={t('deleteUser')}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </td>
       </tr>
     </>
@@ -587,6 +666,7 @@ function AdminTableContent() {
             <tr className="border-b bg-muted/50">
               <th className="px-4 py-3 text-left font-semibold">{t('colEmail')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colDisplayName')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('colVerification')}</th>
               {SHOW_PAID_INFO && (
                 <th className="px-4 py-3 text-left font-semibold">{t('colPlan')}</th>
               )}
@@ -596,6 +676,7 @@ function AdminTableContent() {
               )}
               <th className="px-4 py-3 text-left font-semibold">{t('colAdmin')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('resetUsage')}</th>
+              <th className="px-4 py-3 text-left font-semibold">{t('colDelete')}</th>
             </tr>
           </thead>
           <tbody>

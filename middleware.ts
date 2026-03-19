@@ -48,6 +48,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const isEmailVerified = (token as Record<string, unknown>).isEmailVerified !== false;
+  if (!isEmailVerified) {
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json({ error: 'Email verification required' }, { status: 403 });
+    }
+
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('verified', 'error');
+    loginUrl.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     const isAdmin = (token as Record<string, unknown>).isAdmin === true;
     if (!isAdmin) {

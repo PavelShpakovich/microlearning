@@ -8,19 +8,21 @@ import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { ensureSupabaseIdentityLink } from '@/lib/auth/account-identities';
 import { env } from '@/lib/env';
 import { createSupabaseAuthClient } from '@/lib/supabase/auth-client';
-import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
+import { findAuthUserByEmail, isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
 declare module 'next-auth' {
   interface User {
     id: string;
     isAdmin?: boolean;
     isStub?: boolean;
+    isEmailVerified?: boolean;
   }
   interface Session {
     user: User & {
       id: string;
       isAdmin?: boolean;
       isStub?: boolean;
+      isEmailVerified?: boolean;
     };
   }
 }
@@ -32,6 +34,7 @@ declare module 'next-auth/jwt' {
     email?: string;
     isAdmin?: boolean;
     isStub?: boolean;
+    isEmailVerified?: boolean;
   }
 }
 
@@ -93,6 +96,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required');
         }
 
+        const existingUser = await findAuthUserByEmail(email);
+        if (existingUser && !existingUser.emailConfirmedAt) {
+          throw new Error('email_not_verified');
+        }
+
         const authClient = createSupabaseAuthClient();
         const { data, error } = await authClient.auth.signInWithPassword({ email, password });
 
@@ -146,6 +154,7 @@ export const authOptions: NextAuthOptions = {
           email: authEmail,
           isAdmin: profile?.is_admin || false,
           isStub: isTelegramStubEmail(authEmail),
+          isEmailVerified: Boolean(existingUser?.emailConfirmedAt ?? data.user.email_confirmed_at),
         };
       },
     }),
@@ -201,6 +210,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email || undefined;
         token.isAdmin = user.isAdmin || false;
         token.isStub = user.isStub ?? false;
+        token.isEmailVerified = user.isEmailVerified ?? true;
       } else if (token.userId) {
         // On refresh, fetch the latest display_name and isAdmin from database
         try {
@@ -221,6 +231,7 @@ export const authOptions: NextAuthOptions = {
               const { data } = await supabaseAdmin.auth.admin.getUserById(token.userId);
               if (data.user?.email) {
                 token.email = data.user.email;
+                token.isEmailVerified = Boolean(data.user.email_confirmed_at);
                 const adminEmails = env.ADMIN_EMAILS.split(',').map((e) => e.trim());
                 isAdmin = adminEmails.includes(data.user.email);
                 token.isStub = isTelegramStubEmail(data.user.email);
@@ -247,6 +258,7 @@ export const authOptions: NextAuthOptions = {
         }
         session.user.isAdmin = token.isAdmin || false;
         session.user.isStub = token.isStub || false;
+        session.user.isEmailVerified = token.isEmailVerified ?? true;
       }
       return session;
     },

@@ -193,6 +193,36 @@ export type Database = {
           },
         ];
       };
+      email_verification_tokens: {
+        Row: {
+          consumed_at: string | null;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          token_hash: string;
+          user_id: string;
+        };
+        Insert: {
+          consumed_at?: string | null;
+          created_at?: string;
+          email: string;
+          expires_at: string;
+          id?: string;
+          token_hash: string;
+          user_id: string;
+        };
+        Update: {
+          consumed_at?: string | null;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          token_hash?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       payment_transactions: {
         Row: {
           amount_minor: number;

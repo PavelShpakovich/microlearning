@@ -34,7 +34,7 @@ export const POST = withApiHandler(async (req) => {
     }
     // Unconfirmed account exists — resend the verification email and let the
     // client show the "check your inbox" state again.
-    await sendVerificationEmail({ email, locale });
+    await sendVerificationEmail({ userId: existingUser.id, email, locale });
     return NextResponse.json({ success: true, needsVerification: true });
   }
 
@@ -65,7 +65,7 @@ export const POST = withApiHandler(async (req) => {
     throw profileError;
   }
 
-  await sendVerificationEmail({ email, password, locale });
+  await sendVerificationEmail({ userId: data.user.id, email, locale });
 
   return NextResponse.json({ success: true, needsVerification: true });
 });

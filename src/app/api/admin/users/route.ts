@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getUserPlan, getUserUsage } from '@/lib/subscription-utils';
 import { logger } from '@/lib/logger';
+import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
 /**
  * GET /api/admin/users
@@ -39,6 +40,8 @@ export const GET = withApiHandler(async (req: Request) => {
     const enrichedUsers = await Promise.all(
       usersData.users.map(async (authUser) => {
         try {
+          const email = isTelegramStubEmail(authUser.email) ? null : (authUser.email ?? null);
+
           // Get profile and subscription info
           const [profileRes, planRes, usageRes] = await Promise.all([
             supabaseAdmin
@@ -52,10 +55,11 @@ export const GET = withApiHandler(async (req: Request) => {
 
           return {
             id: authUser.id,
-            email: authUser.email,
+            email,
             telegramId: profileRes.data?.telegram_id ?? null,
             displayName: profileRes.data?.display_name || 'Unknown',
             isAdmin: profileRes.data?.is_admin || false,
+            isEmailVerified: Boolean(authUser.email_confirmed_at),
             plan: planRes.planId,
             cardsPerMonth: planRes.cardsPerMonth,
             cardsUsed: usageRes.cardsGenerated,
@@ -66,9 +70,10 @@ export const GET = withApiHandler(async (req: Request) => {
           logger.error({ error, userId: authUser.id }, 'Failed to enrich user data');
           return {
             id: authUser.id,
-            email: authUser.email,
+            email: isTelegramStubEmail(authUser.email) ? null : (authUser.email ?? null),
             displayName: 'Error',
             isAdmin: false,
+            isEmailVerified: Boolean(authUser.email_confirmed_at),
             plan: 'error',
             cardsPerMonth: 0,
             cardsUsed: 0,
