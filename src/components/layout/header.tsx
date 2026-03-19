@@ -219,11 +219,13 @@ export function Header() {
                   <span className="hidden sm:inline">{displayName}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-2rem)]">
                 <DropdownMenuLabel>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex min-w-0 flex-col gap-1">
                     <p className="font-semibold text-sm">{displayName}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    <p className="break-all whitespace-normal text-xs leading-snug text-muted-foreground">
+                      {user?.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

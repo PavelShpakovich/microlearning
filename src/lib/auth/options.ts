@@ -121,6 +121,14 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        if (
+          data.user.email &&
+          !isTelegramStubEmail(data.user.email) &&
+          !data.user.email_confirmed_at
+        ) {
+          throw new Error('email_not_verified');
+        }
+
         await ensureSupabaseIdentityLink(data.user.id, data.user.email ?? email);
 
         const fallbackDisplayName = deriveDisplayNameFromEmail(data.user.email ?? email);
@@ -212,8 +220,26 @@ export const authOptions: NextAuthOptions = {
         token.isStub = user.isStub ?? false;
         token.isEmailVerified = user.isEmailVerified ?? true;
       } else if (token.userId) {
-        // On refresh, fetch the latest display_name and isAdmin from database
+        // On refresh, fetch the latest auth and profile state so middleware
+        // does not keep trusting a stale verification flag from an old JWT.
         try {
+          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.getUserById(
+            token.userId,
+          );
+
+          if (authError || !authData.user) {
+            token.isEmailVerified = false;
+            return token;
+          }
+
+          const authEmail = authData.user.email;
+          const isStub = authEmail ? isTelegramStubEmail(authEmail) : Boolean(token.isStub);
+
+          token.email = authEmail || undefined;
+          token.isStub = isStub;
+          token.isEmailVerified =
+            isStub || !authEmail ? true : Boolean(authData.user.email_confirmed_at);
+
           const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('display_name, is_admin')
@@ -226,23 +252,13 @@ export const authOptions: NextAuthOptions = {
 
           // Check if admin via is_admin column or ADMIN_EMAILS env
           let isAdmin = profile?.is_admin || false;
-          if (!isAdmin && env.ADMIN_EMAILS) {
-            try {
-              const { data } = await supabaseAdmin.auth.admin.getUserById(token.userId);
-              if (data.user?.email) {
-                token.email = data.user.email;
-                token.isEmailVerified = Boolean(data.user.email_confirmed_at);
-                const adminEmails = env.ADMIN_EMAILS.split(',').map((e) => e.trim());
-                isAdmin = adminEmails.includes(data.user.email);
-                token.isStub = isTelegramStubEmail(data.user.email);
-              }
-            } catch {
-              // If error, keep existing isAdmin
-            }
+          if (!isAdmin && env.ADMIN_EMAILS && authEmail) {
+            const adminEmails = env.ADMIN_EMAILS.split(',').map((entry) => entry.trim());
+            isAdmin = adminEmails.includes(authEmail);
           }
           token.isAdmin = isAdmin;
         } catch {
-          // If error, keep existing values
+          token.isEmailVerified = false;
         }
       }
       return token;

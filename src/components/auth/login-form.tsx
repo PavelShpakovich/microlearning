@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -36,6 +36,8 @@ export function LoginForm() {
     try {
       setIsSubmitting(true);
       setShowResend(false);
+
+      await signOut({ redirect: false });
 
       const result = await signIn('password', {
         email,
