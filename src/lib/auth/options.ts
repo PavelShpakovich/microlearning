@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { decode as nextAuthJwtDecode, encode as nextAuthJwtEncode } from 'next-auth/jwt';
 import { createHmac } from 'crypto';
+import { isAuthApiError } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { ensureSupabaseIdentityLink } from '@/lib/auth/account-identities';
@@ -101,8 +102,7 @@ export const authOptions: NextAuthOptions = {
           // generic "invalid credentials" message.
           if (
             error.message.toLowerCase().includes('email not confirmed') ||
-            // @ts-expect-error – code field is present in Supabase AuthApiError
-            error.code === 'email_not_confirmed'
+            (isAuthApiError(error) && error.code === 'email_not_confirmed')
           ) {
             throw new Error('email_not_verified');
           }
