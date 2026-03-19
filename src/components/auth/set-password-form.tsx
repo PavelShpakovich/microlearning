@@ -62,6 +62,18 @@ export function SetPasswordForm() {
         throw error;
       }
 
+      // The user proved inbox access by clicking the recovery link — confirm
+      // their email now so signIn succeeds even if they never verified before.
+      const {
+        data: { session: recoverySession },
+      } = await supabase.auth.getSession();
+      if (recoverySession?.access_token) {
+        await fetch('/api/auth/password/confirm-reset', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${recoverySession.access_token}` },
+        });
+      }
+
       const result = await signIn('password', {
         email,
         password,

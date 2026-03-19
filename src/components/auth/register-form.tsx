@@ -1,26 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Link } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { authApi } from '@/services/auth-api';
 import { AuthShell } from '@/components/auth/auth-shell';
 
 export function RegisterForm() {
   const t = useTranslations('auth');
   const validation = useTranslations('validation');
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,26 +59,52 @@ export function RegisterForm() {
         return;
       }
 
-      const result = await signIn('password', {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
-      });
-
-      if (!result?.ok) {
-        toast.error(t('invalidCredentials'));
-        return;
-      }
-
-      toast.success(t('registerSuccess'));
-      window.location.href = result.url || callbackUrl;
+      // Account created — the user must verify their email before they can log in.
+      setNeedsVerification(true);
     } catch {
       toast.error(t('error'));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const onResend = async () => {
+    try {
+      setIsResending(true);
+      await authApi.resendVerificationEmail(email);
+      toast.success(t('resendVerificationSuccess'));
+    } catch {
+      toast.error(t('error'));
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  if (needsVerification) {
+    return (
+      <AuthShell
+        title={t('verifyEmailTitle')}
+        description={t('verifyEmailDescription', { email })}
+        footer={
+          <div className="text-center text-sm text-muted-foreground">
+            {t('haveAccount')}{' '}
+            <Link href="/login" className="text-primary hover:underline">
+              {t('signInLink')}
+            </Link>
+          </div>
+        }
+      >
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={() => void onResend()}
+          disabled={isResending}
+        >
+          {isResending ? t('sending') : t('resendVerification')}
+        </Button>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell

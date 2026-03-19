@@ -6,6 +6,7 @@ import { ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ensureSupabaseIdentityLink } from '@/lib/auth/account-identities';
 import { findAuthUserByEmail, isTelegramStubEmail } from '@/lib/auth/user-accounts';
+import { sendVerificationEmail } from '@/lib/email/send-verification';
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -23,6 +24,8 @@ export const POST = withApiHandler(async (req) => {
   }
 
   const email = body.data.email.trim().toLowerCase();
+  const password = body.data.password;
+
   const currentUser = await supabaseAdmin.auth.admin.getUserById(user.id);
   const currentEmail = currentUser.data.user?.email ?? null;
 
@@ -37,8 +40,8 @@ export const POST = withApiHandler(async (req) => {
 
   const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
     email,
-    password: body.data.password,
-    email_confirm: true,
+    password,
+    email_confirm: false,
     user_metadata: {
       source: 'telegram+web',
     },
@@ -50,5 +53,7 @@ export const POST = withApiHandler(async (req) => {
 
   await ensureSupabaseIdentityLink(user.id, email);
 
-  return NextResponse.json({ success: true });
+  await sendVerificationEmail({ email, password });
+
+  return NextResponse.json({ success: true, needsVerification: true });
 });

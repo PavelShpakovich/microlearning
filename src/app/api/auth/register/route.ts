@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { deriveDisplayNameFromEmail } from '@/lib/auth/utils';
 import { ensureSupabaseIdentityLink } from '@/lib/auth/account-identities';
 import { findAuthUserByEmail } from '@/lib/auth/user-accounts';
+import { sendVerificationEmail } from '@/lib/email/send-verification';
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -21,15 +22,25 @@ export const POST = withApiHandler(async (req) => {
   }
 
   const email = body.data.email.trim().toLowerCase();
+  const password = body.data.password;
+
   const existingUser = await findAuthUserByEmail(email);
   if (existingUser) {
-    throw new ValidationError({ message: 'An account with this email already exists' });
+    if (existingUser.emailConfirmedAt) {
+      // Confirmed account already exists — tell the client to sign in instead.
+      throw new ValidationError({ message: 'An account with this email already exists' });
+    }
+    // Unconfirmed account exists — resend the verification email and let the
+    // client show the "check your inbox" state again.
+    await sendVerificationEmail({ email });
+    return NextResponse.json({ success: true, needsVerification: true });
   }
 
+  // Create the user without auto-confirming — we send our own email via Resend.
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
-    password: body.data.password,
-    email_confirm: true,
+    password,
+    email_confirm: false,
     user_metadata: { source: 'web' },
   });
 
@@ -52,5 +63,7 @@ export const POST = withApiHandler(async (req) => {
     throw profileError;
   }
 
-  return NextResponse.json({ success: true, userId: data.user.id });
+  await sendVerificationEmail({ email, password });
+
+  return NextResponse.json({ success: true, needsVerification: true });
 });

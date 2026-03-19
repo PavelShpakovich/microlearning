@@ -9,6 +9,7 @@ import { Link } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { authApi } from '@/services/auth-api';
 import { AuthShell } from '@/components/auth/auth-shell';
 
 export function LoginForm() {
@@ -16,10 +17,13 @@ export function LoginForm() {
   const validation = useTranslations('validation');
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const verifiedParam = searchParams.get('verified');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,6 +35,8 @@ export function LoginForm() {
 
     try {
       setIsSubmitting(true);
+      setShowResend(false);
+
       const result = await signIn('password', {
         email,
         password,
@@ -39,7 +45,12 @@ export function LoginForm() {
       });
 
       if (!result?.ok) {
-        toast.error(t('invalidCredentials'));
+        if (result?.error === 'email_not_verified') {
+          setShowResend(true);
+          toast.error(t('emailNotVerified'));
+        } else {
+          toast.error(t('invalidCredentials'));
+        }
         return;
       }
 
@@ -49,6 +60,22 @@ export function LoginForm() {
       toast.error(t('error'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onResend = async () => {
+    if (!email.includes('@')) {
+      toast.error(validation('invalidEmail'));
+      return;
+    }
+    try {
+      setIsResending(true);
+      await authApi.resendVerificationEmail(email);
+      toast.success(t('resendVerificationSuccess'));
+    } catch {
+      toast.error(t('error'));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -73,6 +100,16 @@ export function LoginForm() {
         </div>
       }
     >
+      {verifiedParam === 'true' && (
+        <p className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 dark:bg-green-950/30 dark:border-green-800 dark:text-green-400">
+          {t('emailVerified')}
+        </p>
+      )}
+      {verifiedParam === 'error' && (
+        <p className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+          {t('emailVerificationError')}
+        </p>
+      )}
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">{t('email')}</Label>
@@ -103,6 +140,17 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? t('signingIn') : t('signIn')}
         </Button>
+        {showResend && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => void onResend()}
+            disabled={isResending}
+          >
+            {isResending ? t('sending') : t('resendVerification')}
+          </Button>
+        )}
       </form>
     </AuthShell>
   );

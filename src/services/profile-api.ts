@@ -62,7 +62,7 @@ class ProfileApi {
     }
   }
 
-  async setupWebAccess(email: string, password: string): Promise<void> {
+  async setupWebAccess(email: string, password: string): Promise<{ needsVerification: boolean }> {
     const response = await fetch('/api/profile/link-web', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,6 +73,9 @@ class ProfileApi {
       const data = (await response.json()) as { error?: string; message?: string };
       throw new Error(data.error || data.message || 'Failed to set up web access');
     }
+
+    const data = (await response.json()) as { needsVerification?: boolean };
+    return { needsVerification: Boolean(data.needsVerification) };
   }
 
   async startTelegramLink(locale?: string): Promise<TelegramLinkResponse> {

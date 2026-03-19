@@ -53,6 +53,7 @@ const envSchema = z.object({
 
   // Resend (transactional email)
   RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
 
   // Cron security
   CRON_SECRET: z.string().optional(),

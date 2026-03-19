@@ -6,7 +6,7 @@ export function isTelegramStubEmail(email: string | null | undefined): boolean {
 
 export async function findAuthUserByEmail(
   email: string,
-): Promise<{ id: string; email: string | null } | null> {
+): Promise<{ id: string; email: string | null; emailConfirmedAt: string | null } | null> {
   let page = 1;
 
   for (;;) {
@@ -22,7 +22,11 @@ export async function findAuthUserByEmail(
     const users = data?.users ?? [];
     const match = users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
     if (match) {
-      return { id: match.id, email: match.email ?? null };
+      return {
+        id: match.id,
+        email: match.email ?? null,
+        emailConfirmedAt: match.email_confirmed_at ?? null,
+      };
     }
 
     if (users.length < 1000) {

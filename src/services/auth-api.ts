@@ -16,6 +16,16 @@ class AuthApi {
 
     return (await response.json()) as { sessionToken: string; wasLinked?: boolean };
   }
+
+  async resendVerificationEmail(email: string): Promise<void> {
+    await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    // The endpoint always returns 200 regardless of whether the email exists,
+    // so there is no error to surface here.
+  }
 }
 
 export const authApi = new AuthApi();

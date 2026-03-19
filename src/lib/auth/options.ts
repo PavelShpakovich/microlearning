@@ -95,7 +95,21 @@ export const authOptions: NextAuthOptions = {
         const authClient = createSupabaseAuthClient();
         const { data, error } = await authClient.auth.signInWithPassword({ email, password });
 
-        if (error || !data.user) {
+        if (error) {
+          // Surface email-not-confirmed as a distinct error so the login form
+          // can prompt the user to verify their inbox instead of showing a
+          // generic "invalid credentials" message.
+          if (
+            error.message.toLowerCase().includes('email not confirmed') ||
+            // @ts-expect-error – code field is present in Supabase AuthApiError
+            error.code === 'email_not_confirmed'
+          ) {
+            throw new Error('email_not_verified');
+          }
+          return null;
+        }
+
+        if (!data.user) {
           return null;
         }
 

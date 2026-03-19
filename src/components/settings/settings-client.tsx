@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { profileApi } from '@/services/profile-api';
+import { authApi } from '@/services/auth-api';
 import { revalidateProfileData } from '@/actions/profile';
 import { broadcastDisplayName } from '@/hooks/use-display-name';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +51,8 @@ export function SettingsClient({
   const [webAccessPassword, setWebAccessPassword] = useState('');
   const [webAccessConfirmPassword, setWebAccessConfirmPassword] = useState('');
   const [isSettingUpWebAccess, setIsSettingUpWebAccess] = useState(false);
+  const [webAccessNeedsVerification, setWebAccessNeedsVerification] = useState(false);
+  const [isResendingWebVerification, setIsResendingWebVerification] = useState(false);
   const [isStartingTelegramLink, setIsStartingTelegramLink] = useState(false);
 
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -76,9 +79,14 @@ export function SettingsClient({
 
     try {
       setIsSettingUpWebAccess(true);
-      await profileApi.setupWebAccess(webAccessEmail, webAccessPassword);
-      toast.success(t('auth.passwordUpdated'));
-      window.location.reload();
+      const result = await profileApi.setupWebAccess(webAccessEmail, webAccessPassword);
+      if (result.needsVerification) {
+        setWebAccessNeedsVerification(true);
+        toast.success(t('settings.webAccessVerificationSent'));
+      } else {
+        toast.success(t('auth.passwordUpdated'));
+        window.location.reload();
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : '';
       if (msg.toLowerCase().includes('already exists')) {
@@ -227,48 +235,76 @@ export function SettingsClient({
             <CardDescription>{t('settings.webAccessCardDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="webAccessEmail">{t('auth.email')}</Label>
-              <Input
-                id="webAccessEmail"
-                type="email"
-                value={webAccessEmail}
-                onChange={(event) => setWebAccessEmail(event.target.value)}
-                placeholder={t('auth.emailPlaceholder')}
-                disabled={isSettingUpWebAccess}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="webAccessPassword">{t('auth.password')}</Label>
-              <Input
-                id="webAccessPassword"
-                type="password"
-                value={webAccessPassword}
-                onChange={(event) => setWebAccessPassword(event.target.value)}
-                placeholder={t('auth.passwordPlaceholder')}
-                disabled={isSettingUpWebAccess}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="webAccessConfirmPassword">{t('auth.confirmPassword')}</Label>
-              <Input
-                id="webAccessConfirmPassword"
-                type="password"
-                value={webAccessConfirmPassword}
-                onChange={(event) => setWebAccessConfirmPassword(event.target.value)}
-                placeholder={t('auth.passwordPlaceholder')}
-                disabled={isSettingUpWebAccess}
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button
-                className="w-full sm:w-auto"
-                onClick={() => void onSetupWebAccess()}
-                disabled={isSettingUpWebAccess}
-              >
-                {isSettingUpWebAccess ? t('auth.saving') : t('settings.webAccessCardCta')}
-              </Button>
-            </div>
+            {webAccessNeedsVerification ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.webAccessVerificationPending', { email: webAccessEmail })}
+                </p>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={isResendingWebVerification}
+                  onClick={async () => {
+                    try {
+                      setIsResendingWebVerification(true);
+                      await authApi.resendVerificationEmail(webAccessEmail);
+                      toast.success(t('auth.resendVerificationSuccess'));
+                    } catch {
+                      toast.error(t('auth.error'));
+                    } finally {
+                      setIsResendingWebVerification(false);
+                    }
+                  }}
+                >
+                  {isResendingWebVerification ? t('auth.sending') : t('auth.resendVerification')}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="webAccessEmail">{t('auth.email')}</Label>
+                  <Input
+                    id="webAccessEmail"
+                    type="email"
+                    value={webAccessEmail}
+                    onChange={(event) => setWebAccessEmail(event.target.value)}
+                    placeholder={t('auth.emailPlaceholder')}
+                    disabled={isSettingUpWebAccess}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="webAccessPassword">{t('auth.password')}</Label>
+                  <Input
+                    id="webAccessPassword"
+                    type="password"
+                    value={webAccessPassword}
+                    onChange={(event) => setWebAccessPassword(event.target.value)}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    disabled={isSettingUpWebAccess}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="webAccessConfirmPassword">{t('auth.confirmPassword')}</Label>
+                  <Input
+                    id="webAccessConfirmPassword"
+                    type="password"
+                    value={webAccessConfirmPassword}
+                    onChange={(event) => setWebAccessConfirmPassword(event.target.value)}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    disabled={isSettingUpWebAccess}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => void onSetupWebAccess()}
+                    disabled={isSettingUpWebAccess}
+                  >
+                    {isSettingUpWebAccess ? t('auth.saving') : t('settings.webAccessCardCta')}
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
