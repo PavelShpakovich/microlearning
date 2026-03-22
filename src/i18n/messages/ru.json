@@ -43,7 +43,9 @@
     "generating": "Генерация…",
     "saving": "Сохранение…",
     "createTheme": "Создать тему",
-    "createAndGenerate": "Создать"
+    "createAndGenerate": "Создать",
+    "clone": "Клонировать",
+    "cloning": "Клонирование…"
   },
   "messages": {
     "success": "Успешно",
@@ -58,7 +60,11 @@
     "failedLoadThemes": "Не удалось загрузить темы. Попробуйте снова.",
     "failedLoadSources": "Не удалось загрузить источники. Генерация будет продолжена без данных источника.",
     "failedBookmarkUpdate": "Не удалось обновить закладку.",
+    "failedCloneTheme": "Не удалось клонировать тему.",
+    "failedRegenerateCard": "Не удалось пересоздать карточку.",
     "generationLimitReached": "Вы достигли месячного лимита генерации карточек. Платные тарифы с более высокими лимитами появятся позже.",
+    "cardRegenerated": "Карточка успешно пересоздана.",
+    "themeCloned": "Тема успешно клонирована.",
     "cardsRemainingLow": "В этом месяце у вас осталось {count} {count, plural, one {карточка} few {карточки} other {карточек}}.",
     "cardsGeneratedPartial": "Создано только {generated} из {requested} карточек — это весь оставшийся лимит."
   },
@@ -145,7 +151,8 @@
     "jumpToCard": "Перейти к карточке",
     "cardNumber": "Карточка {number}",
     "addBookmark": "Сохранить карточку",
-    "removeBookmark": "Удалить сохранённую карточку"
+    "removeBookmark": "Удалить сохранённую карточку",
+    "regenerateCard": "Пересоздать карточку"
   },
   "bookmarks": {
     "heading": "Сохранённые карточки",

@@ -16,8 +16,10 @@ interface ThemeListProps {
   canShare?: boolean;
   cardCounts: Record<string, number>;
   togglingPrivacy: string | null;
+  cloningThemeId?: string | null;
   onPrivacyToggle: (themeId: string, currentIsPublic: boolean) => void;
   onDelete: (theme: Theme) => void;
+  onClone?: (theme: Theme) => void;
   view?: 'grid' | 'list';
 }
 
@@ -27,8 +29,10 @@ export function ThemeList({
   canShare = true,
   cardCounts,
   togglingPrivacy,
+  cloningThemeId,
   onPrivacyToggle,
   onDelete,
+  onClone,
   view = 'grid',
 }: ThemeListProps) {
   const t = useTranslations();
@@ -68,8 +72,10 @@ export function ThemeList({
           isOwner={isOwner}
           canShare={canShare}
           togglingPrivacy={togglingPrivacy}
+          cloningThemeId={cloningThemeId}
           onPrivacyToggle={onPrivacyToggle}
           onDelete={onDelete}
+          onClone={onClone}
           view={view}
         />
       ))}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, Lock, ArrowUpRight } from 'lucide-react';
 import { ViewToggle } from '@/components/common/view-toggle';
 import { useTranslations } from 'next-intl';
@@ -32,12 +33,14 @@ export function DashboardClient({
   cardCounts = {},
 }: DashboardClientProps) {
   const t = useTranslations();
+  const router = useRouter();
   const { status: subscriptionStatus } = useSubscription();
   const displayName = useDisplayName();
   const [themes, setThemes] = useState(initialThemes);
   const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
   const [showDeleteAllThemes, setShowDeleteAllThemes] = useState(false);
   const [togglingPrivacy, setTogglingPrivacy] = useState<string | null>(null);
+  const [cloningThemeId, setCloningThemeId] = useState<string | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState('my-themes');
@@ -110,6 +113,19 @@ export function DashboardClient({
     }
   };
 
+  const handleCloneTheme = async (theme: Theme) => {
+    setCloningThemeId(theme.id);
+    try {
+      const result = await themeApi.cloneTheme(theme.id);
+      toast.success(t('messages.themeCloned'));
+      router.push(`/study/${result.themeId}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('messages.failedCloneTheme'));
+    } finally {
+      setCloningThemeId(null);
+    }
+  };
+
   const renderThemeList = (currentThemes: Theme[], isOwner: boolean) => (
     <ThemeList
       themes={currentThemes}
@@ -117,8 +133,10 @@ export function DashboardClient({
       canShare={canAccessCommunity}
       cardCounts={cardCounts}
       togglingPrivacy={togglingPrivacy}
+      cloningThemeId={cloningThemeId}
       onPrivacyToggle={(id, current) => void handlePrivacyToggle(id, current)}
       onDelete={(theme) => setThemeToDelete(theme)}
+      onClone={!isOwner ? (theme) => void handleCloneTheme(theme) : undefined}
       view={viewMode}
     />
   );

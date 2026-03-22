@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { InfoCard } from '@/components/info-card';
 import { useStudySession } from '@/hooks/use-study-session';
@@ -17,6 +18,7 @@ import {
 } from '@/components/study/study-state-screens';
 import { useTranslations } from 'next-intl';
 import { Lock } from 'lucide-react';
+import { studyApi } from '@/services/study-api';
 
 interface StudyClientProps {
   themeId: string;
@@ -32,6 +34,7 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isRegeneratingCard, setIsRegeneratingCard] = useState(false);
   const [resumeDismissed, setResumeDismissed] = useState(false);
   // Eligibility is evaluated ONCE when initial loading completes and never re-checked.
   // This prevents newly-generated cards from re-triggering the prompt mid-session.
@@ -63,6 +66,7 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     fetchCards,
     markCardSeen,
     toggleBookmark,
+    replaceCard,
     generateMore,
     setInfiniteMode,
     setCardCount,
@@ -71,6 +75,33 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const currentCardId = cards[currentCardIndex]?.id;
   const isCurrentCardBookmarked =
     currentCardId != null && bookmarkedCardIds.includes(currentCardId);
+
+  const handleRegenerateCard = async () => {
+    if (!currentCardId || !isOwner || isRegeneratingCard || isGenerating || isManualGenerating) {
+      return;
+    }
+
+    setIsRegeneratingCard(true);
+    try {
+      const result = await studyApi.regenerateCard(currentCardId);
+      replaceCard(currentCardId, result.card, result.cardsRemaining);
+
+      if (result.cardsRemaining === 0) {
+        toast.error(t('messages.generationLimitReached'));
+      }
+
+      toast.success(t('messages.cardRegenerated'));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg === 'GENERATION_LIMIT_REACHED') {
+        toast.error(t('messages.generationLimitReached'));
+      } else {
+        toast.error(t('messages.failedRegenerateCard'));
+      }
+    } finally {
+      setIsRegeneratingCard(false);
+    }
+  };
 
   // Disable infinite mode for non-owners (they can't generate)
   useEffect(() => {
@@ -338,6 +369,9 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
             void toggleBookmark(currentCardId);
           }
         }}
+        canRegenerate={isOwner && !isLimitReached && cards.length > 0}
+        isRegeneratingCard={isRegeneratingCard}
+        onRegenerate={() => void handleRegenerateCard()}
         canGenerate={isOwner && !isLimitReached}
         cardsRemaining={isOwner ? cardsRemaining : null}
         onScrollToCard={(index) => {

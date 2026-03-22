@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Trash2, Globe, Lock, GraduationCap, Pencil } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Database } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,10 @@ interface ThemeCardProps {
   isOwner: boolean;
   canShare?: boolean;
   togglingPrivacy: string | null;
+  cloningThemeId?: string | null;
   onPrivacyToggle: (themeId: string, currentIsPublic: boolean) => void;
   onDelete: (theme: Theme) => void;
+  onClone?: (theme: Theme) => void;
   view?: 'grid' | 'list';
 }
 
@@ -27,11 +30,14 @@ export function ThemeCard({
   isOwner,
   canShare = true,
   togglingPrivacy,
+  cloningThemeId,
   onPrivacyToggle,
   onDelete,
+  onClone,
   view = 'grid',
 }: ThemeCardProps) {
   const t = useTranslations();
+  const isCloning = cloningThemeId === theme.id;
   if (view === 'list') {
     return (
       <Card className="px-3 py-2.5 md:px-4 md:py-3">
@@ -71,6 +77,17 @@ export function ThemeCard({
                 {t('buttons.study')}
               </Button>
             </Link>
+            {!isOwner && onClone && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onClone(theme)}
+                disabled={isCloning}
+              >
+                <Copy className="h-4 w-4 mr-1.5" />
+                {isCloning ? t('buttons.cloning') : t('buttons.clone')}
+              </Button>
+            )}
             {isOwner && (
               <Link href={`/themes/${theme.id}/edit`}>
                 <Button variant="outline" size="sm">
@@ -139,6 +156,19 @@ export function ThemeCard({
                   {!isOwner && t('buttons.study')}
                 </Button>
               </Link>
+
+              {!isOwner && onClone && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => onClone(theme)}
+                  disabled={isCloning}
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1" />
+                  {isCloning ? t('buttons.cloning') : t('buttons.clone')}
+                </Button>
+              )}
 
               {isOwner && (
                 <>
@@ -237,13 +267,26 @@ export function ThemeCard({
             </div>
           </div>
         ) : (
-          /* For non-owners, just the Study button */
-          <Link href={`/study/${theme.id}`} className="block">
-            <Button className="w-full" variant="default" size="sm">
-              <GraduationCap className="h-4 w-4 mr-2" />
-              {t('buttons.study')}
-            </Button>
-          </Link>
+          <div className="space-y-2">
+            <Link href={`/study/${theme.id}`} className="block">
+              <Button className="w-full" variant="default" size="sm">
+                <GraduationCap className="h-4 w-4 mr-2" />
+                {t('buttons.study')}
+              </Button>
+            </Link>
+            {onClone && (
+              <Button
+                className="w-full"
+                variant="outline"
+                size="sm"
+                onClick={() => onClone(theme)}
+                disabled={isCloning}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                {isCloning ? t('buttons.cloning') : t('buttons.clone')}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Card>

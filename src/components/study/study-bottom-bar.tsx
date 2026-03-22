@@ -24,6 +24,9 @@ interface StudyBottomBarProps {
   canDecreaseFontSize: boolean;
   isBookmarked?: boolean;
   onToggleBookmark: () => void;
+  canRegenerate?: boolean;
+  isRegeneratingCard?: boolean;
+  onRegenerate: () => void;
   canGenerate?: boolean;
   cardsRemaining?: number | null;
   onScrollToCard: (index: number) => void;
@@ -46,6 +49,9 @@ export function StudyBottomBar({
   canDecreaseFontSize,
   isBookmarked = false,
   onToggleBookmark,
+  canRegenerate = false,
+  isRegeneratingCard = false,
+  onRegenerate,
   canGenerate = true,
   cardsRemaining,
   onScrollToCard,
@@ -141,6 +147,21 @@ export function StudyBottomBar({
       </button>
 
       <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
+
+      {canRegenerate && (
+        <>
+          <button
+            onClick={onRegenerate}
+            disabled={isRegeneratingCard}
+            title={t('study.regenerateCard')}
+            className="flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRegeneratingCard ? 'animate-spin' : ''}`} />
+          </button>
+
+          <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
+        </>
+      )}
 
       {/* Generation status (shown in both modes while active) */}
       {anyGenerating && (

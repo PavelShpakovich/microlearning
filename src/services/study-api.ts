@@ -25,6 +25,11 @@ export interface CardsResponse {
   cardsRemaining?: number;
 }
 
+export interface RegenerateCardResponse {
+  card: Card;
+  cardsRemaining: number;
+}
+
 interface FetchCardsOptions {
   triggerGeneration?: boolean;
   count?: number;
@@ -141,6 +146,20 @@ class StudyApi {
     if (!res.ok) {
       throw new Error('Failed to remove bookmark');
     }
+  }
+
+  async regenerateCard(cardId: string, signal?: AbortSignal): Promise<RegenerateCardResponse> {
+    const res = await fetch(`/api/cards/${cardId}/regenerate`, {
+      method: 'POST',
+      signal,
+    });
+
+    if (!res.ok) {
+      const data = (await res.json()) as { error?: string; message?: string };
+      throw new Error(data.error || data.message || 'Failed to regenerate card');
+    }
+
+    return (await res.json()) as RegenerateCardResponse;
   }
 }
 

@@ -130,6 +130,24 @@ class ThemeApi {
       throw new Error(message);
     }
   }
+
+  async cloneTheme(themeId: string): Promise<{ themeId: string }> {
+    const response = await fetch(`/api/themes/${themeId}/clone`, {
+      method: 'POST',
+    });
+
+    const data = (await response.json()) as {
+      themeId?: string;
+      error?: string;
+      message?: string;
+    };
+
+    if (!response.ok || !data.themeId) {
+      throw new Error(data.error || data.message || 'Failed to clone theme');
+    }
+
+    return { themeId: data.themeId };
+  }
 }
 
 export const themeApi = new ThemeApi();

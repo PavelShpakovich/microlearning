@@ -43,7 +43,9 @@
     "generating": "Generating…",
     "saving": "Saving…",
     "createTheme": "Create Theme",
-    "createAndGenerate": "Create"
+    "createAndGenerate": "Create",
+    "clone": "Clone",
+    "cloning": "Cloning…"
   },
   "messages": {
     "success": "Success",
@@ -58,7 +60,11 @@
     "failedLoadThemes": "Failed to load themes. Please try again.",
     "failedLoadSources": "Failed to load sources. Generation will continue without source data.",
     "failedBookmarkUpdate": "Failed to update bookmark.",
+    "failedCloneTheme": "Failed to clone theme.",
+    "failedRegenerateCard": "Failed to regenerate card.",
     "generationLimitReached": "You've reached your monthly card generation limit. Expanded paid plans with higher limits are coming soon.",
+    "cardRegenerated": "Card regenerated successfully.",
+    "themeCloned": "Theme cloned successfully.",
     "cardsRemainingLow": "You have {count} card{count, plural, one {} other {s}} remaining this month.",
     "cardsGeneratedPartial": "Only {generated} of {requested} cards generated — that's all your remaining quota."
   },
@@ -145,7 +151,8 @@
     "jumpToCard": "Jump to card",
     "cardNumber": "Card {number}",
     "addBookmark": "Save card",
-    "removeBookmark": "Remove saved card"
+    "removeBookmark": "Remove saved card",
+    "regenerateCard": "Regenerate card"
   },
   "bookmarks": {
     "heading": "Saved Cards",

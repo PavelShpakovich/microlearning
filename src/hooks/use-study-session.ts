@@ -345,6 +345,22 @@ export function useStudySession(themeId: string) {
     [bookmarkedCardIds, t],
   );
 
+  const replaceCard = useCallback(
+    (oldCardId: string, newCard: Card, nextCardsRemaining?: number) => {
+      setCards((prev) => prev.map((card) => (card.id === oldCardId ? newCard : card)));
+      setSeenCardIds((prev) => prev.map((cardId) => (cardId === oldCardId ? newCard.id : cardId)));
+      setBookmarkedCardIds((prev) =>
+        prev.map((cardId) => (cardId === oldCardId ? newCard.id : cardId)),
+      );
+
+      if (typeof nextCardsRemaining === 'number') {
+        setCardsRemaining(nextCardsRemaining);
+        setIsLimitReached(nextCardsRemaining <= 0);
+      }
+    },
+    [],
+  );
+
   const generateMore = useCallback(
     async (count = cardCount) => {
       if (isGenerating || isManualGenerating) return;
@@ -415,6 +431,7 @@ export function useStudySession(themeId: string) {
     fetchCards,
     markCardSeen,
     toggleBookmark,
+    replaceCard,
     generateMore,
     setInfiniteMode,
     setCardCount,
