@@ -3,12 +3,10 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Bookmark, ExternalLink, Trash2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { InfoCard } from '@/components/info-card';
 import type { BookmarkListItem } from '@/lib/bookmarks';
 
 interface BookmarksClientProps {
@@ -105,79 +103,34 @@ export function BookmarksClient({ initialBookmarks }: BookmarksClientProps) {
               {group.items.map((bookmark) => (
                 <article
                   key={bookmark.cardId}
-                  className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-foreground/20"
+                  className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors hover:border-foreground/20"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="block text-base font-semibold text-foreground">
-                        {bookmark.cardTitle}
-                      </h3>
-                      <div
-                        className="prose prose-sm mt-3 max-w-none dark:prose-invert
-                        prose-p:text-foreground/80 prose-p:leading-relaxed
-                        prose-headings:text-foreground prose-headings:mt-4 prose-headings:mb-2 prose-headings:font-semibold
-                        prose-h2:border-b prose-h2:border-border/40 prose-h2:pb-1
-                        prose-strong:text-foreground prose-strong:font-semibold
-                        prose-ul:text-foreground/80 prose-ol:text-foreground/80
-                        prose-li:text-foreground/80 prose-li:leading-relaxed prose-li:my-0.5
-                        prose-code:text-foreground prose-code:bg-muted prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.875em] prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
-                        prose-blockquote:border-l-[3px] prose-blockquote:border-primary/40 prose-blockquote:bg-primary/5 prose-blockquote:rounded-r-lg prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:not-italic prose-blockquote:text-foreground/70"
-                      >
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
-                          components={{
-                            pre: ({ children }) => (
-                              <div className="not-prose my-4 overflow-hidden rounded-xl shadow-sm">
-                                <pre className="text-sm leading-relaxed p-0">{children}</pre>
-                              </div>
-                            ),
-                            table: ({ children }) => (
-                              <div className="not-prose my-4 overflow-x-auto rounded-xl border border-border">
-                                <table className="w-full border-collapse text-sm">{children}</table>
-                              </div>
-                            ),
-                            thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
-                            code: ({ className, children, ...props }) => {
-                              const isBlock = !!className?.includes('language-');
-                              if (isBlock) {
-                                return (
-                                  <code
-                                    className={`${className ?? ''} block p-4 text-sm leading-relaxed`}
-                                    {...props}
-                                  >
-                                    {children}
-                                  </code>
-                                );
-                              }
-
-                              return (
-                                <code
-                                  className="not-prose rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-foreground/80"
-                                  {...props}
-                                >
-                                  {children}
-                                </code>
-                              );
-                            },
-                          }}
-                        >
-                          {bookmark.cardBody}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+                    <p className="min-w-0 truncate text-sm text-muted-foreground">
+                      {group.themeName}
+                    </p>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       disabled={pendingCardId === bookmark.cardId}
                       onClick={() => void handleRemove(bookmark.cardId)}
-                      className="shrink-0 text-white hover:text-white"
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">{t('bookmarks.remove')}</span>
                     </Button>
                   </div>
+
+                  <InfoCard
+                    card={{
+                      id: bookmark.cardId,
+                      title: bookmark.cardTitle,
+                      body: bookmark.cardBody,
+                    }}
+                    fontSize={0}
+                    reserveBottomBarSpace={false}
+                  />
                 </article>
               ))}
             </div>

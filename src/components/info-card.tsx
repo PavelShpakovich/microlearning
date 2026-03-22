@@ -10,6 +10,7 @@ import 'highlight.js/styles/github-dark.css';
 interface InfoCardProps {
   card: Pick<CardRow, 'id' | 'title' | 'body'>;
   fontSize?: CardFontSize;
+  reserveBottomBarSpace?: boolean;
 }
 
 const FONT_CONFIG = [
@@ -23,13 +24,13 @@ const FONT_CONFIG = [
   { title: 'text-4xl md:text-5xl', container: 'text-xl' },
 ] as const;
 
-export function InfoCard({ card, fontSize = 1 }: InfoCardProps) {
+export function InfoCard({ card, fontSize = 1, reserveBottomBarSpace = true }: InfoCardProps) {
   const cfg = FONT_CONFIG[fontSize];
   return (
     <div className="w-full flex flex-col bg-background relative" data-card-id={card.id}>
       {/* Content — flows naturally, no inner scroll */}
       <div className={`px-5 py-6 pt-6 md:px-10 md:py-8 md:pt-10 ${cfg.container}`}>
-        <div className="max-w-3xl mx-auto pb-28">
+        <div className={`max-w-3xl mx-auto ${reserveBottomBarSpace ? 'pb-28' : ''}`}>
           {/* Title */}
           <h1
             className={`${cfg.title} font-bold text-foreground mb-4 md:mb-6 leading-snug text-balance`}
