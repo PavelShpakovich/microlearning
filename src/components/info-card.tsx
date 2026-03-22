@@ -41,8 +41,8 @@ export function InfoCard({ card, fontSize = 1 }: InfoCardProps) {
           <div
             className={`prose dark:prose-invert max-w-none
             prose-p:text-foreground/80 prose-p:leading-relaxed
-            prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-6 prose-headings:mb-2
-            prose-h2:border-b prose-h2:border-border prose-h2:pb-1
+            prose-headings:font-semibold prose-headings:text-foreground prose-headings:mt-4 prose-headings:mb-2
+            prose-h2:border-b prose-h2:border-border/50 prose-h2:pb-1
             prose-strong:text-foreground prose-strong:font-semibold
             prose-a:text-foreground prose-a:no-underline hover:prose-a:opacity-70
             prose-ul:text-foreground/80 prose-ol:text-foreground/80

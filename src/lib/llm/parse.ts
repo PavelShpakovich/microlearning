@@ -101,7 +101,24 @@ export function parseLlmOutput(raw: string): CardsOutput {
   }
 
   logger.info({ cardCount: result.data.length }, 'Parse: Success');
-  return result.data;
+  return result.data.map((card) => ({ ...card, body: normalizeMarkdown(card.body) }));
+}
+
+/**
+ * Normalizes common markdown rendering issues from LLM output:
+ * - Ensures a blank line before bullet/numbered list items (fixes broken list rendering)
+ * - Collapses 3+ consecutive blank lines to 2
+ * - Strips an accidental leading ## heading that duplicates the card's purpose
+ */
+function normalizeMarkdown(body: string): string {
+  return (
+    body
+      // Ensure blank line before any list item not already preceded by a blank line
+      .replace(/([^\n])\n([ \t]*[-*+][ \t]|[ \t]*\d+\.[ \t])/g, '$1\n\n$2')
+      // Collapse 3+ consecutive blank lines to 2
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  );
 }
 
 export function extractArrayFromObject(raw: string): string {
