@@ -37,6 +37,33 @@ describe('parseLlmOutput', () => {
     expect(result[0].body).toContain(longText);
   });
 
+  it('promotes standalone pseudo-headings to markdown headings', () => {
+    const input = JSON.stringify([
+      {
+        title: 'React hooks',
+        body: `Ключевая концепция
+Функциональные компоненты с хуками представляют собой современный подход к созданию компонентов в React. ${longText}
+
+Как это работает
+Хуки — это функции, которые позволяют подключаться к возможностям React из функциональных компонентов.
+
+Ключевые механизмы:
+useState: управляет локальным состоянием.
+useEffect: обрабатывает побочные эффекты.
+
+Почему это важно
+Хуки упрощают архитектуру приложения и делают логику переиспользуемой.`,
+      },
+    ]);
+
+    const result = parseLlmOutput(input);
+
+    expect(result[0].body).toContain('## Ключевая концепция');
+    expect(result[0].body).toContain('## Как это работает');
+    expect(result[0].body).toContain('## Ключевые механизмы');
+    expect(result[0].body).toContain('## Почему это важно');
+  });
+
   it('throws LlmError for non-JSON output', () => {
     expect(() => parseLlmOutput('not json at all')).toThrow(LlmError);
   });

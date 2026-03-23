@@ -106,13 +106,37 @@ export function parseLlmOutput(raw: string): CardsOutput {
 
 /**
  * Normalizes common markdown rendering issues from LLM output:
+ * - Promotes short standalone pseudo-headings like "Почему это важно" to markdown headings
  * - Ensures a blank line before bullet/numbered list items (fixes broken list rendering)
  * - Collapses 3+ consecutive blank lines to 2
  * - Strips an accidental leading ## heading that duplicates the card's purpose
  */
 function normalizeMarkdown(body: string): string {
+  const lines = body.replace(/\r\n?/g, '\n').split('\n');
+  const promotedLines: string[] = [];
+  let inCodeBlock = false;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (/^```/.test(trimmed)) {
+      inCodeBlock = !inCodeBlock;
+      promotedLines.push(line);
+      continue;
+    }
+
+    if (!inCodeBlock && shouldPromoteStandaloneHeading(lines, index)) {
+      promotedLines.push(`## ${trimmed.replace(/[:：]\s*$/, '')}`);
+      continue;
+    }
+
+    promotedLines.push(line);
+  }
+
   return (
-    body
+    promotedLines
+      .join('\n')
       // Normalize heading markers like ##Heading -> ## Heading
       .replace(/^(#{2,6})([^#\s])/gm, '$1 $2')
       // Ensure a blank line before headings when attached to paragraph text
@@ -125,6 +149,32 @@ function normalizeMarkdown(body: string): string {
       .replace(/\n{3,}/g, '\n\n')
       .trim()
   );
+}
+
+function shouldPromoteStandaloneHeading(lines: string[], index: number): boolean {
+  const trimmed = lines[index]?.trim();
+
+  if (!trimmed) return false;
+  if (trimmed.length > 60) return false;
+  if (!/^[A-ZА-ЯЁ]/.test(trimmed)) return false;
+  if (/^(#{1,6}|[-*+]\s|\d+\.\s|>|\|)/.test(trimmed)) return false;
+  if (/^```/.test(trimmed)) return false;
+  if (/[.!?]$/.test(trimmed)) return false;
+
+  const words = trimmed
+    .replace(/[:：]\s*$/, '')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length === 0 || words.length > 6) return false;
+
+  const previousLine = lines[index - 1]?.trim() ?? '';
+  const nextLine = lines[index + 1]?.trim() ?? '';
+
+  if (previousLine !== '') return false;
+  if (nextLine === '') return false;
+  if (/^(#{1,6}|[-*+]\s|\d+\.\s|>|\|)/.test(nextLine)) return true;
+
+  return true;
 }
 
 export function extractArrayFromObject(raw: string): string {

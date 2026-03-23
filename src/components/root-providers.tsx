@@ -56,7 +56,7 @@ export function RootProviders({
               <SubscriptionProvider>
                 <TelegramLoader>{children}</TelegramLoader>
               </SubscriptionProvider>
-              <Toaster position="bottom-right" />
+              <Toaster position="bottom-right" duration={4000} />
             </div>
           </ThemeProvider>
         </NextIntlClientProvider>
