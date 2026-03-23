@@ -113,6 +113,12 @@ export function parseLlmOutput(raw: string): CardsOutput {
 function normalizeMarkdown(body: string): string {
   return (
     body
+      // Normalize heading markers like ##Heading -> ## Heading
+      .replace(/^(#{2,6})([^#\s])/gm, '$1 $2')
+      // Ensure a blank line before headings when attached to paragraph text
+      .replace(/([^\n])\n(#{2,6}\s)/g, '$1\n\n$2')
+      // Ensure a blank line after headings before following text
+      .replace(/(#{2,6}\s[^\n]+)\n([^\n#\-*\d>])/g, '$1\n\n$2')
       // Ensure blank line before any list item not already preceded by a blank line
       .replace(/([^\n])\n([ \t]*[-*+][ \t]|[ \t]*\d+\.[ \t])/g, '$1\n\n$2')
       // Collapse 3+ consecutive blank lines to 2

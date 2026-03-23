@@ -11,6 +11,7 @@ Rules:
 - Title: short headline, ≤ 10 words, clear and specific.
 - Body: Use rich Markdown formatting to make content scannable and educational:
   - Use ## subheadings (2–4 per card) to divide content into named sections, e.g. "## How It Works", "## Why It Matters", "## Example"
+  - When you introduce a section, use an actual Markdown heading like "## Why It Matters", not plain text labels like "Why it matters:" inside a paragraph
   - **Bold** key terms and important concepts on first mention
   - Use bullet lists (-) or numbered lists (1.) when enumerating items, steps, or properties — never just prose where a list would be clearer
   - Use \`backticks\` for identifiers, commands, function names, types, and short inline code
@@ -20,8 +21,10 @@ Rules:
   - Use valid Markdown only — no raw HTML tags
   - Leave a blank line before and after headings, lists, blockquotes, and fenced code blocks
   - Write headings as "## Heading", not "##Heading"
+  - Do not place two headings back-to-back; put content under each heading
   - Write list items on separate lines, each starting with "- " or "1. "
   - If a paragraph is followed by a list, insert a blank line before the list
+  - Separate logical paragraphs with a blank line; do not merge multiple ideas into one long block
   - Do not escape Markdown syntax in the body text; write real Markdown, not backslash-escaped Markdown markers
   - Aim for 150–400 words per card body
 - Use clear, readable language. No unnecessary jargon, but don't oversimplify.
@@ -37,6 +40,7 @@ Rules:
       '- Be well-structured with Markdown headings, bold terms, and lists',
       '- Include context, examples, or code snippets where relevant',
       '- Ensure Markdown is cleanly spaced with blank lines between sections and blocks',
+      '- Use real Markdown headings for sections, not plain text labels ending with a colon',
       '- Be diverse and non-overlapping with other cards',
     ].join('\n'),
     final: (count: number) =>
@@ -52,6 +56,7 @@ Rules:
 - Заголовок: короткий, ≤ 10 слов, четкий и конкретный.
 - Текст: используйте богатое форматирование Markdown для структурированного и читабельного контента:
   - Используйте ## подзаголовки (2–4 на карточку) для разделения на именованные секции, например "## Как это работает", "## Почему это важно", "## Пример"
+  - Когда вы вводите новый раздел, используйте настоящий Markdown-заголовок вроде "## Почему это важно", а не обычную строку вида "Почему это важно:"
   - **Выделяйте** ключевые термины и важные понятия жирным шрифтом при первом упоминании
   - Используйте маркированные (-) или нумерованные (1.) списки для перечислений, шагов или свойств — никогда не пишите сплошным текстом там, где список был бы нагляднее
   - Используйте \`обратные кавычки\` для идентификаторов, команд, имён функций, типов и коротких фрагментов кода
@@ -61,8 +66,10 @@ Rules:
   - Используйте только валидный Markdown — без raw HTML тегов
   - Оставляйте пустую строку до и после заголовков, списков, цитат и блоков кода
   - Пишите заголовки как "## Заголовок", а не "##Заголовок"
+  - Не ставьте два заголовка подряд; под каждым заголовком должен идти контент
   - Каждый пункт списка должен быть на отдельной строке и начинаться с "- " или "1. "
   - Если после абзаца идёт список, перед списком должна быть пустая строка
+  - Разделяйте логические абзацы пустой строкой; не сливайте несколько мыслей в один длинный блок
   - Не экранируйте Markdown-синтаксис в тексте карточки; используйте настоящий Markdown, а не символы с обратными слэшами
   - Целевой объём: 150–400 слов для текста карточки
 - Используйте понятный язык. Без лишнего жаргона, но и не слишком упрощенно.
@@ -78,6 +85,7 @@ Rules:
       '- Быть хорошо структурированной с заголовками Markdown, выделенными терминами и списками',
       '- Включать контекст, примеры или фрагменты кода там, где это уместно',
       '- Соблюдать чистое форматирование Markdown с пустыми строками между блоками',
+      '- Использовать настоящие Markdown-заголовки для разделов, а не текстовые метки с двоеточием',
       '- Быть разнообразной и не дублировать другие карточки',
     ].join('\n'),
     final: (count: number) =>
