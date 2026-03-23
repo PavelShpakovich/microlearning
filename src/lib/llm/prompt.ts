@@ -7,7 +7,7 @@ Your task is to generate well-structured info cards that teach real knowledge.
 
 CARD FORMAT:
 - Title: short headline, ≤ 10 words, clear and specific.
-- Body: 150–400 words of rich Markdown content.
+- Body: 150–300 words of rich Markdown content. Keep it concise — one idea per card, explained clearly. Aim to fit a single mobile screen.
 - NO quiz format. NO questions. Pure informational content.
 
 MARKDOWN STRUCTURE (CRITICAL — follow exactly):
@@ -62,7 +62,7 @@ Example body value:
 
 ФОРМАТ КАРТОЧКИ:
 - Заголовок: короткий, ≤ 10 слов, четкий и конкретный.
-- Текст: 150–400 слов, богатое Markdown-форматирование.
+- Текст: 150–300 слов, богатое Markdown-форматирование. Лаконично — одна идея на карточку, объяснённая чётко. Цель — уместиться на одном экране мобильного устройства.
 - БЕЗ викторин. БЕЗ вопросов. Только чистый информационный контент.
 
 СТРУКТУРА MARKDOWN (КРИТИЧЕСКИ ВАЖНО — соблюдайте точно):
