@@ -60,6 +60,7 @@
     "failedLoadThemes": "Failed to load themes. Please try again.",
     "failedLoadSources": "Failed to load sources. Generation will continue without source data.",
     "failedBookmarkUpdate": "Failed to update bookmark.",
+    "failedRateCard": "Failed to save card rating.",
     "failedCloneTheme": "Failed to clone theme.",
     "failedRegenerateCard": "Failed to regenerate card.",
     "generationLimitReached": "You've reached your monthly card generation limit. Expanded paid plans with higher limits are coming soon.",
@@ -152,7 +153,17 @@
     "cardNumber": "Card {number}",
     "addBookmark": "Save card",
     "removeBookmark": "Remove saved card",
-    "regenerateCard": "Regenerate card"
+    "hideDownvotedCards": "Hide downvoted cards",
+    "hideDownvotedShort": "Hide downvoted",
+    "showDownvotedCards": "Show downvoted cards",
+    "showDownvotedShort": "Show hidden",
+    "hiddenCardsTitle": "All downvoted cards are hidden",
+    "hiddenCardsDescription": "You filtered this study deck to hide cards marked as not helpful. Show them again to continue reviewing everything.",
+    "regenerateCard": "Regenerate card",
+    "rateHelpful": "Mark card as helpful",
+    "rateHelpfulShort": "Helpful",
+    "rateNotHelpful": "Mark card as not helpful",
+    "rateNotHelpfulShort": "Not helpful"
   },
   "bookmarks": {
     "heading": "Saved Cards",

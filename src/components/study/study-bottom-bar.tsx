@@ -10,7 +10,8 @@ import {
   LogOut,
   AlertTriangle,
   Bookmark,
-  Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -33,9 +34,8 @@ interface StudyBottomBarProps {
   canDecreaseFontSize: boolean;
   isBookmarked?: boolean;
   onToggleBookmark: () => void;
-  canRegenerate?: boolean;
-  isRegeneratingCard?: boolean;
-  onRegenerate: () => void;
+  hideDownvotedCards?: boolean;
+  onToggleHideDownvoted?: () => void;
   canGenerate?: boolean;
   cardsRemaining?: number | null;
   onScrollToCard: (index: number) => void;
@@ -58,9 +58,8 @@ export function StudyBottomBar({
   canDecreaseFontSize,
   isBookmarked = false,
   onToggleBookmark,
-  canRegenerate = false,
-  isRegeneratingCard = false,
-  onRegenerate,
+  hideDownvotedCards = false,
+  onToggleHideDownvoted,
   canGenerate = true,
   cardsRemaining,
   onScrollToCard,
@@ -157,20 +156,28 @@ export function StudyBottomBar({
 
       <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
 
-      {canRegenerate && (
+      {onToggleHideDownvoted ? (
         <>
           <button
-            onClick={onRegenerate}
-            disabled={isRegeneratingCard}
-            title={t('study.regenerateCard')}
-            className="flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            onClick={onToggleHideDownvoted}
+            title={
+              hideDownvotedCards ? t('study.showDownvotedCards') : t('study.hideDownvotedCards')
+            }
+            className={`flex items-center gap-1 px-2 md:px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer ${
+              hideDownvotedCards
+                ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/15'
+                : 'bg-background text-muted-foreground border-border hover:text-foreground hover:border-foreground/30'
+            }`}
           >
-            <Sparkles className={`w-3.5 h-3.5 ${isRegeneratingCard ? 'animate-pulse' : ''}`} />
+            {hideDownvotedCards ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span className="hidden sm:inline">
+              {hideDownvotedCards ? t('study.showDownvotedShort') : t('study.hideDownvotedShort')}
+            </span>
           </button>
 
           <div className="shrink-0 w-px h-3 md:h-4 bg-border" />
         </>
-      )}
+      ) : null}
 
       {/* Generation status (shown in both modes while active) */}
       {anyGenerating && (

@@ -60,6 +60,7 @@
     "failedLoadThemes": "Не удалось загрузить темы. Попробуйте снова.",
     "failedLoadSources": "Не удалось загрузить источники. Генерация будет продолжена без данных источника.",
     "failedBookmarkUpdate": "Не удалось обновить закладку.",
+    "failedRateCard": "Не удалось сохранить оценку карточки.",
     "failedCloneTheme": "Не удалось клонировать тему.",
     "failedRegenerateCard": "Не удалось пересоздать карточку.",
     "generationLimitReached": "Вы достигли месячного лимита генерации карточек. Платные тарифы с более высокими лимитами появятся позже.",
@@ -152,7 +153,17 @@
     "cardNumber": "Карточка {number}",
     "addBookmark": "Сохранить карточку",
     "removeBookmark": "Удалить сохранённую карточку",
-    "regenerateCard": "Пересоздать карточку"
+    "hideDownvotedCards": "Скрыть неполезные карточки",
+    "hideDownvotedShort": "Скрыть неполезные",
+    "showDownvotedCards": "Показать неполезные карточки",
+    "showDownvotedShort": "Показать скрытые",
+    "hiddenCardsTitle": "Все неполезные карточки скрыты",
+    "hiddenCardsDescription": "Вы скрыли карточки, отмеченные как неполезные. Покажите их снова, чтобы продолжить просмотр всей колоды.",
+    "regenerateCard": "Пересоздать карточку",
+    "rateHelpful": "Отметить карточку как полезную",
+    "rateHelpfulShort": "Полезно",
+    "rateNotHelpful": "Отметить карточку как неполезную",
+    "rateNotHelpfulShort": "Не полезно"
   },
   "bookmarks": {
     "heading": "Сохранённые карточки",

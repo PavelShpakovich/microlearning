@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { Database } from '@/lib/supabase/types';
 import { useSubscription } from '@/hooks/use-subscription';
 import { studyApi } from '@/services/study-api';
+import type { CardRatingValue } from '@/services/study-api';
 import { themeApi } from '@/services/theme-api';
 import { sourcesApi } from '@/services/sources-api';
 import { LOW_CARDS_THRESHOLD } from '@/lib/constants';
@@ -47,6 +48,7 @@ export function useStudySession(themeId: string) {
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [cardsRemaining, setCardsRemaining] = useState<number | null>(null);
   const [bookmarkedCardIds, setBookmarkedCardIds] = useState<string[]>([]);
+  const [cardRatings, setCardRatings] = useState<Record<string, CardRatingValue>>({});
   const [infiniteMode, setInfiniteMode] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cardCount, setCardCount] = useState(
@@ -139,6 +141,7 @@ export function useStudySession(themeId: string) {
         setIsLimitReached(false);
         setCardsRemaining(null);
         setBookmarkedCardIds([]);
+        setCardRatings({});
         setSourceIds([]);
 
         const data = await studyApi.initSession(themeId, abortController.signal);
@@ -162,6 +165,13 @@ export function useStudySession(themeId: string) {
           setBookmarkedCardIds(bookmarkIds);
         } catch {
           // Non-blocking: studying should still work if bookmark loading fails.
+        }
+
+        try {
+          const ratings = await studyApi.fetchCardRatings(themeId, abortController.signal);
+          setCardRatings(ratings);
+        } catch {
+          // Non-blocking: studying should still work if ratings fail to load.
         }
 
         const initialData = await fetchCardsForSession(data.sessionId, {
@@ -347,6 +357,39 @@ export function useStudySession(themeId: string) {
     [bookmarkedCardIds, t],
   );
 
+  const rateCard = useCallback(
+    async (cardId: string, rating: Exclude<CardRatingValue, 0>) => {
+      const previousRating = cardRatings[cardId] ?? 0;
+      const nextRating: CardRatingValue = previousRating === rating ? 0 : rating;
+
+      setCardRatings((prev) => {
+        const updated = { ...prev };
+        if (nextRating === 0) {
+          delete updated[cardId];
+        } else {
+          updated[cardId] = nextRating;
+        }
+        return updated;
+      });
+
+      try {
+        await studyApi.rateCard(cardId, nextRating);
+      } catch (err) {
+        setCardRatings((prev) => {
+          const updated = { ...prev };
+          if (previousRating === 0) {
+            delete updated[cardId];
+          } else {
+            updated[cardId] = previousRating;
+          }
+          return updated;
+        });
+        toast.error(err instanceof Error ? err.message : t('messages.failedRateCard'));
+      }
+    },
+    [cardRatings, t],
+  );
+
   const replaceCard = useCallback(
     (oldCardId: string, newCard: Card, nextCardsRemaining?: number) => {
       setCards((prev) => prev.map((card) => (card.id === oldCardId ? newCard : card)));
@@ -354,6 +397,11 @@ export function useStudySession(themeId: string) {
       setBookmarkedCardIds((prev) =>
         prev.map((cardId) => (cardId === oldCardId ? newCard.id : cardId)),
       );
+      setCardRatings((prev) => {
+        const updated = { ...prev };
+        delete updated[oldCardId];
+        return updated;
+      });
 
       if (typeof nextCardsRemaining === 'number') {
         setCardsRemaining(nextCardsRemaining);
@@ -431,12 +479,14 @@ export function useStudySession(themeId: string) {
     isLimitReached,
     cardsRemaining,
     bookmarkedCardIds,
+    cardRatings,
     infiniteMode,
     error,
     cardCount,
     fetchCards,
     markCardSeen,
     toggleBookmark,
+    rateCard,
     replaceCard,
     generateMore,
     setInfiniteMode,

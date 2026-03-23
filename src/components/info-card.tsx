@@ -11,6 +11,7 @@ interface InfoCardProps {
   card: Pick<CardRow, 'id' | 'title' | 'body'>;
   fontSize?: CardFontSize;
   reserveBottomBarSpace?: boolean;
+  actions?: React.ReactNode;
 }
 
 const FONT_CONFIG = [
@@ -24,7 +25,12 @@ const FONT_CONFIG = [
   { title: 'text-3xl md:text-5xl', container: 'text-lg md:text-xl' },
 ] as const;
 
-export function InfoCard({ card, fontSize = 1, reserveBottomBarSpace = true }: InfoCardProps) {
+export function InfoCard({
+  card,
+  fontSize = 1,
+  reserveBottomBarSpace = true,
+  actions,
+}: InfoCardProps) {
   const cfg = FONT_CONFIG[fontSize];
   return (
     <div className="w-full flex flex-col bg-background relative" data-card-id={card.id}>
@@ -32,11 +38,13 @@ export function InfoCard({ card, fontSize = 1, reserveBottomBarSpace = true }: I
       <div className={`px-4 py-4 pt-4 md:px-10 md:py-8 md:pt-10 ${cfg.container}`}>
         <div className={`max-w-3xl mx-auto ${reserveBottomBarSpace ? 'pb-28' : ''}`}>
           {/* Title */}
-          <h1
-            className={`${cfg.title} font-bold text-foreground mb-3 md:mb-6 leading-snug text-balance`}
-          >
-            {card.title}
-          </h1>
+          <div className="mb-3 md:mb-6 space-y-3">
+            <h1 className={`${cfg.title} font-bold text-foreground leading-snug text-balance`}>
+              {card.title}
+            </h1>
+
+            {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+          </div>
 
           {/* Markdown body */}
           <div

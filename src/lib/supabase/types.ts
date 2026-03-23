@@ -95,6 +95,38 @@ export type Database = {
           },
         ];
       };
+      card_ratings: {
+        Row: {
+          card_id: string;
+          created_at: string;
+          id: string;
+          rating: number;
+          user_id: string;
+        };
+        Insert: {
+          card_id: string;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          user_id: string;
+        };
+        Update: {
+          card_id?: string;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_ratings_card_id_fkey';
+            columns: ['card_id'];
+            isOneToOne: false;
+            referencedRelation: 'cards';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       cards: {
         Row: {
           body: string;

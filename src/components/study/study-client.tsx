@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
   StudyLoadingMoreScreen,
 } from '@/components/study/study-state-screens';
 import { useTranslations } from 'next-intl';
-import { Lock } from 'lucide-react';
+import { Lock, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { studyApi } from '@/services/study-api';
 
 interface StudyClientProps {
@@ -32,6 +32,8 @@ const STUDY_ERROR_KEYS: Record<string, string> = {
   LOAD_FAILED: 'study.loadFailed',
 };
 
+const HIDE_DOWNVOTED_STORAGE_KEY = 'clario-study-hide-downvoted';
+
 export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -39,6 +41,7 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isRegeneratingCard, setIsRegeneratingCard] = useState(false);
   const [resumeDismissed, setResumeDismissed] = useState(false);
+  const [hideDownvotedCards, setHideDownvotedCards] = useState(false);
   // Eligibility is evaluated ONCE when initial loading completes and never re-checked.
   // This prevents newly-generated cards from re-triggering the prompt mid-session.
   const [resumeEligible, setResumeEligible] = useState(false);
@@ -63,31 +66,60 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     isLimitReached,
     cardsRemaining,
     bookmarkedCardIds,
+    cardRatings,
     infiniteMode,
     error,
     cardCount,
     fetchCards,
     markCardSeen,
     toggleBookmark,
+    rateCard,
     replaceCard,
     generateMore,
     setInfiniteMode,
     setCardCount,
   } = useStudySession(themeId);
 
-  const currentCardId = cards[currentCardIndex]?.id;
+  useEffect(() => {
+    const savedPreference = window.localStorage.getItem(HIDE_DOWNVOTED_STORAGE_KEY);
+    setHideDownvotedCards(savedPreference === 'true');
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(HIDE_DOWNVOTED_STORAGE_KEY, hideDownvotedCards ? 'true' : 'false');
+  }, [hideDownvotedCards]);
+
+  const visibleCards = useMemo(
+    () => (hideDownvotedCards ? cards.filter((card) => cardRatings[card.id] !== -1) : cards),
+    [cards, cardRatings, hideDownvotedCards],
+  );
+
+  useEffect(() => {
+    if (visibleCards.length === 0) {
+      if (currentCardIndex !== 0) {
+        setCurrentCardIndex(0);
+      }
+      return;
+    }
+
+    if (currentCardIndex > visibleCards.length - 1) {
+      setCurrentCardIndex(visibleCards.length - 1);
+    }
+  }, [visibleCards.length, currentCardIndex]);
+
+  const currentCardId = visibleCards[currentCardIndex]?.id;
   const isCurrentCardBookmarked =
     currentCardId != null && bookmarkedCardIds.includes(currentCardId);
 
-  const handleRegenerateCard = async () => {
-    if (!currentCardId || !isOwner || isRegeneratingCard || isGenerating || isManualGenerating) {
+  const handleRegenerateCard = async (cardId: string) => {
+    if (!cardId || !isOwner || isRegeneratingCard || isGenerating || isManualGenerating) {
       return;
     }
 
     setIsRegeneratingCard(true);
     try {
-      const result = await studyApi.regenerateCard(currentCardId);
-      replaceCard(currentCardId, result.card, result.cardsRemaining);
+      const result = await studyApi.regenerateCard(cardId);
+      replaceCard(cardId, result.card, result.cardsRemaining);
       void refetchSubscription().catch(() => null);
 
       if (result.cardsRemaining === 0) {
@@ -119,11 +151,11 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   // Compute resume index: first card after the last seen card in deck order.
   // Kept as a live computation so "Continue" can always scroll to the right card.
   const resumeIndex = (() => {
-    if (seenCardIds.length === 0 || cards.length === 0) return 0;
+    if (seenCardIds.length === 0 || visibleCards.length === 0) return 0;
     const seenSet = new Set(seenCardIds);
     let lastSeenIdx = -1;
-    for (let i = 0; i < cards.length; i++) {
-      if (seenSet.has(cards[i].id)) lastSeenIdx = i;
+    for (let i = 0; i < visibleCards.length; i++) {
+      if (seenSet.has(visibleCards[i].id)) lastSeenIdx = i;
     }
     return lastSeenIdx + 1;
   })();
@@ -134,7 +166,10 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     if (isInitialLoading || resumeEvaluatedRef.current) return;
     resumeEvaluatedRef.current = true;
     setResumeEligible(
-      cards.length > 0 && seenCardIds.length > 0 && resumeIndex > 0 && resumeIndex < cards.length,
+      visibleCards.length > 0 &&
+        seenCardIds.length > 0 &&
+        resumeIndex > 0 &&
+        resumeIndex < visibleCards.length,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialLoading]); // intentionally only react to loading completion, not card/seen changes
@@ -143,7 +178,7 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   const showResumePrompt = resumeEligible && !resumeDismissed;
 
   const done =
-    !infiniteMode && cards.length > 0 && !isGenerating && !isManualGenerating && session?.id;
+    !infiniteMode && visibleCards.length > 0 && !isGenerating && !isManualGenerating && session?.id;
 
   useEffect(() => {
     if (!session?.id) return;
@@ -239,26 +274,26 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
   }, [session?.id]);
 
   // Auto-scroll to newly generated cards if the user is at the bottom (viewing the loader)
-  const prevCardCountRef = useRef(cards.length);
+  const prevCardCountRef = useRef(visibleCards.length);
   // Keep a ref to cards.length so the scroll handler can clamp the index
   // without needing cards in its dependency array (which would re-register
   // the listener on every card append).
-  const cardCountRef = useRef(cards.length);
+  const cardCountRef = useRef(visibleCards.length);
   // Keep a ref to the cards array so the scrollend handler can read card IDs
   // without forming a stale closure.
-  const cardsRef = useRef(cards);
+  const cardsRef = useRef(visibleCards);
   // Keep a ref to markCardSeen so the scrollend handler doesn't need it as a dep.
   const markCardSeenRef = useRef(markCardSeen);
   // Update synchronously during render (safe for refs — no re-render triggered)
 
-  cardCountRef.current = cards.length;
-  cardsRef.current = cards;
+  cardCountRef.current = visibleCards.length;
+  cardsRef.current = visibleCards;
   markCardSeenRef.current = markCardSeen;
   useEffect(() => {
-    if (cards.length > prevCardCountRef.current) {
+    if (visibleCards.length > prevCardCountRef.current) {
       // If user was viewing the loader (index == prevLength) or further
       if (currentCardIndex >= prevCardCountRef.current - 1) {
-        const firstNewCard = cards[prevCardCountRef.current];
+        const firstNewCard = visibleCards[prevCardCountRef.current];
         if (firstNewCard) {
           setTimeout(() => {
             const el = document.querySelector(`[data-card-id="${firstNewCard.id}"]`);
@@ -269,29 +304,40 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         }
       }
     }
-    prevCardCountRef.current = cards.length;
-  }, [cards, currentCardIndex]);
+    prevCardCountRef.current = visibleCards.length;
+  }, [visibleCards, currentCardIndex]);
 
   useEffect(() => {
-    if (!infiniteMode || !session?.id || cards.length === 0 || isGenerating || isLimitReached)
+    if (
+      !infiniteMode ||
+      !session?.id ||
+      visibleCards.length === 0 ||
+      isGenerating ||
+      isLimitReached
+    )
       return;
 
-    const cardsLeft = cards.length - currentCardIndex;
-    const alreadyTriggeredForBatch = triggerFetchedAtRef.current === cards.length;
+    const cardsLeft = visibleCards.length - currentCardIndex;
+    const alreadyTriggeredForBatch = triggerFetchedAtRef.current === visibleCards.length;
 
     if (cardsLeft <= 2 && !alreadyTriggeredForBatch) {
-      triggerFetchedAtRef.current = cards.length;
+      triggerFetchedAtRef.current = visibleCards.length;
       void fetchCards({ triggerGeneration: true });
     }
   }, [
     currentCardIndex,
-    cards.length,
+    visibleCards.length,
     infiniteMode,
     session?.id,
     isGenerating,
     isLimitReached,
     fetchCards,
   ]);
+
+  const handleToggleHideDownvoted = useCallback(() => {
+    setHideDownvotedCards((previous) => !previous);
+    setCurrentCardIndex(0);
+  }, []);
 
   if (error) {
     const errorKey = STUDY_ERROR_KEYS[error];
@@ -325,14 +371,14 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         <div className="text-center px-6 max-w-sm">
           <p className="mb-2 text-lg font-semibold">{t('study.resumeTitle')}</p>
           <p className="mb-6 text-sm text-muted-foreground">
-            {t('study.resumePrompt', { count: seenCardIds.length, total: cards.length })}
+            {t('study.resumePrompt', { count: seenCardIds.length, total: visibleCards.length })}
           </p>
           <div className="flex flex-col gap-3">
             <Button
               onClick={() => {
                 setResumeDismissed(true);
                 setTimeout(() => {
-                  const card = cards[resumeIndex];
+                  const card = visibleCards[resumeIndex];
                   if (card) {
                     document
                       .querySelector(`[data-card-id="${card.id}"]`)
@@ -352,10 +398,28 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
     );
   }
 
+  if (cards.length > 0 && hideDownvotedCards && visibleCards.length === 0) {
+    return (
+      <main className="fixed inset-0 z-50 flex items-center justify-center bg-background px-6">
+        <div className="text-center max-w-sm">
+          <ThumbsDown className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+          <p className="mb-2 text-lg font-semibold">{t('study.hiddenCardsTitle')}</p>
+          <p className="mb-6 text-sm text-muted-foreground">{t('study.hiddenCardsDescription')}</p>
+          <div className="flex flex-col gap-3">
+            <Button onClick={handleToggleHideDownvoted}>{t('study.showDownvotedCards')}</Button>
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
+              {t('navigation.back')}
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="fixed inset-0 z-50 overflow-y-scroll snap-y snap-mandatory bg-background">
       <StudyBottomBar
-        totalCards={cards.length}
+        totalCards={visibleCards.length}
         currentCardIndex={currentCardIndex}
         isGenerating={isGenerating}
         isManualGenerating={isManualGenerating}
@@ -375,9 +439,8 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
             void toggleBookmark(currentCardId);
           }
         }}
-        canRegenerate={isOwner && !isLimitReached && cards.length > 0}
-        isRegeneratingCard={isRegeneratingCard}
-        onRegenerate={() => void handleRegenerateCard()}
+        hideDownvotedCards={hideDownvotedCards}
+        onToggleHideDownvoted={handleToggleHideDownvoted}
         canGenerate={isOwner && !isLimitReached}
         cardsRemaining={isOwner ? cardsRemaining : null}
         onScrollToCard={(index) => {
@@ -403,9 +466,62 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         />
       )}
 
-      {cards.map((card) => (
+      {visibleCards.map((card) => (
         <div key={card.id} className="w-full min-h-screen snap-start snap-always">
-          <InfoCard card={card} fontSize={fontSize} />
+          <InfoCard
+            card={card}
+            fontSize={fontSize}
+            actions={
+              <>
+                <button
+                  type="button"
+                  onClick={() => void rateCard(card.id, 1)}
+                  title={t('study.rateHelpful')}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                    (cardRatings[card.id] ?? 0) === 1
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                  }`}
+                >
+                  <ThumbsUp
+                    className={`h-3.5 w-3.5 ${(cardRatings[card.id] ?? 0) === 1 ? 'fill-current' : ''}`}
+                  />
+                  <span>{t('study.rateHelpfulShort')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void rateCard(card.id, -1)}
+                  title={t('study.rateNotHelpful')}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                    (cardRatings[card.id] ?? 0) === -1
+                      ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                      : 'border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                  }`}
+                >
+                  <ThumbsDown
+                    className={`h-3.5 w-3.5 ${(cardRatings[card.id] ?? 0) === -1 ? 'fill-current' : ''}`}
+                  />
+                  <span>{t('study.rateNotHelpfulShort')}</span>
+                </button>
+
+                {isOwner && !isLimitReached ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleRegenerateCard(card.id)}
+                    disabled={isRegeneratingCard}
+                    title={t('study.regenerateCard')}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles
+                      className={`h-3.5 w-3.5 ${isRegeneratingCard ? 'animate-pulse' : ''}`}
+                    />
+                    <span>{t('study.regenerateCard')}</span>
+                  </button>
+                ) : null}
+              </>
+            }
+          />
         </div>
       ))}
 

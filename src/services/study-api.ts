@@ -6,6 +6,7 @@
 import type { Database } from '@/lib/supabase/types';
 
 type Card = Database['public']['Tables']['cards']['Row'];
+export type CardRatingValue = -1 | 0 | 1;
 
 export interface BookmarkListItem {
   cardId: string;
@@ -28,6 +29,10 @@ export interface CardsResponse {
 export interface RegenerateCardResponse {
   card: Card;
   cardsRemaining: number;
+}
+
+export interface CardRatingsResponse {
+  ratings: Record<string, CardRatingValue>;
 }
 
 interface FetchCardsOptions {
@@ -113,6 +118,22 @@ class StudyApi {
     return data.cardIds;
   }
 
+  async fetchCardRatings(
+    themeId: string,
+    signal?: AbortSignal,
+  ): Promise<Record<string, CardRatingValue>> {
+    const res = await fetch(`/api/cards/ratings?themeId=${encodeURIComponent(themeId)}`, {
+      signal,
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch card ratings');
+    }
+
+    const data = (await res.json()) as CardRatingsResponse;
+    return data.ratings;
+  }
+
   async fetchBookmarks(signal?: AbortSignal): Promise<BookmarkListItem[]> {
     const res = await fetch('/api/bookmarks', { signal });
 
@@ -160,6 +181,27 @@ class StudyApi {
     }
 
     return (await res.json()) as RegenerateCardResponse;
+  }
+
+  async rateCard(
+    cardId: string,
+    rating: CardRatingValue,
+    signal?: AbortSignal,
+  ): Promise<CardRatingValue> {
+    const res = await fetch(`/api/cards/${cardId}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating }),
+      signal,
+    });
+
+    if (!res.ok) {
+      const data = (await res.json()) as { error?: string; message?: string };
+      throw new Error(data.error || data.message || 'Failed to rate card');
+    }
+
+    const data = (await res.json()) as { rating: CardRatingValue };
+    return data.rating;
   }
 }
 
