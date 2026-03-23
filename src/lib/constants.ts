@@ -14,6 +14,10 @@ export const MAX_CARDS_PER_SESSION_FETCH = 100;
 /** Show a "running low" toast warning when this many cards remain in the billing period. */
 export const LOW_CARDS_THRESHOLD = 5;
 
+// ─── UI / Toast ─────────────────────────────────────────────────────────────
+/** Auto-dismiss duration for all toasts (ms). */
+export const TOAST_DURATION_MS = 4000;
+
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 /** Max generation requests per user per minute. */
 export const RATE_LIMIT_GENERATE_RPM = 10;

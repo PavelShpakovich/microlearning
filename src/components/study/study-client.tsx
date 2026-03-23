@@ -8,6 +8,7 @@ import { InfoCard } from '@/components/info-card';
 import { useStudySession } from '@/hooks/use-study-session';
 import { useCardFontSize } from '@/hooks/use-card-font-size';
 import { useSubscription } from '@/hooks/use-subscription';
+import { TOAST_DURATION_MS } from '@/lib/constants';
 import { StudyBottomBar } from '@/components/study/study-bottom-bar';
 import {
   StudyDoneScreen,
@@ -93,7 +94,8 @@ export function StudyClient({ themeId, isOwner = true }: StudyClientProps) {
         toast.error(t('messages.generationLimitReached'));
       }
 
-      toast.success(t('messages.cardRegenerated'), { duration: 4000 });
+      const toastId = toast.success(t('messages.cardRegenerated'));
+      setTimeout(() => toast.dismiss(toastId), TOAST_DURATION_MS);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg === 'GENERATION_LIMIT_REACHED') {

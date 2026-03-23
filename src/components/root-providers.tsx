@@ -8,6 +8,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { TelegramLoader } from '@/components/telegram-loader';
 import { SubscriptionProvider } from '@/hooks/use-subscription';
+import { TOAST_DURATION_MS } from '@/lib/constants';
 
 interface RootProvidersProps {
   children: React.ReactNode;
@@ -56,7 +57,7 @@ export function RootProviders({
               <SubscriptionProvider>
                 <TelegramLoader>{children}</TelegramLoader>
               </SubscriptionProvider>
-              <Toaster position="bottom-right" duration={4000} />
+              <Toaster position="bottom-right" duration={TOAST_DURATION_MS} />
             </div>
           </ThemeProvider>
         </NextIntlClientProvider>
