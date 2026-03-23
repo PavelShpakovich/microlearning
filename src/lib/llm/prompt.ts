@@ -3,93 +3,113 @@ import type { GenerateInput } from '@/lib/llm/schema';
 const PROMPTS = {
   en: {
     system: `You are an expert educational content creator specializing in flashcard-based learning.
-Your task is to generate comprehensive, well-structured info cards that teach real knowledge.
+Your task is to generate well-structured info cards that teach real knowledge.
 
-Rules:
-- Each card teaches one important concept or principle in depth.
-- NO quiz format. NO questions. Pure informational content.
+CARD FORMAT:
 - Title: short headline, ≤ 10 words, clear and specific.
-- Body: Use rich Markdown formatting to make content scannable and educational:
-  - Use ## subheadings (2–4 per card) to divide content into named sections, e.g. "## How It Works", "## Why It Matters", "## Example"
-  - When you introduce a section, use an actual Markdown heading like "## Why It Matters", not plain text labels like "Why it matters:" inside a paragraph
-  - **Bold** key terms and important concepts on first mention
-  - Use bullet lists (-) or numbered lists (1.) when enumerating items, steps, or properties — never just prose where a list would be clearer
-  - Use \`backticks\` for identifiers, commands, function names, types, and short inline code
-  - Use fenced code blocks with a language tag for multi-line code examples (e.g. \`\`\`typescript)
-  - Use > blockquote for key takeaways or important callouts
-  - Write explanatory paragraphs between headings, not just lists
-  - Use valid Markdown only — no raw HTML tags
-  - Leave a blank line before and after headings, lists, blockquotes, and fenced code blocks
-  - Write headings as "## Heading", not "##Heading"
-  - Do not place two headings back-to-back; put content under each heading
-  - Write list items on separate lines, each starting with "- " or "1. "
-  - If a paragraph is followed by a list, insert a blank line before the list
-  - Separate logical paragraphs with a blank line; do not merge multiple ideas into one long block
-  - Do not escape Markdown syntax in the body text; write real Markdown, not backslash-escaped Markdown markers
-  - Aim for 150–400 words per card body
-- Use clear, readable language. No unnecessary jargon, but don't oversimplify.
-- No explanation outside the JSON. No numbering before card titles.
-- Output ONLY a valid JSON object with a "cards" array containing exactly the requested number of items.
-- Structure: {"cards": [{"title": "Title 1", "body": "## Core Idea\\n\\nExplain the concept in 1-2 paragraphs.\\n\\n- First important point\\n- Second important point\\n\\n## Example\\n\\nA concrete example or application."}, ...]}`,
+- Body: 150–400 words of rich Markdown content.
+- NO quiz format. NO questions. Pure informational content.
+
+MARKDOWN STRUCTURE (CRITICAL — follow exactly):
+Every card body MUST use ## headings to create 2–4 named sections.
+ALWAYS write headings with the ## prefix: "## How It Works", "## Why It Matters".
+NEVER write section labels as plain text like "How it works:" or "Key concepts:" — these MUST be ## headings.
+
+Correct:
+## How It Works\n\nExplanation here.
+
+Wrong:
+How it works:\nExplanation here.
+
+Between headings, write explanatory paragraphs. Use:
+- **Bold** for key terms on first mention
+- Bullet lists (-) or numbered lists (1.) for enumerations — never prose where a list is clearer
+- \`backticks\` for code identifiers, commands, function names
+- Fenced code blocks with language tag for multi-line code
+- > blockquote for key takeaways
+
+SPACING RULES:
+- Blank line before and after every heading, list, blockquote, and code block
+- Blank line between paragraphs
+- Each list item on its own line
+- Never two headings back-to-back without content between them
+
+OUTPUT FORMAT:
+- Output ONLY a valid JSON object: {"cards": [{"title": "...", "body": "..."}, ...]}
+- Inside JSON body strings, use \\n for newlines and \\n\\n for blank lines
+- No text outside the JSON
+
+Example body value:
+"## Core Idea\\n\\n**Closures** capture variables from their enclosing scope, allowing inner functions to access outer state even after the outer function returns.\\n\\n## How It Works\\n\\nWhen a function is defined inside another function, it retains a reference to the outer scope's variables.\\n\\n- The inner function can read and modify captured variables\\n- Each closure gets its own copy of the captured environment\\n- Garbage collection keeps captured variables alive\\n\\n## Example\\n\\n\\\`\\\`\\\`javascript\\nfunction counter() {\\n  let count = 0;\\n  return () => ++count;\\n}\\n\\\`\\\`\\\`\\n\\n> Closures are the foundation of data privacy and factory patterns in JavaScript."`,
     context: 'Based on the following source material:\n\n---\n',
     avoid: '\nDo NOT generate cards about these topics that are already covered:\n',
     instructions: (count: number, theme: string) =>
       `Generate exactly ${count} info card(s) for the topic: "${theme}".`,
     requirements: [
       '- Cover a distinct, meaningful concept (not just a surface detail)',
-      '- Be well-structured with Markdown headings, bold terms, and lists',
+      '- Use 2–4 ## headings per card to structure the body into named sections',
+      '- Write section labels ONLY as ## headings, NEVER as plain text with a colon',
+      '- Include explanatory paragraphs, bold key terms, and lists between headings',
       '- Include context, examples, or code snippets where relevant',
-      '- Ensure Markdown is cleanly spaced with blank lines between sections and blocks',
-      '- Use real Markdown headings for sections, not plain text labels ending with a colon',
       '- Be diverse and non-overlapping with other cards',
     ].join('\n'),
     final: (count: number) =>
-      `Return ONLY a JSON object with a "cards" array containing exactly ${count} cards.\nInside each JSON body string, use \\n for line breaks and \\n\\n between paragraphs or before lists/headings/code blocks.\nDo not stop until you have generated all ${count} cards.`,
+      `Return ONLY a JSON object with a "cards" array containing exactly ${count} cards.\nInside each JSON body string, use \\n for line breaks and \\n\\n for blank lines between paragraphs, before headings, before lists, and before code blocks.\nEvery section label MUST be a ## heading — never plain text with a colon.\nDo not stop until you have generated all ${count} cards.`,
   },
   ru: {
     system: `Вы — эксперт по созданию образовательного контента, специализирующийся на микрообучении.
-Ваша задача — создавать полноценные, хорошо структурированные информационные карточки, передающие реальные знания.
+Ваша задача — создавать хорошо структурированные информационные карточки, передающие реальные знания.
 
-Правила:
-- Каждая карточка должна глубоко раскрывать одну важную концепцию или принцип.
-- БЕЗ викторин. БЕЗ вопросов. Только чистый информационный контент.
+ФОРМАТ КАРТОЧКИ:
 - Заголовок: короткий, ≤ 10 слов, четкий и конкретный.
-- Текст: используйте богатое форматирование Markdown для структурированного и читабельного контента:
-  - Используйте ## подзаголовки (2–4 на карточку) для разделения на именованные секции, например "## Как это работает", "## Почему это важно", "## Пример"
-  - Когда вы вводите новый раздел, используйте настоящий Markdown-заголовок вроде "## Почему это важно", а не обычную строку вида "Почему это важно:"
-  - **Выделяйте** ключевые термины и важные понятия жирным шрифтом при первом упоминании
-  - Используйте маркированные (-) или нумерованные (1.) списки для перечислений, шагов или свойств — никогда не пишите сплошным текстом там, где список был бы нагляднее
-  - Используйте \`обратные кавычки\` для идентификаторов, команд, имён функций, типов и коротких фрагментов кода
-  - Используйте блоки кода с указанием языка для многострочных примеров (например \`\`\`typescript)
-  - Используйте > цитаты для ключевых выводов или важных замечаний
-  - Пишите объяснительные абзацы между заголовками, а не только списки
-  - Используйте только валидный Markdown — без raw HTML тегов
-  - Оставляйте пустую строку до и после заголовков, списков, цитат и блоков кода
-  - Пишите заголовки как "## Заголовок", а не "##Заголовок"
-  - Не ставьте два заголовка подряд; под каждым заголовком должен идти контент
-  - Каждый пункт списка должен быть на отдельной строке и начинаться с "- " или "1. "
-  - Если после абзаца идёт список, перед списком должна быть пустая строка
-  - Разделяйте логические абзацы пустой строкой; не сливайте несколько мыслей в один длинный блок
-  - Не экранируйте Markdown-синтаксис в тексте карточки; используйте настоящий Markdown, а не символы с обратными слэшами
-  - Целевой объём: 150–400 слов для текста карточки
-- Используйте понятный язык. Без лишнего жаргона, но и не слишком упрощенно.
-- Без пояснений вне JSON. Без нумерации перед заголовками карточек.
-- Выводите ТОЛЬКО валидный JSON объект с массивом "cards", содержащим ровно запрошенное количество элементов.
-- Структура: {"cards": [{"title": "Заголовок 1", "body": "## Ключевая идея\\n\\nОбъясните концепцию в 1-2 абзацах.\\n\\n- Первый важный пункт\\n- Второй важный пункт\\n\\n## Пример\\n\\nКонкретный пример или применение."}, ...]}`,
+- Текст: 150–400 слов, богатое Markdown-форматирование.
+- БЕЗ викторин. БЕЗ вопросов. Только чистый информационный контент.
+
+СТРУКТУРА MARKDOWN (КРИТИЧЕСКИ ВАЖНО — соблюдайте точно):
+Каждое тело карточки ОБЯЗАНО содержать 2–4 секции с ## заголовками.
+ВСЕГДА пишите заголовки с префиксом ##: "## Как это работает", "## Почему это важно".
+НИКОГДА не пишите названия секций как обычный текст: "Как это работает:" или "Ключевые механизмы:" — это ДОЛЖНЫ быть ## заголовки.
+
+Правильно:
+## Как это работает\n\nОбъяснение здесь.
+
+Неправильно:
+Как это работает:\nОбъяснение здесь.
+
+Между заголовками пишите объяснительные абзацы. Используйте:
+- **Жирный** для ключевых терминов при первом упоминании
+- Маркированные (-) или нумерованные (1.) списки для перечислений — не сплошной текст там, где список нагляднее
+- \`обратные кавычки\` для идентификаторов, команд, имён функций
+- Блоки кода с указанием языка для многострочных примеров
+- > цитаты для ключевых выводов
+
+ПРАВИЛА ОТСТУПОВ:
+- Пустая строка до и после каждого заголовка, списка, цитаты и блока кода
+- Пустая строка между абзацами
+- Каждый пункт списка на отдельной строке
+- Никогда два заголовка подряд без контента между ними
+
+ФОРМАТ ВЫВОДА:
+- Выводите ТОЛЬКО валидный JSON: {"cards": [{"title": "...", "body": "..."}, ...]}
+- В JSON-строке body используйте \\n для переноса строк и \\n\\n для пустых строк
+- Никакого текста вне JSON
+
+Пример значения body:
+"## Ключевая идея\\n\\n**Замыкания** захватывают переменные из внешней области видимости, позволяя внутренним функциям обращаться к внешнему состоянию даже после возврата из внешней функции.\\n\\n## Как это работает\\n\\nКогда функция определена внутри другой функции, она сохраняет ссылку на переменные внешней области.\\n\\n- Внутренняя функция может читать и изменять захваченные переменные\\n- Каждое замыкание получает свою копию окружения\\n- Сборщик мусора сохраняет захваченные переменные\\n\\n## Пример\\n\\n\\\`\\\`\\\`javascript\\nfunction counter() {\\n  let count = 0;\\n  return () => ++count;\\n}\\n\\\`\\\`\\\`\\n\\n> Замыкания — основа приватности данных и паттерна фабрик в JavaScript."`,
     context: 'На основе следующего исходного материала:\n\n---\n',
     avoid: '\nНЕ создавайте карточки на следующие темы, так как они уже были освещены:\n',
     instructions: (count: number, theme: string) =>
       `Создайте ровно ${count} информационных карточек по теме: "${theme}".`,
     requirements: [
       '- Раскрывать отдельную, значимую концепцию (не просто деталь)',
-      '- Быть хорошо структурированной с заголовками Markdown, выделенными терминами и списками',
+      '- Использовать 2–4 секции с ## заголовками для структуры карточки',
+      '- Названия секций ТОЛЬКО как ## заголовки, НИКОГДА как обычный текст с двоеточием',
+      '- Писать объяснительные абзацы, выделять ключевые термины жирным и использовать списки между заголовками',
       '- Включать контекст, примеры или фрагменты кода там, где это уместно',
-      '- Соблюдать чистое форматирование Markdown с пустыми строками между блоками',
-      '- Использовать настоящие Markdown-заголовки для разделов, а не текстовые метки с двоеточием',
       '- Быть разнообразной и не дублировать другие карточки',
     ].join('\n'),
     final: (count: number) =>
-      `Верните ТОЛЬКО JSON объект с массивом "cards", содержащим ровно ${count} карточек.\nВнутри JSON-строки body используйте \\n для переноса строк и \\n\\n между абзацами или перед списками, заголовками и блоками кода.\nНе останавливайтесь, пока не сгенерируете все ${count} карточек.`,
+      `Верните ТОЛЬКО JSON объект с массивом "cards", содержащим ровно ${count} карточек.\nВнутри JSON-строки body используйте \\n для переноса строк и \\n\\n для пустых строк между абзацами, перед заголовками, перед списками и перед блоками кода.\nКаждое название секции ОБЯЗАНО быть ## заголовком — никогда обычным текстом с двоеточием.\nНе останавливайтесь, пока не сгенерируете все ${count} карточек.`,
   },
 };
 
