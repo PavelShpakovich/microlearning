@@ -249,8 +249,9 @@ function PlanBadge({ plan }: { plan: string }) {
 }
 
 function formatUserIdentifier(user: AdminUser): string {
+  if (user.email) return user.email;
   if (user.telegramId) return `ID: ${user.telegramId}`;
-  return user.email ?? user.displayName;
+  return user.displayName;
 }
 
 function VerificationBadge({ user }: { user: AdminUser }) {
