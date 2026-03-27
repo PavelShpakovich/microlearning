@@ -53,7 +53,7 @@ export default async function PrivacyPage() {
               </div>
             ))}
 
-            <div className="mb-8">
+            {/* <div className="mb-8">
               <h2 className="text-xl font-semibold mb-3">{t('section10Title')}</h2>
               <p className="text-muted-foreground leading-relaxed mb-2">{t('section10Body')}</p>
               <a
@@ -62,7 +62,7 @@ export default async function PrivacyPage() {
               >
                 {supportEmail}
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

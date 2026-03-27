@@ -29,7 +29,7 @@ export default async function TermsPage() {
     { title: t('section9Title'), body: t('section9Body') },
     { title: t('section10Title'), body: t('section10Body') },
     { title: t('section11Title'), body: t('section11Body') },
-    { title: t('section12Title'), body: t('section12Body') },
+    // { title: t('section12Title'), body: t('section12Body') },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default async function TermsPage() {
               </div>
             ))}
 
-            <div className="mb-8">
+            {/* <div className="mb-8">
               <h2 className="text-xl font-semibold mb-3">{t('section13Title')}</h2>
               <p className="text-muted-foreground leading-relaxed mb-2">{t('section13Body')}</p>
               <a
@@ -65,7 +65,7 @@ export default async function TermsPage() {
               >
                 {supportEmail}
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

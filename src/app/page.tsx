@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { LandingFooter } from '@/components/layout/landing-footer';
 import { Accordion } from '@/components/ui/accordion';
-import { Upload, Sparkles, BrainCircuit, MessageSquare, Clock3 } from 'lucide-react';
+import { Upload, Sparkles, BrainCircuit, MessageSquare } from 'lucide-react';
 import { HeroSection } from '@/components/landing/hero-section';
 import { SectionHeader } from '@/components/landing/section-header';
 import { FeatureCard } from '@/components/landing/feature-card';
@@ -124,7 +124,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-background">
+      {/* <section className="py-20 px-4 bg-background">
         <div className="max-w-7xl mx-auto">
           <SectionHeader
             title={showPaidInformation ? t('pricingTitle') : t('comingSoonTitle')}
@@ -152,7 +152,7 @@ export default async function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-3xl mx-auto">
