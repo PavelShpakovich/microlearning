@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
-export type AccountIdentityProvider = 'supabase' | 'telegram' | 'webpay';
+export type AccountIdentityProvider = 'supabase' | 'telegram';
 
 interface AccountIdentityRow {
   user_id: string;
@@ -23,22 +23,7 @@ export async function resolveUserIdByTelegramId(telegramId: string): Promise<str
   if (identity?.user_id) {
     return identity.user_id;
   }
-
-  const { data: profile, error: profileError } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('telegram_id', telegramId)
-    .maybeSingle();
-
-  if (profileError) {
-    logger.warn(
-      { profileError, telegramId },
-      'account-identities: fallback profile lookup failed for telegram identity',
-    );
-    return null;
-  }
-
-  return profile?.id ?? null;
+  return null;
 }
 
 export async function ensureTelegramIdentityLink(
@@ -74,19 +59,6 @@ export async function ensureTelegramIdentityLink(
     if (insertError) {
       throw insertError;
     }
-  }
-
-  const { error: profileUpdateError } = await supabaseAdmin
-    .from('profiles')
-    .update({ telegram_id: telegramId })
-    .eq('id', userId)
-    .or(`telegram_id.is.null,telegram_id.eq.${telegramId}`);
-
-  if (profileUpdateError) {
-    logger.warn(
-      { profileUpdateError, userId, telegramId },
-      'account-identities: failed to sync legacy telegram_id column',
-    );
   }
 }
 
@@ -153,16 +125,5 @@ export async function getTelegramIdForUser(userId: string): Promise<string | nul
     return identity.provider_user_id;
   }
 
-  const { data: profile, error: profileError } = await supabaseAdmin
-    .from('profiles')
-    .select('telegram_id')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (profileError) {
-    logger.warn({ profileError, userId }, 'account-identities: fallback profile read failed');
-    return null;
-  }
-
-  return profile?.telegram_id ?? null;
+  return null;
 }

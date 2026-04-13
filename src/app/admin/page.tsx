@@ -8,13 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -22,7 +15,6 @@ import {
   Trash2,
   Bot,
   Users,
-  CreditCard,
   LayoutGrid,
 } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
@@ -31,17 +23,6 @@ import { toast } from 'sonner';
 import { AdminTableSkeleton } from '@/components/skeletons';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { adminApi, type AdminUser, type AdminAnalytics } from '@/services/admin-api';
-import { areSubscriptionsEnabled, isPaidInformationVisible } from '@/lib/feature-flags';
-
-const SHOW_PAID_INFO = areSubscriptionsEnabled() && isPaidInformationVisible();
-
-function formatByn(amountMinor: number, currency: string) {
-  return new Intl.NumberFormat('ru-BY', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amountMinor / 100);
-}
 
 // ---------------------------------------------------------------------------
 // Analytics Card
@@ -89,14 +70,6 @@ function AnalyticsCard() {
     void load();
   }, [load]);
 
-  const planOrder = ['free', 'basic', 'pro', 'max'] as const;
-  const planColors: Record<string, string> = {
-    free: 'bg-gray-200',
-    basic: 'bg-blue-400',
-    pro: 'bg-purple-400',
-    max: 'bg-amber-400',
-  };
-
   return (
     <Card className="p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -117,64 +90,20 @@ function AnalyticsCard() {
       ) : data ? (
         <div className="space-y-4">
           {/* Primary stat tiles */}
-          <div
-            className={`grid grid-cols-1 sm:grid-cols-2 ${SHOW_PAID_INFO ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-3`}
-          >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2">
             <StatTile
               label={t('analyticsTotalUsers')}
               value={data.totalUsers.toLocaleString()}
               icon={Users}
               sub={t('analyticsNewThisMonth', { count: data.newUsersThisMonth })}
             />
-            {SHOW_PAID_INFO && (
-              <>
-                <StatTile
-                  label={t('analyticsPaidSubscribers')}
-                  value={data.activeSubscribers.toLocaleString()}
-                  icon={CreditCard}
-                  sub={
-                    data.cancelledInPeriod > 0
-                      ? t('analyticsCancelling', { count: data.cancelledInPeriod })
-                      : undefined
-                  }
-                />
-                <StatTile
-                  label={t('analyticsRevenueMonth')}
-                  value={formatByn(data.revenueThisMonthMinor, data.revenueCurrency)}
-                  icon={CreditCard}
-                  sub={t('analyticsAllTime', {
-                    amount: formatByn(data.totalRevenueMinor, data.revenueCurrency),
-                  })}
-                />
-              </>
-            )}
             <StatTile
-              label={t('analyticsCardsGenerated')}
-              value={data.cardsGeneratedThisMonth.toLocaleString()}
+              label={t('analyticsChartsCreated')}
+              value={data.chartsCreatedThisMonth.toLocaleString()}
               icon={LayoutGrid}
               sub={t('analyticsThisMonth')}
             />
           </div>
-
-          {/* Plan distribution */}
-          {SHOW_PAID_INFO && Object.keys(data.planDistribution).length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">{t('analyticsPlanDistribution')}</p>
-              <div className="flex flex-wrap gap-3">
-                {planOrder
-                  .filter((p) => data.planDistribution[p] != null)
-                  .map((plan) => (
-                    <div key={plan} className="flex items-center gap-1.5 text-sm">
-                      <span
-                        className={`inline-block w-2.5 h-2.5 rounded-full ${planColors[plan] ?? 'bg-gray-400'}`}
-                      />
-                      <span className="capitalize">{plan}</span>
-                      <span className="font-semibold">{data.planDistribution[plan]}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
         </div>
       ) : null}
     </Card>
@@ -231,23 +160,6 @@ function BotSetupCard() {
   );
 }
 
-const PLAN_LABELS: Record<string, string> = {
-  free: 'Free',
-  basic: 'Starter',
-  pro: 'Pro',
-  max: 'Max',
-};
-
-function PlanBadge({ plan }: { plan: string }) {
-  const colors: Record<string, string> = {
-    free: 'bg-gray-100 text-gray-800',
-    basic: 'bg-blue-100 text-blue-800',
-    pro: 'bg-purple-100 text-purple-800',
-    max: 'bg-amber-100 text-amber-800',
-  };
-  return <Badge className={colors[plan] || colors.free}>{PLAN_LABELS[plan] ?? plan}</Badge>;
-}
-
 function formatUserIdentifier(user: AdminUser): string {
   if (user.email) return user.email;
   if (user.telegramId) return `ID: ${user.telegramId}`;
@@ -281,25 +193,10 @@ interface UserRowProps {
 function useUserActions(user: AdminUser, onRefresh: () => void) {
   const t = useTranslations('admin');
   const [loading, setLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(user.plan);
   const [isAdminState, setIsAdminState] = useState(user.isAdmin);
   const [pendingAction, setPendingAction] = useState<
     'toggleAdmin' | 'resetUsage' | 'deleteUser' | null
   >(null);
-
-  const handlePlanChange = async (newPlan: string) => {
-    setLoading(true);
-    try {
-      await adminApi.changePlan(user.id, newPlan as 'free' | 'basic' | 'pro' | 'max');
-      setSelectedPlan(newPlan);
-      onRefresh();
-    } catch (error) {
-      console.error('Failed to change user plan', error);
-      toast.error(t('failedChangePlan'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const executeToggleAdmin = async () => {
     setLoading(true);
@@ -363,9 +260,7 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
   return {
     t,
     loading,
-    selectedPlan,
     isAdminState,
-    handlePlanChange,
     handleToggleAdmin: () => setPendingAction('toggleAdmin'),
     handleResetUsage: () => setPendingAction('resetUsage'),
     handleDeleteUser: () => setPendingAction('deleteUser'),
@@ -409,9 +304,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
   const {
     t,
     loading,
-    selectedPlan,
     isAdminState,
-    handlePlanChange,
     handleToggleAdmin,
     handleResetUsage,
     handleDeleteUser,
@@ -443,32 +336,18 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
             <p className="text-xs text-muted-foreground truncate">{user.displayName}</p>
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
-            {SHOW_PAID_INFO && <PlanBadge plan={selectedPlan} />}
             <VerificationBadge user={user} />
             {isAdminState && (
               <Badge variant="secondary" className="text-xs">
-                Admin
+                {t('colAdmin')}
               </Badge>
             )}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('colCardsUsed')}: {user.cardsUsed}/{user.cardsPerMonth}
+          {t('colChartsUsed')}: {user.chartsUsed}/{user.chartsPerPeriod}
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {SHOW_PAID_INFO && (
-            <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="basic">Starter</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="max">Max</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
           <AdminToggle
             t={t}
             loading={loading}
@@ -507,9 +386,7 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
   const {
     t,
     loading,
-    selectedPlan,
     isAdminState,
-    handlePlanChange,
     handleToggleAdmin,
     handleResetUsage,
     handleDeleteUser,
@@ -540,29 +417,9 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
         <td className="px-4 py-3">
           <VerificationBadge user={user} />
         </td>
-        {SHOW_PAID_INFO && (
-          <td className="px-4 py-3">
-            <PlanBadge plan={selectedPlan} />
-          </td>
-        )}
         <td className="px-4 py-3 text-sm text-center">
-          {user.cardsUsed}/{user.cardsPerMonth}
+          {user.chartsUsed}/{user.chartsPerPeriod}
         </td>
-        {SHOW_PAID_INFO && (
-          <td className="px-4 py-3">
-            <Select value={selectedPlan} onValueChange={handlePlanChange} disabled={loading}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="basic">Starter</SelectItem>
-                <SelectItem value="pro">Pro</SelectItem>
-                <SelectItem value="max">Max</SelectItem>
-              </SelectContent>
-            </Select>
-          </td>
-        )}
         <td className="px-4 py-3">
           <AdminToggle
             t={t}
@@ -668,13 +525,7 @@ function AdminTableContent() {
               <th className="px-4 py-3 text-left font-semibold">{t('colEmail')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colDisplayName')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colVerification')}</th>
-              {SHOW_PAID_INFO && (
-                <th className="px-4 py-3 text-left font-semibold">{t('colPlan')}</th>
-              )}
-              <th className="px-4 py-3 text-left font-semibold">{t('colCardsUsed')}</th>
-              {SHOW_PAID_INFO && (
-                <th className="px-4 py-3 text-left font-semibold">{t('colChangePlan')}</th>
-              )}
+              <th className="px-4 py-3 text-left font-semibold">{t('colChartsUsed')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colAdmin')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('resetUsage')}</th>
               <th className="px-4 py-3 text-left font-semibold">{t('colDelete')}</th>

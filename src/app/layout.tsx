@@ -19,12 +19,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const isRu = locale === 'ru';
 
-  const title = isRu
-    ? 'Clario — ИИ-генератор карточек для обучения'
-    : 'Clario — AI Flashcard Generator';
+  const title = isRu ? 'Clario — AI-аcтрологические разборы' : 'Clario — AI Astrology Readings';
   const description = isRu
-    ? 'Превратите любую тему, документ или URL в карточки для обучения за секунды. Учитесь умнее в Telegram.'
-    : 'Clario turns any topic, document, or URL into AI-generated study cards in seconds. Learn smarter inside Telegram.';
+    ? 'Создавайте натальные карты и получайте AI-разборы на основе структурированных астрологических данных.'
+    : 'Create natal charts and generate AI readings from structured astrology data.';
 
   return {
     metadataBase: new URL(APP_URL),
@@ -34,13 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     keywords: [
-      'AI flashcards',
-      'flashcard generator',
-      'study app',
-      'spaced learning',
-      'Telegram study bot',
-      'AI learning',
-      'knowledge cards',
+      'AI astrology',
+      'natal chart',
+      'astrology reading',
+      'compatibility reading',
+      'transit forecast',
+      'birth chart',
+      'AI spiritual guidance',
     ],
     authors: [{ name: 'Clario' }],
     creator: 'Clario',

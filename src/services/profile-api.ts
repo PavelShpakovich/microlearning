@@ -1,16 +1,6 @@
-// SubscriptionResponse type replaced with inline types
-
 type ProfileResponse = {
   display_name: string | null;
   telegram_id: string | null;
-};
-
-type SubscriptionResponse = {
-  planId: 'free' | 'basic' | 'pro' | 'max';
-  cardsLimit: number;
-  cardsGenerated: number;
-  cardsRemaining: number;
-  isPaid: boolean;
 };
 
 type TelegramLinkResponse = {
@@ -91,32 +81,6 @@ class ProfileApi {
     }
 
     return (await response.json()) as TelegramLinkResponse;
-  }
-
-  async getSubscription(): Promise<SubscriptionResponse> {
-    const response = await fetch('/api/profile/subscription');
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string; message?: string };
-      throw new Error(data.error || data.message || 'Failed to load subscription');
-    }
-    return (await response.json()) as SubscriptionResponse;
-  }
-
-  async requestPlanCheckout(planId: string): Promise<{ url: string }> {
-    const response = await fetch('/api/subscription/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId }),
-    });
-    if (!response.ok) {
-      const data = (await response.json()) as { error?: string; message?: string };
-      throw new Error(data.error || data.message || 'Failed to start plan checkout');
-    }
-    return (await response.json()) as { url: string };
-  }
-
-  async requestUpgrade(planId: string): Promise<{ url: string }> {
-    return this.requestPlanCheckout(planId);
   }
 
   async deleteAccount(): Promise<void> {

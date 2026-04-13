@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       if (text?.startsWith('/start')) {
         await sendTelegramMessage(
           chatId,
-          'Welcome to Clario!\n\nTransform long content into bite-sized flashcards and study them right here in Telegram.',
+          'Welcome to Clario!\n\nCreate natal charts, receive AI astrology readings, and revisit your saved insights right here in Telegram.',
         );
       } else if (text?.startsWith('/support')) {
         const supportEmail = env.SUPPORT_EMAIL || 'support@example.com';

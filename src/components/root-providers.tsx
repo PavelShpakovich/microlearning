@@ -7,7 +7,6 @@ import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { TelegramLoader } from '@/components/telegram-loader';
-import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { TOAST_DURATION_MS } from '@/lib/constants';
 
 interface RootProvidersProps {
@@ -54,9 +53,7 @@ export function RootProviders({
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone} now={now}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="flex flex-col flex-1">
-              <SubscriptionProvider>
-                <TelegramLoader>{children}</TelegramLoader>
-              </SubscriptionProvider>
+              <TelegramLoader>{children}</TelegramLoader>
               <Toaster position="bottom-right" duration={TOAST_DURATION_MS} />
             </div>
           </ThemeProvider>

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Clario — AI Flashcard Generator';
+export const alt = 'Clario — AI Astrology Readings';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -61,7 +61,7 @@ export default function Image() {
           lineHeight: 1.4,
         }}
       >
-        AI Flashcard Generator for Telegram
+        AI astrology readings for charts, insights, and follow-up guidance
       </div>
 
       {/* URL badge */}

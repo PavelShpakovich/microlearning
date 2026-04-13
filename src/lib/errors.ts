@@ -69,7 +69,7 @@ export class RateLimitError extends AppError {
   }
 }
 
-/** Thrown when a user hits a plan-based resource limit (e.g. theme count). */
+/** Thrown when a user hits a workspace resource limit (e.g. chart or reading quota). */
 export class PlanLimitError extends AppError {
   constructor(opts: AppErrorOptions) {
     super('PLAN_LIMIT_ERROR', opts);

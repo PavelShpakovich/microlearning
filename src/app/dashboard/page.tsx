@@ -1,17 +1,16 @@
 import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
 import { auth } from '@/auth';
-import { getUserThemes } from '@/lib/data-fetchers';
-import { DashboardClient } from '@/components/dashboard/dashboard-client';
-import { DashboardSkeleton } from '@/components/skeletons';
-import { WelcomeModal } from '@/components/common/welcome-modal';
+import { ChartsOverview } from '@/components/astrology/charts-overview';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const metadata = {
-  title: 'Dashboard',
-  description: 'Manage your learning themes and generate AI flashcards.',
+  title: 'Рабочее пространство',
+  description: 'Астрологическое рабочее пространство для карт и AI-разборов.',
 };
 
 export const dynamic = 'force-dynamic';
+
+const db = supabaseAdmin as any;
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,18 +19,16 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const { themes, publicThemes, cardCounts } = await getUserThemes(session.user.id);
+  const [{ data: charts }, { data: profile }] = await Promise.all([
+    db
+      .from('charts')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false }),
+    db.from('profiles').select('onboarding_completed_at').eq('id', session.user.id).maybeSingle(),
+  ]);
 
-  return (
-    <>
-      <WelcomeModal />
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardClient
-          initialThemes={themes}
-          publicThemes={publicThemes}
-          cardCounts={cardCounts}
-        />
-      </Suspense>
-    </>
-  );
+  const needsOnboarding = !profile?.onboarding_completed_at;
+
+  return <ChartsOverview charts={charts ?? []} needsOnboarding={needsOnboarding} />;
 }

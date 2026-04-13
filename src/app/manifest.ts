@@ -2,13 +2,14 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Clario — AI Flashcard Generator',
+    name: 'Clario — AI-астрологические разборы',
     short_name: 'Clario',
-    description: 'Turn any topic into AI-generated study cards in seconds. Learn inside Telegram.',
+    description:
+      'Создавайте натальные карты и получайте AI-разборы на основе структурированных астрологических данных.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#ffffff',
+    theme_color: '#f7f4ff',
     icons: [
       { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
       { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },

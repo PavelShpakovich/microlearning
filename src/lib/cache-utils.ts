@@ -48,25 +48,25 @@ export const CACHE_PRESETS = {
     tags: ['user-profile'],
   },
 
-  // Themes - changes on user action, user-specific → never CDN-cached
-  userThemes: {
+  // Charts - changes on user action, user-specific → never CDN-cached
+  userCharts: {
     private: true,
     maxAge: 60, // 1 minute
-    tags: ['user-themes'],
+    tags: ['user-charts'],
   },
 
-  // Study sessions - real-time data, user-specific → never CDN-cached
-  studySession: {
+  // Reading threads - user-specific and potentially updated frequently
+  readingThreads: {
     private: true,
     maxAge: 0,
-    tags: ['study-session'],
+    tags: ['reading-threads'],
   },
 
-  // Cards - frequently updated, user-specific → never CDN-cached
-  cards: {
+  // Readings - user-specific and updated after generation/retry flows
+  readings: {
     private: true,
     maxAge: 0,
-    tags: ['cards'],
+    tags: ['readings'],
   },
 
   // Public data - can be cached aggressively

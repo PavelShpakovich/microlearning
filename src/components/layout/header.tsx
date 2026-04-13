@@ -31,7 +31,8 @@ import {
   Globe,
   LayoutDashboard,
   Monitor,
-  Bookmark,
+  ScrollText,
+  Orbit,
 } from 'lucide-react';
 
 export function Header() {
@@ -44,9 +45,9 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  // In Telegram Mini App context, show settings bar on all pages except study and the /tg auth entry page
+  // In Telegram Mini App context, show the compact settings bar everywhere except the /tg auth entry page.
   if (isTelegramWebApp()) {
-    if (pathname.startsWith('/study') || pathname === '/tg') return null;
+    if (pathname === '/tg') return null;
     return <TgSettingsBar />;
   }
 
@@ -107,19 +108,19 @@ export function Header() {
                   onClick={() => setTheme('light')}
                   className={theme === 'light' ? 'bg-muted' : ''}
                 >
-                  <Sun className="w-4 h-4 mr-2" /> Light
+                  <Sun className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Светлая' : 'Light'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('dark')}
                   className={theme === 'dark' ? 'bg-muted' : ''}
                 >
-                  <Moon className="w-4 h-4 mr-2" /> Dark
+                  <Moon className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Тёмная' : 'Dark'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('system')}
                   className={theme === 'system' ? 'bg-muted' : ''}
                 >
-                  <Monitor className="w-4 h-4 mr-2" /> System
+                  <Monitor className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Системная' : 'System'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -195,19 +196,19 @@ export function Header() {
                   onClick={() => setTheme('light')}
                   className={theme === 'light' ? 'bg-muted' : ''}
                 >
-                  <Sun className="w-4 h-4 mr-2" /> Light
+                  <Sun className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Светлая' : 'Light'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('dark')}
                   className={theme === 'dark' ? 'bg-muted' : ''}
                 >
-                  <Moon className="w-4 h-4 mr-2" /> Dark
+                  <Moon className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Тёмная' : 'Dark'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('system')}
                   className={theme === 'system' ? 'bg-muted' : ''}
                 >
-                  <Monitor className="w-4 h-4 mr-2" /> System
+                  <Monitor className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Системная' : 'System'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -233,19 +234,25 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="flex items-center gap-2">
                     <LayoutDashboard className="w-4 h-4" />
-                    {t('navigation.dashboard')}
+                    {locale === 'ru' ? 'Рабочее пространство' : 'Workspace'}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/charts" className="flex items-center gap-2">
+                    <Orbit className="w-4 h-4" />
+                    {locale === 'ru' ? 'Карты' : 'Charts'}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/readings" className="flex items-center gap-2">
+                    <ScrollText className="w-4 h-4" />
+                    {locale === 'ru' ? 'Разборы' : 'Readings'}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
-                    {t('navigation.settings')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/bookmarks" className="flex items-center gap-2">
-                    <Bookmark className="w-4 h-4" />
-                    {t('navigation.bookmarks')}
+                    {locale === 'ru' ? 'Настройки' : 'Settings'}
                   </Link>
                 </DropdownMenuItem>
                 {user?.isAdmin && (

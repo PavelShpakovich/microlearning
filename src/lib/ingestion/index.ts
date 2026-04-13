@@ -1,6 +1,7 @@
-import type { DataSourceType } from '@/lib/constants';
 import { ValidationError } from '@/lib/errors';
 import type { ExtractedContent, ExtractorInput } from '@/lib/ingestion/extractor';
+
+type IngestionSourceType = 'text' | 'pdf' | 'docx' | 'url';
 
 // ─── Barrel re-exports ────────────────────────────────────────────────────────
 export type { ExtractedContent, ExtractorInput } from '@/lib/ingestion/extractor';
@@ -10,7 +11,7 @@ export type { ExtractedContent, ExtractorInput } from '@/lib/ingestion/extractor
  * All extractors are lazy-loaded to avoid bundling heavy libs unnecessarily.
  */
 export async function extractContent(
-  type: DataSourceType,
+  type: IngestionSourceType,
   input: ExtractorInput,
 ): Promise<ExtractedContent> {
   switch (type) {

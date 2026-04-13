@@ -10,8 +10,8 @@ import type { Database } from '@/lib/supabase/types';
  * from ever being bundled into the client. It bypasses RLS everywhere.
  *
  * Use only in:
- *  - API Routes that need admin-level writes (card generation, source processing)
- *  - The local generator script (generator/generate_flashcards.js)
+ *  - API routes that need admin-level writes
+ *  - server-side product workflows and maintenance scripts
  */
 export const supabaseAdmin = createClient<Database>(
   env.NEXT_PUBLIC_SUPABASE_URL,

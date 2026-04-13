@@ -8,7 +8,7 @@ import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
 /**
  * GET /api/admin/users
- * Paginated list of all users with their subscription info
+ * Paginated list of all users with their current workspace usage info.
  * Query params:
  *  - page: page number (default 1, 1-indexed)
  *  - perPage: items per page (default 20, max 100)
@@ -33,20 +33,20 @@ export const GET = withApiHandler(async (req: Request) => {
 
     if (usersError || !usersData) {
       logger.error({ error: usersError }, 'Failed to list users');
-      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+      return NextResponse.json({ error: 'Не удалось загрузить пользователей' }, { status: 500 });
     }
 
-    // Enrich each user with subscription and profile data
+    // Enrich each user with profile and workspace usage data.
     const enrichedUsers = await Promise.all(
       usersData.users.map(async (authUser) => {
         try {
           const email = isTelegramStubEmail(authUser.email) ? null : (authUser.email ?? null);
 
-          // Get profile and subscription info
+          // Get profile and current workspace access info
           const [profileRes, planRes, usageRes] = await Promise.all([
             supabaseAdmin
               .from('profiles')
-              .select('display_name, is_admin, telegram_id')
+              .select('display_name, is_admin')
               .eq('id', authUser.id)
               .single(),
             getUserPlan(authUser.id),
@@ -56,14 +56,14 @@ export const GET = withApiHandler(async (req: Request) => {
           return {
             id: authUser.id,
             email,
-            telegramId: profileRes.data?.telegram_id ?? null,
+            telegramId: null,
             displayName: profileRes.data?.display_name || 'Unknown',
             isAdmin: profileRes.data?.is_admin || false,
             isEmailVerified: Boolean(authUser.email_confirmed_at),
             plan: planRes.planId,
-            cardsPerMonth: planRes.cardsPerMonth,
-            cardsUsed: usageRes.cardsGenerated,
-            cardsRemaining: usageRes.cardsRemaining,
+            chartsPerPeriod: planRes.chartsPerPeriod,
+            chartsUsed: usageRes.chartsCreated,
+            chartsRemaining: usageRes.chartsRemaining,
             createdAt: authUser.created_at,
           };
         } catch (error) {
@@ -75,9 +75,9 @@ export const GET = withApiHandler(async (req: Request) => {
             isAdmin: false,
             isEmailVerified: Boolean(authUser.email_confirmed_at),
             plan: 'error',
-            cardsPerMonth: 0,
-            cardsUsed: 0,
-            cardsRemaining: 0,
+            chartsPerPeriod: 0,
+            chartsUsed: 0,
+            chartsRemaining: 0,
             createdAt: authUser.created_at,
           };
         }
@@ -94,6 +94,6 @@ export const GET = withApiHandler(async (req: Request) => {
     });
   } catch (error) {
     logger.error({ error }, 'Admin users endpoint error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
   }
 });

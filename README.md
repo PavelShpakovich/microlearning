@@ -1,24 +1,25 @@
-# Clario — AI Flashcard App
+# Clario — AI Astrology Workspace
 
-An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unified **LLM adapter**. Users primarily work in the web app, while the **Telegram Mini App** acts as a companion surface for quick access and study.
+An AI-powered astrology application built with **Next.js**, **Supabase**, and a structured reading pipeline that can run through **Qwen**, **Ollama**, or mock mode. Users work primarily in the web app, while the **Telegram Mini App** remains a companion surface for quick access.
+
+The canonical rewrite and product documentation now lives in [docs/pivots/ai-astrology-pivot.md](docs/pivots/ai-astrology-pivot.md).
 
 ---
 
 ## Tech Stack
 
-| Layer           | Tech                                                 |
-| --------------- | ---------------------------------------------------- |
-| Framework       | Next.js 15, App Router, TypeScript strict            |
-| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                     |
-| Session         | NextAuth.js (JWT cookie)                             |
-| LLM             | Groq / OpenAI / Anthropic / Ollama (unified adapter) |
-| Validation      | Zod                                                  |
-| Ingestion       | PDF, DOCX, URL scraping, plain text                  |
-| Payments        | WEBPAY preparation + feature-flagged subscriptions   |
-| i18n            | next-intl (English + Russian)                        |
-| Logging         | pino                                                 |
-| Tests           | Jest + Testing Library                               |
-| Deploy          | Vercel                                               |
+| Layer           | Tech                                                   |
+| --------------- | ------------------------------------------------------ |
+| Framework       | Next.js 16, App Router, TypeScript strict              |
+| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                       |
+| Session         | NextAuth.js (JWT cookie)                               |
+| LLM             | Qwen API, Ollama OpenAI-compatible endpoint, mock mode |
+| Validation      | Zod                                                    |
+| Ingestion       | Birth data intake, chart snapshots, structured prompts |
+| i18n            | next-intl (English + Russian)                          |
+| Logging         | pino                                                   |
+| Tests           | Jest + Testing Library                                 |
+| Deploy          | Vercel                                                 |
 
 ---
 
@@ -29,7 +30,7 @@ An AI-powered flashcard app built with **Next.js 15**, **Supabase**, and a unifi
 - Node.js 20+
 - A [Supabase](https://supabase.com) project
 - A Telegram bot (create via [@BotFather](https://t.me/BotFather))
-- An API key for at least one LLM provider (or run Ollama locally)
+- A Qwen API key or a local Ollama instance
 
 ### 2. Install dependencies
 
@@ -55,12 +56,18 @@ NEXTAUTH_SECRET=replace-with-strong-random-secret
 TELEGRAM_BOT_TOKEN=your-bot-token
 NEXT_PUBLIC_TELEGRAM_BOT_URL=https://t.me/your_bot
 
-# LLM — choose one: groq | openai | anthropic | ollama | mock
-LLM_PROVIDER=groq
-GROQ_API_KEY=gsk_...
+# LLM
+LLM_PROVIDER=qwen
+QWEN_API_KEY=your-qwen-key
+QWEN_MODEL=qwen-plus
+
+# Or use Ollama instead
+# LLM_PROVIDER=ollama
+# OLLAMA_BASE_URL=http://127.0.0.1:11434/v1
+# OLLAMA_MODEL=llama3.1
 ```
 
-> **`mock` provider** requires no API key — returns deterministic fake cards. Useful for local development and tests.
+> `mock` remains available for deterministic local development and tests.
 
 ### 4. Apply database migrations
 
@@ -68,11 +75,14 @@ GROQ_API_KEY=gsk_...
 # Install Supabase CLI if needed
 brew install supabase/tap/supabase
 
-# Push all migrations to your remote project
+# Reset a local database from the current astrology baseline
+supabase db reset
+
+# Or push the current baseline to a clean remote project
 supabase db push --db-url "postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres"
 ```
 
-Migrations are in `supabase/migrations/` and must be applied in order.
+The repository now keeps a single destructive baseline migration for the astrology product in `supabase/migrations/`. It is intended for a reset local database or a clean remote project.
 
 ### 5. Run the development server
 
@@ -81,6 +91,12 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Telegram remains available as a companion Mini App once the bot is configured.
+
+---
+
+## Documentation
+
+- [docs/pivots/ai-astrology-pivot.md](docs/pivots/ai-astrology-pivot.md) — single source of truth for rewrite status, product direction, backlog, architecture, and launch criteria
 
 ---
 
@@ -98,13 +114,10 @@ The app is **web-first with Telegram as companion**.
 ### Core Flow
 
 1. **Open the web app** or launch the Telegram companion Mini App.
-2. **Create a theme** — e.g. "TypeScript", "Spanish Vocabulary".
-3. **Add sources** — upload a PDF/DOCX, paste a URL, or enter text.
-4. **Study** — flashcards are AI-generated and served in sessions; more are generated on-demand when your queue runs low.
-
-### Subscriptions & Payments
-
-Plans are enforced server-side. Paid subscriptions and prices remain hidden behind feature flags until launch, while future billing is being prepared for **WEBPAY** in **BYN**.
+2. **Enter birth data** and complete onboarding for a chart profile.
+3. **Build a chart snapshot** from structured birth details.
+4. **Generate a reading** with the Qwen-based structured interpretation pipeline.
+5. **Return to saved charts and readings** from the dashboard.
 
 ---
 
@@ -128,28 +141,28 @@ npm run test:coverage # Jest with coverage report
 
 ---
 
-## LLM Providers
+## LLM Runtime
 
-Set `LLM_PROVIDER` in `.env.local`. Only the relevant API key is required.
+Set `LLM_PROVIDER` in `.env.local`.
 
-| `LLM_PROVIDER` | Required env var    | Notes                                                   |
-| -------------- | ------------------- | ------------------------------------------------------- |
-| `groq`         | `GROQ_API_KEY`      | Fast, free tier available                               |
-| `openai`       | `OPENAI_API_KEY`    | `OPENAI_MODEL` defaults to `gpt-4o-mini`                |
-| `anthropic`    | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` defaults to `claude-3-haiku-20240307` |
-| `ollama`       | `OLLAMA_BASE_URL`   | Run `ollama serve` locally; no cloud costs              |
-| `mock`         | _(none)_            | Deterministic fake cards; for tests & dev               |
+| `LLM_PROVIDER` | Required env var | Notes                                             |
+| -------------- | ---------------- | ------------------------------------------------- |
+| `qwen`         | `QWEN_API_KEY`   | Default hosted provider                           |
+| `ollama`       | `OLLAMA_MODEL`   | Local or self-hosted OpenAI-compatible endpoint   |
+| `mock`         | _(none)_         | Deterministic fake readings for tests & local dev |
 
 ---
 
-## Data Source Types
+## Domain Model
 
-| Type   | Input               | Notes                                 |
-| ------ | ------------------- | ------------------------------------- |
-| `text` | Paste raw text      | Simplest option                       |
-| `pdf`  | Upload `.pdf` file  | Max 4.5 MB                            |
-| `docx` | Upload `.docx` file | Max 4.5 MB                            |
-| `url`  | Enter a URL         | SSRF-protected; strips navigation/ads |
+The active product revolves around:
+
+- chart profiles
+- chart snapshots
+- positions and aspects
+- structured readings
+- user preferences
+- Telegram-linked access as a companion flow
 
 ---
 
@@ -162,10 +175,7 @@ vercel --prod
 
 Set all environment variables in the Vercel dashboard under **Settings > Environment Variables**.
 
-`vercel.json` configures:
-
-- 60s function timeout for `/api/generate/**`
-- 30s function timeout for `/api/sources/**`
+`vercel.json` configures runtime limits for active API surfaces and scheduled cleanup jobs.
 
 ---
 
@@ -177,31 +187,30 @@ src/
 │   ├── api/
 │   │   ├── admin/            # Admin user management
 │   │   ├── auth/             # NextAuth + Telegram HMAC auth
-│   │   ├── cards/            # Fetch unseen cards
 │   │   ├── cron/             # Scheduled jobs
-│   │   ├── generate/         # LLM card generation
+│   │   ├── charts/           # Chart creation and retrieval
 │   │   ├── profile/          # Profile updates
-│   │   ├── session/          # Study session management
-│   │   ├── sources/          # Source upload & ingestion
+│   │   ├── readings/         # Structured reading generation
 │   │   ├── telegram/         # Telegram companion bot + webhook
-│   │   └── themes/           # Theme CRUD
+│   │   └── tg/               # Telegram entry surfaces
 │   ├── admin/                # Admin panel
-│   ├── dashboard/            # Theme list
-│   ├── settings/             # User settings & plan
-│   ├── study/[themeId]/      # Flashcard study loop
+│   ├── charts/               # Chart library and detail views
+│   ├── dashboard/            # Main astrology workspace
+│   ├── onboarding/           # Birth data intake
+│   ├── readings/             # Reading library
+│   ├── settings/             # User settings
 │   ├── tg/                   # Telegram Mini App entry point
-│   └── themes/               # Theme creation & management
+│   └── page.tsx              # Landing page
 ├── components/
 ├── hooks/
 ├── i18n/                     # next-intl messages (en, ru)
 ├── lib/
 │   ├── supabase/             # Supabase clients + generated types
-│   ├── llm/                  # Unified LLM adapter
-│   ├── ingestion/            # Source text extractors
-│   ├── feature-flags.ts      # Code-based feature toggles
-│   ├── plan-limits.ts        # Subscription plan definitions
+│   ├── llm/                  # Qwen-based structured generation
+│   ├── astrology/            # Chart domain logic
+│   ├── readings/             # Reading prompts and schemas
 │   └── env.ts                # Zod environment validation
 └── services/                 # Client-side API wrappers
 
-supabase/migrations/          # SQL migrations (apply in order)
+supabase/migrations/          # SQL baseline for the astrology product
 ```

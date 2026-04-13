@@ -6,31 +6,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '14.1';
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       account_identities: {
@@ -66,161 +41,251 @@ export type Database = {
         };
         Relationships: [];
       };
-      bookmarked_cards: {
+      chart_aspects: {
         Row: {
-          card_id: string;
+          applying: boolean | null;
+          aspect_key: string;
+          body_a: string;
+          body_b: string;
+          chart_snapshot_id: string;
           created_at: string;
           id: string;
-          user_id: string;
+          orb_decimal: number;
         };
         Insert: {
-          card_id: string;
+          applying?: boolean | null;
+          aspect_key: string;
+          body_a: string;
+          body_b: string;
+          chart_snapshot_id: string;
           created_at?: string;
           id?: string;
-          user_id: string;
+          orb_decimal: number;
         };
         Update: {
-          card_id?: string;
+          applying?: boolean | null;
+          aspect_key?: string;
+          body_a?: string;
+          body_b?: string;
+          chart_snapshot_id?: string;
           created_at?: string;
           id?: string;
-          user_id?: string;
+          orb_decimal?: number;
         };
         Relationships: [
           {
-            foreignKeyName: 'bookmarked_cards_card_id_fkey';
-            columns: ['card_id'];
+            foreignKeyName: 'chart_aspects_chart_snapshot_id_fkey';
+            columns: ['chart_snapshot_id'];
             isOneToOne: false;
-            referencedRelation: 'cards';
+            referencedRelation: 'chart_snapshots';
             referencedColumns: ['id'];
           },
         ];
       };
-      card_ratings: {
+      chart_positions: {
         Row: {
-          card_id: string;
+          body_key: string;
+          chart_snapshot_id: string;
           created_at: string;
+          degree_decimal: number;
+          house_number: number | null;
           id: string;
-          rating: number;
-          user_id: string;
+          retrograde: boolean;
+          sign_key: string;
         };
         Insert: {
-          card_id: string;
+          body_key: string;
+          chart_snapshot_id: string;
           created_at?: string;
+          degree_decimal: number;
+          house_number?: number | null;
           id?: string;
-          rating: number;
-          user_id: string;
+          retrograde?: boolean;
+          sign_key: string;
         };
         Update: {
-          card_id?: string;
+          body_key?: string;
+          chart_snapshot_id?: string;
           created_at?: string;
+          degree_decimal?: number;
+          house_number?: number | null;
           id?: string;
-          rating?: number;
-          user_id?: string;
+          retrograde?: boolean;
+          sign_key?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'card_ratings_card_id_fkey';
-            columns: ['card_id'];
+            foreignKeyName: 'chart_positions_chart_snapshot_id_fkey';
+            columns: ['chart_snapshot_id'];
             isOneToOne: false;
-            referencedRelation: 'cards';
+            referencedRelation: 'chart_snapshots';
             referencedColumns: ['id'];
           },
         ];
       };
-      cards: {
+      chart_snapshots: {
         Row: {
-          body: string;
+          calculation_provider: string;
+          chart_id: string;
+          computed_chart_json: Json;
           created_at: string;
           id: string;
-          is_public: boolean | null;
-          source_id: string | null;
-          theme_id: string | null;
-          title: string;
-          topic: string | null;
-          user_id: string | null;
+          raw_input_json: Json;
+          snapshot_version: number;
+          warnings_json: Json;
         };
         Insert: {
-          body: string;
+          calculation_provider: string;
+          chart_id: string;
+          computed_chart_json?: Json;
           created_at?: string;
           id?: string;
-          is_public?: boolean | null;
-          source_id?: string | null;
-          theme_id?: string | null;
-          title: string;
-          topic?: string | null;
-          user_id?: string | null;
+          raw_input_json?: Json;
+          snapshot_version: number;
+          warnings_json?: Json;
         };
         Update: {
-          body?: string;
+          calculation_provider?: string;
+          chart_id?: string;
+          computed_chart_json?: Json;
           created_at?: string;
           id?: string;
-          is_public?: boolean | null;
-          source_id?: string | null;
-          theme_id?: string | null;
-          title?: string;
-          topic?: string | null;
-          user_id?: string | null;
+          raw_input_json?: Json;
+          snapshot_version?: number;
+          warnings_json?: Json;
         };
         Relationships: [
           {
-            foreignKeyName: 'cards_source_id_fkey';
-            columns: ['source_id'];
+            foreignKeyName: 'chart_snapshots_chart_id_fkey';
+            columns: ['chart_id'];
             isOneToOne: false;
-            referencedRelation: 'data_sources';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'cards_theme_id_fkey';
-            columns: ['theme_id'];
-            isOneToOne: false;
-            referencedRelation: 'themes';
+            referencedRelation: 'charts';
             referencedColumns: ['id'];
           },
         ];
       };
-      data_sources: {
+      charts: {
         Row: {
+          birth_date: string;
+          birth_time: string | null;
+          birth_time_known: boolean;
+          city: string;
+          country: string;
           created_at: string;
-          extracted_text: string | null;
+          house_system: string;
           id: string;
-          name: string;
-          raw_url: string | null;
+          label: string;
+          latitude: number | null;
+          longitude: number | null;
+          notes: string | null;
+          person_name: string;
+          source: string;
           status: string;
-          storage_path: string | null;
-          theme_id: string;
-          type: string;
+          subject_type: string;
+          timezone: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          birth_date: string;
+          birth_time?: string | null;
+          birth_time_known?: boolean;
+          city: string;
+          country: string;
+          created_at?: string;
+          house_system?: string;
+          id?: string;
+          label: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          notes?: string | null;
+          person_name: string;
+          source?: string;
+          status?: string;
+          subject_type?: string;
+          timezone?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          birth_date?: string;
+          birth_time?: string | null;
+          birth_time_known?: boolean;
+          city?: string;
+          country?: string;
+          created_at?: string;
+          house_system?: string;
+          id?: string;
+          label?: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          notes?: string | null;
+          person_name?: string;
+          source?: string;
+          status?: string;
+          subject_type?: string;
+          timezone?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      compatibility_reports: {
+        Row: {
+          created_at: string;
+          id: string;
+          model_name: string | null;
+          model_provider: string | null;
+          primary_chart_id: string;
+          prompt_version: string;
+          rendered_content_json: Json;
+          secondary_chart_id: string;
+          status: string;
+          summary: string | null;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
           created_at?: string;
-          extracted_text?: string | null;
           id?: string;
-          name: string;
-          raw_url?: string | null;
+          model_name?: string | null;
+          model_provider?: string | null;
+          primary_chart_id: string;
+          prompt_version: string;
+          rendered_content_json?: Json;
+          secondary_chart_id: string;
           status?: string;
-          storage_path?: string | null;
-          theme_id: string;
-          type: string;
+          summary?: string | null;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
           created_at?: string;
-          extracted_text?: string | null;
           id?: string;
-          name?: string;
-          raw_url?: string | null;
+          model_name?: string | null;
+          model_provider?: string | null;
+          primary_chart_id?: string;
+          prompt_version?: string;
+          rendered_content_json?: Json;
+          secondary_chart_id?: string;
           status?: string;
-          storage_path?: string | null;
-          theme_id?: string;
-          type?: string;
+          summary?: string | null;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'data_sources_theme_id_fkey';
-            columns: ['theme_id'];
+            foreignKeyName: 'compatibility_reports_primary_chart_id_fkey';
+            columns: ['primary_chart_id'];
             isOneToOne: false;
-            referencedRelation: 'themes';
+            referencedRelation: 'charts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'compatibility_reports_secondary_chart_id_fkey';
+            columns: ['secondary_chart_id'];
+            isOneToOne: false;
+            referencedRelation: 'charts';
             referencedColumns: ['id'];
           },
         ];
@@ -255,77 +320,377 @@ export type Database = {
         };
         Relationships: [];
       };
-      payment_transactions: {
+      follow_up_messages: {
         Row: {
-          amount_minor: number;
+          content: string;
           created_at: string;
-          currency: string;
-          external_customer_id: string | null;
-          external_subscription_id: string | null;
-          external_transaction_id: string;
           id: string;
-          kind: string;
-          period_end: string | null;
-          period_start: string | null;
-          plan_id: string | null;
-          provider: string;
-          raw_payload: Json;
-          status: string;
-          subscription_id: string | null;
+          model_name: string | null;
+          model_provider: string | null;
+          role: string;
+          thread_id: string;
+          usage_tokens: number | null;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          model_name?: string | null;
+          model_provider?: string | null;
+          role: string;
+          thread_id: string;
+          usage_tokens?: number | null;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          model_name?: string | null;
+          model_provider?: string | null;
+          role?: string;
+          thread_id?: string;
+          usage_tokens?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'follow_up_messages_thread_id_fkey';
+            columns: ['thread_id'];
+            isOneToOne: false;
+            referencedRelation: 'follow_up_threads';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      follow_up_threads: {
+        Row: {
+          chart_id: string | null;
+          created_at: string;
+          id: string;
+          reading_id: string | null;
+          title: string;
           updated_at: string;
           user_id: string;
         };
         Insert: {
-          amount_minor: number;
+          chart_id?: string | null;
           created_at?: string;
-          currency: string;
-          external_customer_id?: string | null;
-          external_subscription_id?: string | null;
-          external_transaction_id: string;
           id?: string;
-          kind?: string;
-          period_end?: string | null;
-          period_start?: string | null;
-          plan_id?: string | null;
-          provider: string;
-          raw_payload?: Json;
-          status?: string;
-          subscription_id?: string | null;
+          reading_id?: string | null;
+          title: string;
           updated_at?: string;
           user_id: string;
         };
         Update: {
-          amount_minor?: number;
+          chart_id?: string | null;
           created_at?: string;
-          currency?: string;
-          external_customer_id?: string | null;
-          external_subscription_id?: string | null;
-          external_transaction_id?: string;
           id?: string;
-          kind?: string;
-          period_end?: string | null;
-          period_start?: string | null;
-          plan_id?: string | null;
-          provider?: string;
-          raw_payload?: Json;
-          status?: string;
-          subscription_id?: string | null;
+          reading_id?: string | null;
+          title?: string;
           updated_at?: string;
           user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'payment_transactions_plan_id_fkey';
-            columns: ['plan_id'];
+            foreignKeyName: 'follow_up_threads_chart_id_fkey';
+            columns: ['chart_id'];
             isOneToOne: false;
-            referencedRelation: 'subscription_plans';
+            referencedRelation: 'charts';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'payment_transactions_subscription_id_fkey';
-            columns: ['subscription_id'];
+            foreignKeyName: 'follow_up_threads_reading_id_fkey';
+            columns: ['reading_id'];
             isOneToOne: false;
-            referencedRelation: 'user_subscriptions';
+            referencedRelation: 'readings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      forecasts: {
+        Row: {
+          chart_id: string;
+          created_at: string;
+          forecast_type: string;
+          id: string;
+          rendered_content_json: Json;
+          target_end_date: string;
+          target_start_date: string;
+          transit_snapshot_json: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          chart_id: string;
+          created_at?: string;
+          forecast_type: string;
+          id?: string;
+          rendered_content_json?: Json;
+          target_end_date: string;
+          target_start_date: string;
+          transit_snapshot_json?: Json;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          chart_id?: string;
+          created_at?: string;
+          forecast_type?: string;
+          id?: string;
+          rendered_content_json?: Json;
+          target_end_date?: string;
+          target_start_date?: string;
+          transit_snapshot_json?: Json;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'forecasts_chart_id_fkey';
+            columns: ['chart_id'];
+            isOneToOne: false;
+            referencedRelation: 'charts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      generation_logs: {
+        Row: {
+          created_at: string;
+          entity_id: string | null;
+          entity_type: string;
+          error_message: string | null;
+          id: string;
+          latency_ms: number | null;
+          model: string | null;
+          operation_key: string;
+          provider: string | null;
+          request_payload_json: Json;
+          response_payload_json: Json;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type: string;
+          error_message?: string | null;
+          id?: string;
+          latency_ms?: number | null;
+          model?: string | null;
+          operation_key: string;
+          provider?: string | null;
+          request_payload_json?: Json;
+          response_payload_json?: Json;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type?: string;
+          error_message?: string | null;
+          id?: string;
+          latency_ms?: number | null;
+          model?: string | null;
+          operation_key?: string;
+          provider?: string | null;
+          request_payload_json?: Json;
+          response_payload_json?: Json;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      profiles: {
+        Row: {
+          birth_data_consent_at: string | null;
+          created_at: string;
+          display_name: string | null;
+          email_unverified: boolean;
+          id: string;
+          is_admin: boolean;
+          locale: string;
+          marketing_opt_in: boolean;
+          onboarding_completed_at: string | null;
+          pending_email: string | null;
+          timezone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          birth_data_consent_at?: string | null;
+          created_at?: string;
+          display_name?: string | null;
+          email_unverified?: boolean;
+          id: string;
+          is_admin?: boolean;
+          locale?: string;
+          marketing_opt_in?: boolean;
+          onboarding_completed_at?: string | null;
+          pending_email?: string | null;
+          timezone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          birth_data_consent_at?: string | null;
+          created_at?: string;
+          display_name?: string | null;
+          email_unverified?: boolean;
+          id?: string;
+          is_admin?: boolean;
+          locale?: string;
+          marketing_opt_in?: boolean;
+          onboarding_completed_at?: string | null;
+          pending_email?: string | null;
+          timezone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      prompt_templates: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          developer_prompt: string | null;
+          id: string;
+          key: string;
+          locale: string;
+          output_schema_json: Json;
+          system_prompt: string;
+          version: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          developer_prompt?: string | null;
+          id?: string;
+          key: string;
+          locale?: string;
+          output_schema_json?: Json;
+          system_prompt: string;
+          version: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          developer_prompt?: string | null;
+          id?: string;
+          key?: string;
+          locale?: string;
+          output_schema_json?: Json;
+          system_prompt?: string;
+          version?: string;
+        };
+        Relationships: [];
+      };
+      reading_sections: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          reading_id: string;
+          section_key: string;
+          sort_order: number;
+          title: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          reading_id: string;
+          section_key: string;
+          sort_order?: number;
+          title: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          reading_id?: string;
+          section_key?: string;
+          sort_order?: number;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'reading_sections_reading_id_fkey';
+            columns: ['reading_id'];
+            isOneToOne: false;
+            referencedRelation: 'readings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      readings: {
+        Row: {
+          chart_id: string;
+          chart_snapshot_id: string | null;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          locale: string;
+          model_name: string | null;
+          model_provider: string | null;
+          plain_text_content: string | null;
+          prompt_version: string;
+          reading_type: string;
+          rendered_content_json: Json;
+          schema_version: string;
+          status: string;
+          summary: string | null;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          chart_id: string;
+          chart_snapshot_id?: string | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          locale?: string;
+          model_name?: string | null;
+          model_provider?: string | null;
+          plain_text_content?: string | null;
+          prompt_version: string;
+          reading_type: string;
+          rendered_content_json?: Json;
+          schema_version: string;
+          status?: string;
+          summary?: string | null;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          chart_id?: string;
+          chart_snapshot_id?: string | null;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          locale?: string;
+          model_name?: string | null;
+          model_provider?: string | null;
+          plain_text_content?: string | null;
+          prompt_version?: string;
+          reading_type?: string;
+          rendered_content_json?: Json;
+          schema_version?: string;
+          status?: string;
+          summary?: string | null;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'readings_chart_id_fkey';
+            columns: ['chart_id'];
+            isOneToOne: false;
+            referencedRelation: 'charts';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'readings_chart_snapshot_id_fkey';
+            columns: ['chart_snapshot_id'];
+            isOneToOne: false;
+            referencedRelation: 'chart_snapshots';
             referencedColumns: ['id'];
           },
         ];
@@ -354,270 +719,80 @@ export type Database = {
         };
         Relationships: [];
       };
-      profiles: {
+      usage_counters: {
         Row: {
+          charts_created: number;
+          compatibility_reports_used: number;
           created_at: string;
-          display_name: string | null;
-          email_unverified: boolean;
-          id: string;
-          is_admin: boolean | null;
-          last_study_date: string | null;
-          streak_count: number | null;
-          telegram_id: string | null;
-          ui_language: string | null;
-        };
-        Insert: {
-          created_at?: string;
-          display_name?: string | null;
-          email_unverified?: boolean;
-          id: string;
-          is_admin?: boolean | null;
-          last_study_date?: string | null;
-          streak_count?: number | null;
-          telegram_id?: string | null;
-          ui_language?: string | null;
-        };
-        Update: {
-          created_at?: string;
-          display_name?: string | null;
-          email_unverified?: boolean;
-          id?: string;
-          is_admin?: boolean | null;
-          last_study_date?: string | null;
-          streak_count?: number | null;
-          telegram_id?: string | null;
-          ui_language?: string | null;
-        };
-        Relationships: [];
-      };
-      session_cards: {
-        Row: {
-          card_id: string;
-          seen_at: string;
-          session_id: string;
-        };
-        Insert: {
-          card_id: string;
-          seen_at?: string;
-          session_id: string;
-        };
-        Update: {
-          card_id?: string;
-          seen_at?: string;
-          session_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'session_cards_card_id_fkey';
-            columns: ['card_id'];
-            isOneToOne: false;
-            referencedRelation: 'cards';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'session_cards_session_id_fkey';
-            columns: ['session_id'];
-            isOneToOne: false;
-            referencedRelation: 'sessions';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      sessions: {
-        Row: {
-          created_at: string;
-          id: string;
-          theme_id: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          theme_id: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          theme_id?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'sessions_theme_id_fkey';
-            columns: ['theme_id'];
-            isOneToOne: false;
-            referencedRelation: 'themes';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      subscription_plans: {
-        Row: {
-          cards_per_month: number;
-          community_themes: boolean;
-          currency: string;
-          id: string;
-          is_public: boolean;
-          max_themes: number | null;
-          name: string;
-          price_minor: number | null;
-          sort_order: number;
-          webpay_plan_id: string | null;
-          webpay_product_id: string | null;
-        };
-        Insert: {
-          cards_per_month: number;
-          community_themes?: boolean;
-          currency?: string;
-          id: string;
-          is_public?: boolean;
-          max_themes?: number | null;
-          name: string;
-          price_minor?: number | null;
-          sort_order?: number;
-          webpay_plan_id?: string | null;
-          webpay_product_id?: string | null;
-        };
-        Update: {
-          cards_per_month?: number;
-          community_themes?: boolean;
-          currency?: string;
-          id?: string;
-          is_public?: boolean;
-          max_themes?: number | null;
-          name?: string;
-          price_minor?: number | null;
-          sort_order?: number;
-          webpay_plan_id?: string | null;
-          webpay_product_id?: string | null;
-        };
-        Relationships: [];
-      };
-      themes: {
-        Row: {
-          created_at: string;
-          description: string | null;
-          generation_failed_at: string | null;
-          generation_started_at: string | null;
-          id: string;
-          is_public: boolean | null;
-          language: string | null;
-          name: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          description?: string | null;
-          generation_failed_at?: string | null;
-          generation_started_at?: string | null;
-          id?: string;
-          is_public?: boolean | null;
-          language?: string | null;
-          name: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          description?: string | null;
-          generation_failed_at?: string | null;
-          generation_started_at?: string | null;
-          id?: string;
-          is_public?: boolean | null;
-          language?: string | null;
-          name?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      user_subscriptions: {
-        Row: {
-          auto_renew: boolean | null;
-          billing_customer_id: string | null;
-          billing_provider: string | null;
-          billing_subscription_id: string | null;
-          created_at: string | null;
-          current_period_end: string;
-          current_period_start: string;
-          id: string;
-          plan_id: string;
-          status: string;
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
-          updated_at: string | null;
-          user_id: string;
-        };
-        Insert: {
-          auto_renew?: boolean | null;
-          billing_customer_id?: string | null;
-          billing_provider?: string | null;
-          billing_subscription_id?: string | null;
-          created_at?: string | null;
-          current_period_end?: string;
-          current_period_start?: string;
-          id?: string;
-          plan_id: string;
-          status?: string;
-          stripe_customer_id?: string | null;
-          stripe_subscription_id?: string | null;
-          updated_at?: string | null;
-          user_id: string;
-        };
-        Update: {
-          auto_renew?: boolean | null;
-          billing_customer_id?: string | null;
-          billing_provider?: string | null;
-          billing_subscription_id?: string | null;
-          created_at?: string | null;
-          current_period_end?: string;
-          current_period_start?: string;
-          id?: string;
-          plan_id?: string;
-          status?: string;
-          stripe_customer_id?: string | null;
-          stripe_subscription_id?: string | null;
-          updated_at?: string | null;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'user_subscriptions_plan_id_fkey';
-            columns: ['plan_id'];
-            isOneToOne: false;
-            referencedRelation: 'subscription_plans';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      user_usage: {
-        Row: {
-          cards_generated: number | null;
-          cards_limit: number;
-          created_at: string | null;
+          follow_up_messages_used: number;
+          forecasts_generated: number;
           id: string;
           period_end: string;
           period_start: string;
-          updated_at: string | null;
+          readings_generated: number;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
-          cards_generated?: number | null;
-          cards_limit: number;
-          created_at?: string | null;
+          charts_created?: number;
+          compatibility_reports_used?: number;
+          created_at?: string;
+          follow_up_messages_used?: number;
+          forecasts_generated?: number;
           id?: string;
           period_end: string;
           period_start: string;
-          updated_at?: string | null;
+          readings_generated?: number;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
-          cards_generated?: number | null;
-          cards_limit?: number;
-          created_at?: string | null;
+          charts_created?: number;
+          compatibility_reports_used?: number;
+          created_at?: string;
+          follow_up_messages_used?: number;
+          forecasts_generated?: number;
           id?: string;
           period_end?: string;
           period_start?: string;
-          updated_at?: string | null;
+          readings_generated?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      user_preferences: {
+        Row: {
+          allow_spiritual_tone: boolean;
+          content_focus_career: boolean;
+          content_focus_growth: boolean;
+          content_focus_love: boolean;
+          created_at: string;
+          id: string;
+          tone_style: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          allow_spiritual_tone?: boolean;
+          content_focus_career?: boolean;
+          content_focus_growth?: boolean;
+          content_focus_love?: boolean;
+          created_at?: string;
+          id?: string;
+          tone_style?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          allow_spiritual_tone?: boolean;
+          content_focus_career?: boolean;
+          content_focus_growth?: boolean;
+          content_focus_love?: boolean;
+          created_at?: string;
+          id?: string;
+          tone_style?: string;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -627,26 +802,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_user_plan: {
-        Args: { user_id: string };
-        Returns: {
-          cards_per_month: number;
-          plan_id: string;
-        }[];
-      };
-      get_user_usage: {
-        Args: { user_id: string };
-        Returns: {
-          cards_generated: number;
-          cards_limit: number;
-          cards_remaining: number;
-        }[];
-      };
-      reset_monthly_usage: { Args: never; Returns: undefined };
-      increment_card_usage: {
-        Args: { p_user_id: string; p_count: number };
-        Returns: undefined;
-      };
+      [_ in never]: never;
     };
     Enums: {
       [_ in never]: never;
@@ -773,22 +929,7 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const;
-// Convenience aliases for common table types
-export type CardRow = Tables<'cards'>;
-export type ThemeRow = Tables<'themes'>;
-export type DataSourceRow = Tables<'data_sources'>;
-export type SessionRow = Tables<'sessions'>;
-export type SessionCardRow = Tables<'session_cards'>;
-export type ProfileRow = Tables<'profiles'>;
-export type BookmarkedCardRow = Tables<'bookmarked_cards'>;
-export type SubscriptionPlanRow = Tables<'subscription_plans'>;
-export type UserSubscriptionRow = Tables<'user_subscriptions'>;
-export type UserUsageRow = Tables<'user_usage'>;
-export type PaymentTransactionRow = Tables<'payment_transactions'>;

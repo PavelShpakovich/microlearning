@@ -99,7 +99,7 @@ export const POST = withApiHandler(async (req) => {
 
     const { error: upsertErr } = await supabaseAdmin
       .from('profiles')
-      .upsert({ id: userId, telegram_id: telegramId }, { onConflict: 'id' });
+      .upsert({ id: userId }, { onConflict: 'id' });
     if (upsertErr) {
       throw new AuthError({ message: 'Failed to update linked profile', cause: upsertErr });
     }
@@ -173,7 +173,6 @@ export const POST = withApiHandler(async (req) => {
     const { error: upsertErr } = await supabaseAdmin.from('profiles').upsert(
       {
         id: userId,
-        telegram_id: telegramId,
         display_name: [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(' '),
       },
       { onConflict: 'id' },

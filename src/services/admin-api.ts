@@ -1,4 +1,3 @@
-import { PlanId } from '@/lib/subscription-utils';
 import type { AdminAnalytics } from '@/app/api/admin/analytics/route';
 
 export type { AdminAnalytics };
@@ -11,9 +10,9 @@ export interface AdminUser {
   isAdmin: boolean;
   isEmailVerified: boolean;
   plan: string;
-  cardsPerMonth: number;
-  cardsUsed: number;
-  cardsRemaining: number;
+  chartsPerPeriod: number;
+  chartsUsed: number;
+  chartsRemaining: number;
   createdAt: string;
 }
 
@@ -24,13 +23,6 @@ interface ListUsersResponse {
     perPage: number;
     total: number;
   };
-}
-
-interface ChangePlanResponse {
-  success: boolean;
-  message: string;
-  userId: string;
-  planId: PlanId;
 }
 
 interface ToggleAdminResponse {
@@ -48,44 +40,21 @@ interface DeleteUserResponse {
 
 class AdminApi {
   /**
-   * Fetch paginated list of users with subscription info
+   * Fetch paginated list of users with current workspace access and usage info.
    */
   async listUsers(page: number = 1, perPage: number = 20): Promise<ListUsersResponse> {
     const res = await fetch(`/api/admin/users?page=${page}&perPage=${perPage}`);
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to fetch users');
+      throw new Error(data.error || 'Не удалось загрузить пользователей');
     }
 
     return data;
   }
 
   /**
-   * Change a user's plan access.
-   */
-  async changePlan(userId: string, planId: PlanId): Promise<ChangePlanResponse> {
-    const res = await fetch(`/api/admin/users/${userId}/plan`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to update plan access');
-    }
-
-    return data;
-  }
-
-  async updatePlanAccess(userId: string, planId: PlanId): Promise<ChangePlanResponse> {
-    return this.changePlan(userId, planId);
-  }
-
-  /**
-   * Reset a user's card usage to zero for the current period
+   * Reset the current chart and reading usage counters for a user.
    */
   async resetUsage(userId: string): Promise<{ success: boolean; message: string; userId: string }> {
     const res = await fetch(`/api/admin/users/${userId}/reset-usage`, {
@@ -95,7 +64,7 @@ class AdminApi {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to reset usage');
+      throw new Error(data.error || 'Не удалось сбросить использование');
     }
 
     return data;
@@ -118,7 +87,7 @@ class AdminApi {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to fetch analytics');
+      throw new Error(data.error || 'Не удалось загрузить аналитику');
     }
 
     return data as AdminAnalytics;
@@ -137,7 +106,7 @@ class AdminApi {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to toggle admin status');
+      throw new Error(data.error || 'Не удалось изменить права администратора');
     }
 
     return data;
@@ -154,7 +123,7 @@ class AdminApi {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Failed to delete user');
+      throw new Error(data.error || 'Не удалось удалить пользователя');
     }
 
     return data;

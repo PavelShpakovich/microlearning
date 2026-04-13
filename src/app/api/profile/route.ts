@@ -19,7 +19,7 @@ export const GET = withApiHandler(async () => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, telegram_id')
+    .select('display_name')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -35,7 +35,7 @@ export const GET = withApiHandler(async () => {
         id: user.id,
         display_name: fallbackDisplayName,
       })
-      .select('display_name, telegram_id')
+      .select('display_name')
       .single();
 
     if (createError ?? !createdProfile) {
@@ -51,7 +51,10 @@ export const GET = withApiHandler(async () => {
       throw createError ?? new Error('Failed to create profile');
     }
 
-    const response = NextResponse.json(createdProfile);
+    const response = NextResponse.json({
+      ...createdProfile,
+      telegram_id: await getTelegramIdForUser(user.id),
+    });
 
     // Add cache headers
     Object.entries(getCacheHeaders(CACHE_PRESETS.userProfile)).forEach(([key, value]) =>
@@ -64,7 +67,7 @@ export const GET = withApiHandler(async () => {
   const telegramId = await getTelegramIdForUser(user.id);
   const response = NextResponse.json({
     ...profile,
-    telegram_id: telegramId ?? profile.telegram_id,
+    telegram_id: telegramId,
   });
 
   // Add cache headers
@@ -98,22 +101,25 @@ export const PATCH = withApiHandler(async (req) => {
   const { data: updatedProfile, error } = await supabase
     .from('profiles')
     .upsert(updateData, { onConflict: 'id' })
-    .select('display_name, telegram_id')
+    .select('display_name')
     .single();
 
   if (error ?? !updatedProfile) {
     throw error ?? new Error('Failed to update profile');
   }
 
-  return NextResponse.json(updatedProfile);
+  return NextResponse.json({
+    ...updatedProfile,
+    telegram_id: await getTelegramIdForUser(user.id),
+  });
 });
 
 export const DELETE = withApiHandler(async () => {
   const { user } = await requireAuth();
 
-  // Delete user from Supabase Auth
-  // Because of ON DELETE CASCADE, this will wipe out their rows in
-  // profiles, themes, cards, user_usage, user_subscriptions, etc.
+  // Delete user from Supabase Auth.
+  // Because of ON DELETE CASCADE, this removes workspace rows such as
+  // profiles, charts, readings, follow-up threads, and usage counters.
   const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
   if (deleteError) {
