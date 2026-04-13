@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,7 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -136,10 +137,10 @@ export default async function SettingsPage() {
 
       <div className="flex gap-3">
         <Button asChild>
-          <a href="/onboarding">Обновить данные карты</a>
+          <Link href="/onboarding">Обновить данные карты</Link>
         </Button>
         <Button asChild variant="outline">
-          <a href="/charts">Открыть карты</a>
+          <Link href="/charts">Открыть карты</Link>
         </Button>
       </div>
     </main>

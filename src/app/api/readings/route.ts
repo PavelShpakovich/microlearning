@@ -6,7 +6,7 @@ import { readingCreateSchema } from '@/lib/readings/reading-request-schema';
 import { createReadingDraft } from '@/lib/readings/service';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export const GET = withApiHandler(async () => {
   const { user } = await requireAuth();

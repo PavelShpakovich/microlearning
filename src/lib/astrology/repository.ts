@@ -1,8 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import type { Json } from '@/lib/supabase/types';
 import type { ChartComputationResult } from '@/lib/astrology/types';
 import type { ChartCreateInput } from '@/lib/astrology/chart-schema';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export async function createChartRecord(userId: string, input: ChartCreateInput) {
   const { data, error } = await db
@@ -48,7 +49,10 @@ export async function markOnboardingComplete(userId: string) {
 }
 
 export async function markChartFailed(chartId: string, message: string) {
-  const { error } = await db.from('charts').update({ status: 'error', notes: message }).eq('id', chartId);
+  const { error } = await db
+    .from('charts')
+    .update({ status: 'error', notes: message })
+    .eq('id', chartId);
 
   if (error) {
     throw error;
@@ -73,7 +77,7 @@ export async function saveChartSnapshot(chartId: string, result: ChartComputatio
       snapshot_version: snapshotVersion,
       calculation_provider: result.provider,
       raw_input_json: {},
-      computed_chart_json: result.computedChart,
+      computed_chart_json: result.computedChart as Json,
       warnings_json: result.warnings,
     })
     .select('id, snapshot_version')

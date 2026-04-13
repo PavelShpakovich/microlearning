@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAdmin } from '@/lib/api/auth';
-import { resetUsage } from '@/lib/subscription-utils';
+import { resetUsage } from '@/lib/access-utils';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 

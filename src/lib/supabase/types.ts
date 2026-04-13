@@ -579,6 +579,170 @@ export type Database = {
         };
         Relationships: [];
       };
+      report_entitlements: {
+        Row: {
+          consumed_at: string | null;
+          created_at: string;
+          entity_id: string | null;
+          entity_type: string;
+          expires_at: string | null;
+          id: string;
+          metadata_json: Json;
+          product_id: string;
+          purchase_id: string | null;
+          reading_type: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          consumed_at?: string | null;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type: string;
+          expires_at?: string | null;
+          id?: string;
+          metadata_json?: Json;
+          product_id: string;
+          purchase_id?: string | null;
+          reading_type?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          consumed_at?: string | null;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type?: string;
+          expires_at?: string | null;
+          id?: string;
+          metadata_json?: Json;
+          product_id?: string;
+          purchase_id?: string | null;
+          reading_type?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'report_entitlements_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'report_products';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'report_entitlements_purchase_id_fkey';
+            columns: ['purchase_id'];
+            isOneToOne: false;
+            referencedRelation: 'report_purchases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      report_products: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          id: string;
+          kind: string;
+          metadata_json: Json;
+          price_minor: number | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id: string;
+          kind: string;
+          metadata_json?: Json;
+          price_minor?: number | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          kind?: string;
+          metadata_json?: Json;
+          price_minor?: number | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      report_purchases: {
+        Row: {
+          amount_minor: number | null;
+          created_at: string;
+          currency: string;
+          entity_id: string | null;
+          entity_type: string | null;
+          external_order_id: string | null;
+          external_payment_id: string | null;
+          id: string;
+          metadata_json: Json;
+          paid_at: string | null;
+          product_id: string;
+          provider: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount_minor?: number | null;
+          created_at?: string;
+          currency?: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          external_order_id?: string | null;
+          external_payment_id?: string | null;
+          id?: string;
+          metadata_json?: Json;
+          paid_at?: string | null;
+          product_id: string;
+          provider: string;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount_minor?: number | null;
+          created_at?: string;
+          currency?: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          external_order_id?: string | null;
+          external_payment_id?: string | null;
+          id?: string;
+          metadata_json?: Json;
+          paid_at?: string | null;
+          product_id?: string;
+          provider?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'report_purchases_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'report_products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       reading_sections: {
         Row: {
           content: string;

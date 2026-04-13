@@ -19,10 +19,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const isRu = locale === 'ru';
 
-  const title = isRu ? 'Clario — AI-аcтрологические разборы' : 'Clario — AI Astrology Readings';
+  const title = isRu ? 'Clario — AI-астрологические разборы' : 'Clario — AI Astrology Readings';
   const description = isRu
-    ? 'Создавайте натальные карты и получайте AI-разборы на основе структурированных астрологических данных.'
-    : 'Create natal charts and generate AI readings from structured astrology data.';
+    ? 'Создавайте натальные карты, получайте структурированные AI-разборы и возвращайтесь к сохранённым инсайтам в одном астрологическом пространстве.'
+    : 'Create natal charts, generate structured AI readings, and return to saved insights inside one astrology workspace.';
 
   return {
     metadataBase: new URL(APP_URL),
@@ -35,10 +35,11 @@ export async function generateMetadata(): Promise<Metadata> {
       'AI astrology',
       'natal chart',
       'astrology reading',
+      'birth data interpretation',
       'compatibility reading',
       'transit forecast',
       'birth chart',
-      'AI spiritual guidance',
+      'structured astrology insights',
     ],
     authors: [{ name: 'Clario' }],
     creator: 'Clario',

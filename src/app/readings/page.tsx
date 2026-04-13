@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import type { Tables } from '@/lib/supabase/types';
 
 export const metadata = {
   title: 'Разборы',
   description: 'Библиотека сгенерированных астрологических разборов.',
 };
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
+
+type ReadingRow = Tables<'readings'>;
 
 export default async function ReadingsPage() {
   const session = await auth();
@@ -60,7 +63,7 @@ export default async function ReadingsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {readings.map((reading: any) => (
+          {readings.map((reading: ReadingRow) => (
             <Card key={reading.id}>
               <CardHeader>
                 <CardDescription className="capitalize">

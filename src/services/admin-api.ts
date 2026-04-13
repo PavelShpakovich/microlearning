@@ -9,8 +9,8 @@ export interface AdminUser {
   displayName: string;
   isAdmin: boolean;
   isEmailVerified: boolean;
-  plan: string;
-  chartsPerPeriod: number;
+  accessMode: string;
+  chartsLimit: number;
   chartsUsed: number;
   chartsRemaining: number;
   createdAt: string;

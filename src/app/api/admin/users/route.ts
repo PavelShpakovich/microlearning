@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getUserPlan, getUserUsage } from '@/lib/subscription-utils';
+import { getUserAccessPolicy, getUserUsage } from '@/lib/access-utils';
 import { logger } from '@/lib/logger';
 import { isTelegramStubEmail } from '@/lib/auth/user-accounts';
 
@@ -43,13 +43,13 @@ export const GET = withApiHandler(async (req: Request) => {
           const email = isTelegramStubEmail(authUser.email) ? null : (authUser.email ?? null);
 
           // Get profile and current workspace access info
-          const [profileRes, planRes, usageRes] = await Promise.all([
+          const [profileRes, accessPolicyRes, usageRes] = await Promise.all([
             supabaseAdmin
               .from('profiles')
               .select('display_name, is_admin')
               .eq('id', authUser.id)
               .single(),
-            getUserPlan(authUser.id),
+            getUserAccessPolicy(authUser.id),
             getUserUsage(authUser.id),
           ]);
 
@@ -60,8 +60,8 @@ export const GET = withApiHandler(async (req: Request) => {
             displayName: profileRes.data?.display_name || 'Unknown',
             isAdmin: profileRes.data?.is_admin || false,
             isEmailVerified: Boolean(authUser.email_confirmed_at),
-            plan: planRes.planId,
-            chartsPerPeriod: planRes.chartsPerPeriod,
+            accessMode: accessPolicyRes.accessMode,
+            chartsLimit: accessPolicyRes.chartsLimit,
             chartsUsed: usageRes.chartsCreated,
             chartsRemaining: usageRes.chartsRemaining,
             createdAt: authUser.created_at,
@@ -74,8 +74,8 @@ export const GET = withApiHandler(async (req: Request) => {
             displayName: 'Error',
             isAdmin: false,
             isEmailVerified: Boolean(authUser.email_confirmed_at),
-            plan: 'error',
-            chartsPerPeriod: 0,
+            accessMode: 'direct',
+            chartsLimit: 0,
             chartsUsed: 0,
             chartsRemaining: 0,
             createdAt: authUser.created_at,

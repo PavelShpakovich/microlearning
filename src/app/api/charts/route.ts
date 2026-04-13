@@ -6,7 +6,7 @@ import { chartCreateSchema } from '@/lib/astrology/chart-schema';
 import { createChart } from '@/lib/astrology/chart-service';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export const GET = withApiHandler(async () => {
   const { user } = await requireAuth();

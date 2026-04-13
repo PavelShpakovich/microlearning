@@ -3,7 +3,7 @@
  *
  * Re-owned directly:
  *   charts, readings, follow_up_threads, compatibility_reports, forecasts,
- *   generation_logs
+ *   generation_logs, report_purchases, report_entitlements
  *
  * Merged with conflict handling:
  *   usage_counters     — sum the current period counters
@@ -14,7 +14,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export async function mergeAccounts(fromUserId: string, toUserId: string): Promise<void> {
   logger.info({ fromUserId, toUserId }, 'merge-accounts: starting');
@@ -27,6 +27,8 @@ export async function mergeAccounts(fromUserId: string, toUserId: string): Promi
     'compatibility_reports',
     'forecasts',
     'generation_logs',
+    'report_purchases',
+    'report_entitlements',
   ] as const) {
     const { error } = await db.from(table).update({ user_id: toUserId }).eq('user_id', fromUserId);
     if (error) {

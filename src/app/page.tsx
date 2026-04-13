@@ -40,7 +40,7 @@ export default async function LandingPage() {
   const isRu = locale !== 'en';
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(218,200,255,0.16),_transparent_32%),linear-gradient(180deg,_rgba(13,16,29,0.02),_transparent_40%)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(218,200,255,0.16),transparent_32%),linear-gradient(180deg,rgba(13,16,29,0.02),transparent_40%)]">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div className="space-y-6">

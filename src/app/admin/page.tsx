@@ -345,7 +345,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t('colChartsUsed')}: {user.chartsUsed}/{user.chartsPerPeriod}
+          {t('colChartsUsed')}: {user.chartsUsed}/{user.chartsLimit}
         </p>
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <AdminToggle
@@ -418,7 +418,7 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
           <VerificationBadge user={user} />
         </td>
         <td className="px-4 py-3 text-sm text-center">
-          {user.chartsUsed}/{user.chartsPerPeriod}
+          {user.chartsUsed}/{user.chartsLimit}
         </td>
         <td className="px-4 py-3">
           <AdminToggle

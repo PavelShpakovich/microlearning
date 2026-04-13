@@ -2,11 +2,16 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import type { Tables } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateReadingButton } from '@/components/astrology/create-reading-button';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
+
+type ChartSnapshotRow = Tables<'chart_snapshots'>;
+type ChartPositionRow = Tables<'chart_positions'>;
+type ChartAspectRow = Tables<'chart_aspects'>;
 
 export default async function ChartDetailPage({
   params,
@@ -39,7 +44,7 @@ export default async function ChartDetailPage({
     .order('snapshot_version', { ascending: false });
 
   const latestSnapshot = snapshots?.[0] ?? null;
-  const snapshotIds = (snapshots ?? []).map((item: { id: string }) => item.id);
+  const snapshotIds = (snapshots ?? []).map((item: ChartSnapshotRow) => item.id);
   const [{ data: positions }, { data: aspects }] = await Promise.all([
     snapshotIds.length > 0
       ? db.from('chart_positions').select('*').in('chart_snapshot_id', snapshotIds)
@@ -137,7 +142,7 @@ export default async function ChartDetailPage({
             <CardContent>
               {positions && positions.length > 0 ? (
                 <div className="grid gap-2 text-sm">
-                  {positions.slice(0, 12).map((position: any) => (
+                  {positions.slice(0, 12).map((position: ChartPositionRow) => (
                     <div
                       key={position.id}
                       className="flex items-center justify-between rounded-lg border px-3 py-2"
@@ -164,7 +169,7 @@ export default async function ChartDetailPage({
             <CardContent>
               {aspects && aspects.length > 0 ? (
                 <div className="grid gap-2 text-sm">
-                  {aspects.slice(0, 12).map((aspect: any) => (
+                  {aspects.slice(0, 12).map((aspect: ChartAspectRow) => (
                     <div
                       key={aspect.id}
                       className="flex items-center justify-between rounded-lg border px-3 py-2"

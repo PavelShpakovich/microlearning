@@ -98,7 +98,8 @@ The current codebase should be treated as reusable technical foundation, not as 
 - most database tables and RLS policies
 - most landing, dashboard, settings, and API copy and UX
 - old broad multi-provider LLM architecture
-- billing and subscription architecture as a product driver
+- subscription architecture as a product driver
+- recurring billing as a required part of the core product loop
 
 ## Hard Product Constraints
 
@@ -219,19 +220,21 @@ The app should feel like a premium personal insight workspace, not a casual horo
 
 ### Monetization policy
 
-Phase 1 should not depend on active subscriptions or payment checkout.
+Phase 1 should not depend on subscriptions or payment checkout.
 
 Allowed temporary options:
 
 - single free product mode
 - simple internal usage caps without checkout
 - admin-controlled access for staged rollout
+- manual paid-report fulfillment only if explicitly handled outside the product loop
 
 Not allowed as a launch blocker:
 
 - public pricing as a required conversion surface
 - legacy checkout-provider dependency in the main user loop
 - deep subscription-state coupling in chart and reading workflows
+- recurring-plan logic in report generation, access checks, or follow-up logic
 
 ### Explicitly out of Phase 1
 
@@ -759,45 +762,45 @@ Store with every generated output:
 - admin can inspect all
 - public sharing should use signed tokens rather than open public rows
 
-## Access Packaging Direction
+## Monetization Direction
 
-Public billing is not part of the current must-have product loop, but the packaging model should still be documented for future decisions.
+Recurring subscriptions are not part of the target product model.
 
-### Proposed future plans
+The preferred future monetization path is one-off paid reports built on top of a stable free core loop.
 
-#### Free
+### Proposed future offers
 
-- 1 chart
-- 1 natal overview
-- limited follow-up questions
-- no compatibility
-- no forecasts
+#### Free core
 
-#### Plus
+- chart creation
+- basic natal overview
+- saved reading history within the active workspace policy
+- limited follow-up guidance where needed for product validation
 
-- up to 5 charts
-- extended natal reports
-- more follow-up questions
-- saved reading history
+#### Paid natal report
 
-#### Pro
+- one-off purchase per report
+- deeper multi-section interpretation
+- richer placement synthesis
+- longer retained report artifact
 
-- more charts
-- compatibility reports
-- monthly forecasts
-- priority generation
+#### Paid add-ons
+
+- compatibility report as a separate purchase
+- forecast report as a separate purchase
+- follow-up packs or extended interpretation as separate purchases
 
 ### Metering model
 
-Do not meter by cards.
+Do not design around recurring plans.
 
 Use:
 
-- charts per account
-- reports per period
-- follow-up messages per period
-- compatibility reports per period
-- forecasts per period
+- charts per account for operational protection
+- free reports per account or per rollout phase
+- purchased report entitlements per artifact
+- follow-up message allowances per reading or purchased add-on
+- compatibility and forecast entitlements as standalone purchases
 
 ## Frontend UX Direction
 
@@ -981,22 +984,22 @@ Tasks:
 - [ ] add follow-up thread APIs
 - [ ] add follow-up message APIs
 - [ ] implement reading-scoped AI chat context builder
-- [ ] enforce per-plan or per-access follow-up quota
+- [ ] enforce per-reading or per-purchase follow-up allowance
 - [ ] implement safety framing for sensitive topics
 
-### Phase 5. Future packaging
+### Phase 5. Future monetization
 
 Goals:
 
-- define future access packaging only after the core astrology loop is stable
+- define paid report monetization only after the core astrology loop is stable
 
 Tasks:
 
-- [ ] decide whether public monetization is needed after V1
-- [ ] design packaging around charts, readings, and follow-up depth
+- [ ] decide when paid natal reports should become public
+- [ ] design one-off paid report entitlements and fulfillment flow
 - [ ] add admin-managed internal access policies if rollout control is needed
-- [ ] add compatibility report quota
-- [ ] add forecast quota
+- [ ] design compatibility report purchase flow
+- [ ] design forecast report purchase flow
 
 ### Phase 6. Cleanup and cutover
 

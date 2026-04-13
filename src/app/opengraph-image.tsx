@@ -9,69 +9,83 @@ export default function Image() {
   return new ImageResponse(
     <div
       style={{
-        background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)',
+        background:
+          'radial-gradient(circle at top, rgba(214, 187, 127, 0.22), transparent 34%), linear-gradient(135deg, #0e1726 0%, #132238 48%, #1d3044 100%)',
         width: '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: 'sans-serif',
+        fontFamily: 'Georgia, serif',
       }}
     >
-      {/* Logo circle */}
       <div
         style={{
-          width: 96,
-          height: 96,
+          padding: '12px 22px',
+          borderRadius: 999,
+          border: '1px solid rgba(214, 187, 127, 0.35)',
+          color: 'rgba(255,255,255,0.72)',
+          fontSize: 18,
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
+          marginBottom: 28,
+        }}
+      >
+        Astrology Workspace
+      </div>
+
+      <div
+        style={{
+          width: 104,
+          height: 104,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(135deg, #c7a86a 0%, #f0d8a2 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 32,
-          fontSize: 48,
-          color: 'white',
+          marginBottom: 30,
+          fontSize: 50,
+          color: '#172334',
           fontWeight: 'bold',
+          boxShadow: '0 18px 48px rgba(0,0,0,0.24)',
         }}
       >
         C
       </div>
 
-      {/* Brand name */}
       <div
         style={{
-          fontSize: 72,
-          fontWeight: 800,
+          fontSize: 74,
+          fontWeight: 700,
           color: 'white',
           letterSpacing: '-2px',
-          marginBottom: 16,
+          marginBottom: 18,
         }}
       >
         Clario
       </div>
 
-      {/* Tagline */}
       <div
         style={{
           fontSize: 28,
-          color: 'rgba(255,255,255,0.7)',
+          color: 'rgba(255,255,255,0.78)',
           textAlign: 'center',
-          maxWidth: 700,
+          maxWidth: 780,
           lineHeight: 1.4,
         }}
       >
-        AI astrology readings for charts, insights, and follow-up guidance
+        Structured natal charts, AI readings, and follow-up guidance built on deterministic chart
+        data
       </div>
 
-      {/* URL badge */}
       <div
         style={{
           marginTop: 48,
           padding: '10px 28px',
           borderRadius: 40,
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'rgba(255,255,255,0.5)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          color: 'rgba(255,255,255,0.56)',
           fontSize: 22,
         }}
       >

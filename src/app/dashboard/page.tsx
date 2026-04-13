@@ -10,7 +10,7 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export default async function DashboardPage() {
   const session = await auth();

@@ -1,17 +1,53 @@
 import { NotFoundError } from '@/lib/errors';
 import { env } from '@/lib/env';
 import { generateStructuredOutput } from '@/lib/llm/structured-generation';
+import { logger } from '@/lib/logger';
+import { TONE_STYLES } from '@/lib/astrology/constants';
+import type { ToneStyle } from '@/lib/astrology/types';
+import { getReadingAccessDecision } from '@/lib/report-access';
+import { readingPlanSchema } from '@/lib/readings/plan-schema';
 import {
   structuredReadingSchema,
   type StructuredReadingOutput,
 } from '@/lib/readings/report-schema';
-import { buildReadingPrompts } from '@/lib/readings/prompt';
+import {
+  buildReadingPlanPrompts,
+  buildReadingReviewPrompts,
+  buildReadingWriterPrompts,
+  type ReadingPromptInput,
+} from '@/lib/readings/prompt';
 import type { ReadingCreateInput } from '@/lib/readings/reading-request-schema';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import type { Json, TablesInsert } from '@/lib/supabase/types';
+import type { ZodType } from 'zod';
 
-// Temporary bridge until Supabase types are regenerated for the astrology schema.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
+
+type JsonObject = { [key: string]: Json | undefined };
+
+interface ChartPositionSource {
+  body_key: string;
+  sign_key: string;
+  house_number: number | null;
+  degree_decimal: number;
+  retrograde: boolean;
+}
+
+interface ChartAspectSource {
+  body_a: string;
+  body_b: string;
+  aspect_key: string;
+  orb_decimal: number;
+  applying: boolean | null;
+}
+
+interface GenerationLogDraft {
+  operationKey: string;
+  requestPayload: JsonObject;
+  responsePayload: Json;
+  latencyMs: number;
+  errorMessage: string | null;
+}
 
 function activeModelName() {
   switch (env.LLM_PROVIDER) {
@@ -88,6 +124,77 @@ function titleForReadingType(readingType: string, label: string) {
   }
 }
 
+function normalizeToneStyle(value: string | null | undefined): ToneStyle {
+  return TONE_STYLES.includes(value as ToneStyle) ? (value as ToneStyle) : 'balanced';
+}
+
+function extractWarnings(value: Json): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((warning): warning is string => typeof warning === 'string');
+}
+
+async function runStructuredStage<T>({
+  operationKey,
+  systemPrompt,
+  userPrompt,
+  schema,
+  mockResponse,
+  requestPayload,
+  traces,
+}: {
+  operationKey: string;
+  systemPrompt: string;
+  userPrompt: string;
+  schema: ZodType<T>;
+  mockResponse: T;
+  requestPayload: JsonObject;
+  traces: GenerationLogDraft[];
+}): Promise<T> {
+  const startedAt = Date.now();
+
+  try {
+    const output = await generateStructuredOutput({
+      systemPrompt,
+      userPrompt,
+      schema,
+      mockResponse,
+    });
+
+    traces.push({
+      operationKey,
+      requestPayload: {
+        ...requestPayload,
+        systemPrompt,
+        userPrompt,
+      },
+      responsePayload: output as Json,
+      latencyMs: Date.now() - startedAt,
+      errorMessage: null,
+    });
+
+    return output;
+  } catch (error) {
+    traces.push({
+      operationKey,
+      requestPayload: {
+        ...requestPayload,
+        systemPrompt,
+        userPrompt,
+      },
+      responsePayload: {
+        status: 'error',
+      } as Json,
+      latencyMs: Date.now() - startedAt,
+      errorMessage: error instanceof Error ? error.message : 'Structured generation failed',
+    });
+
+    throw error;
+  }
+}
+
 export async function createReadingDraft(userId: string, input: ReadingCreateInput) {
   const { data: chart } = await db
     .from('charts')
@@ -131,6 +238,13 @@ export async function createReadingDraft(userId: string, input: ReadingCreateInp
   let status: 'pending' | 'ready' | 'error' = snapshot?.id ? 'ready' : 'pending';
   let errorMessage: string | null = snapshot?.id ? null : 'No chart snapshot available yet';
   let content: StructuredReadingOutput;
+  const generationTraces: GenerationLogDraft[] = [];
+  const accessDecision = await getReadingAccessDecision(userId, input.readingType);
+  const accessDecisionPayload = {
+    accessBasis: accessDecision.accessBasis,
+    productId: accessDecision.productId,
+    entitlementId: accessDecision.entitlementId,
+  } satisfies JsonObject;
 
   if (!snapshot?.id) {
     content = {
@@ -153,16 +267,16 @@ export async function createReadingDraft(userId: string, input: ReadingCreateInp
       metadata: {
         locale: input.locale,
         readingType: input.readingType,
-        promptVersion: 'astrology-reading-v1',
+        promptVersion: 'astrology-reading-pipeline-v1',
         schemaVersion: '1',
       },
     };
   } else {
     try {
-      const prompts = buildReadingPrompts({
+      const promptInput: ReadingPromptInput = {
         locale: input.locale,
         readingType: input.readingType,
-        toneStyle: preferences?.tone_style ?? 'balanced',
+        toneStyle: normalizeToneStyle(preferences?.tone_style),
         chartLabel: chart.label,
         personName: chart.person_name,
         birthDate: chart.birth_date,
@@ -170,44 +284,78 @@ export async function createReadingDraft(userId: string, input: ReadingCreateInp
         city: chart.city,
         country: chart.country,
         houseSystem: chart.house_system,
-        positions: (positions ?? []).map(
-          (position: {
-            body_key: string;
-            sign_key: string;
-            house_number: number | null;
-            degree_decimal: number;
-            retrograde: boolean;
-          }) => ({
-            bodyKey: position.body_key,
-            signKey: position.sign_key,
-            houseNumber: position.house_number,
-            degreeDecimal: position.degree_decimal,
-            retrograde: position.retrograde,
-          }),
-        ),
-        aspects: (aspects ?? []).map(
-          (aspect: {
-            body_a: string;
-            body_b: string;
-            aspect_key: string;
-            orb_decimal: number;
-            applying: boolean | null;
-          }) => ({
-            bodyA: aspect.body_a,
-            bodyB: aspect.body_b,
-            aspectKey: aspect.aspect_key,
-            orbDecimal: aspect.orb_decimal,
-            applying: aspect.applying,
-          }),
-        ),
-        warnings: Array.isArray(snapshot.warnings_json) ? snapshot.warnings_json : [],
+        positions: (positions ?? []).map((position: ChartPositionSource) => ({
+          bodyKey: position.body_key,
+          signKey: position.sign_key,
+          houseNumber: position.house_number,
+          degreeDecimal: position.degree_decimal,
+          retrograde: position.retrograde,
+        })),
+        aspects: (aspects ?? []).map((aspect: ChartAspectSource) => ({
+          bodyA: aspect.body_a,
+          bodyB: aspect.body_b,
+          aspectKey: aspect.aspect_key,
+          orbDecimal: aspect.orb_decimal,
+          applying: aspect.applying,
+        })),
+        warnings: extractWarnings(snapshot.warnings_json),
+      };
+
+      const stageContext = {
+        chartId: chart.id,
+        chartSnapshotId: snapshot.id,
+        locale: input.locale,
+        readingType: input.readingType,
+        accessDecision: accessDecisionPayload,
+        provider: env.LLM_PROVIDER,
+        model: activeModelName(),
+      } satisfies JsonObject;
+
+      const planPrompts = buildReadingPlanPrompts(promptInput);
+      const plan = await runStructuredStage({
+        operationKey: 'reading.pipeline.planner',
+        systemPrompt: planPrompts.systemPrompt,
+        userPrompt: planPrompts.userPrompt,
+        schema: readingPlanSchema,
+        mockResponse: planPrompts.mockResponse,
+        requestPayload: {
+          ...stageContext,
+          stage: 'planner',
+          promptVersion: planPrompts.mockResponse.metadata.promptVersion,
+        },
+        traces: generationTraces,
       });
 
-      content = await generateStructuredOutput({
-        systemPrompt: prompts.systemPrompt,
-        userPrompt: prompts.userPrompt,
+      const writerPrompts = buildReadingWriterPrompts(promptInput, plan);
+      const draft = await runStructuredStage({
+        operationKey: 'reading.pipeline.writer',
+        systemPrompt: writerPrompts.systemPrompt,
+        userPrompt: writerPrompts.userPrompt,
         schema: structuredReadingSchema,
-        mockResponse: prompts.mockResponse,
+        mockResponse: writerPrompts.mockResponse,
+        requestPayload: {
+          ...stageContext,
+          stage: 'writer',
+          promptVersion: writerPrompts.mockResponse.metadata.promptVersion,
+          plan,
+        },
+        traces: generationTraces,
+      });
+
+      const reviewPrompts = buildReadingReviewPrompts(promptInput, draft);
+      content = await runStructuredStage({
+        operationKey: 'reading.pipeline.reviewer',
+        systemPrompt: reviewPrompts.systemPrompt,
+        userPrompt: reviewPrompts.userPrompt,
+        schema: structuredReadingSchema,
+        mockResponse: reviewPrompts.mockResponse,
+        requestPayload: {
+          ...stageContext,
+          stage: 'reviewer',
+          promptVersion: reviewPrompts.mockResponse.metadata.promptVersion,
+          draft,
+        },
+        traces: generationTraces,
       });
     } catch (error) {
       status = 'error';
@@ -232,7 +380,7 @@ export async function createReadingDraft(userId: string, input: ReadingCreateInp
         metadata: {
           locale: input.locale,
           readingType: input.readingType,
-          promptVersion: 'astrology-reading-v1',
+          promptVersion: 'astrology-reading-pipeline-v1',
           schemaVersion: '1',
         },
       };
@@ -277,6 +425,36 @@ export async function createReadingDraft(userId: string, input: ReadingCreateInp
 
   if (sectionError) {
     throw sectionError;
+  }
+
+  if (generationTraces.length > 0) {
+    const generationLogRows: TablesInsert<'generation_logs'>[] = generationTraces.map((trace) => ({
+      user_id: userId,
+      entity_type: 'reading',
+      entity_id: reading.id,
+      operation_key: trace.operationKey,
+      provider: env.LLM_PROVIDER,
+      model: activeModelName(),
+      request_payload_json: trace.requestPayload,
+      response_payload_json: trace.responsePayload,
+      latency_ms: trace.latencyMs,
+      error_message: trace.errorMessage,
+    }));
+
+    const { error: generationLogError } = await db
+      .from('generation_logs')
+      .insert(generationLogRows);
+
+    if (generationLogError) {
+      logger.warn(
+        {
+          error: generationLogError,
+          readingId: reading.id,
+          traceCount: generationTraces.length,
+        },
+        'readings: failed to persist generation logs',
+      );
+    }
   }
 
   if (status === 'ready') {

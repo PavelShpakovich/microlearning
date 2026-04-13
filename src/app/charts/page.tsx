@@ -8,7 +8,7 @@ export const metadata = {
   description: 'Управление натальными картами и связанными астрологическими разборами.',
 };
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export default async function ChartsPage() {
   const session = await auth();

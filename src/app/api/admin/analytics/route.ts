@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAdmin } from '@/lib/api/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import type { Tables } from '@/lib/supabase/types';
 import { logger } from '@/lib/logger';
 
-const db = supabaseAdmin as any;
+const db = supabaseAdmin;
 
 export interface AdminAnalytics {
   totalUsers: number;
@@ -12,9 +13,7 @@ export interface AdminAnalytics {
   chartsCreatedThisMonth: number;
 }
 
-interface UsageCounterRow {
-  charts_created: number | null;
-}
+type UsageCounterRow = Pick<Tables<'usage_counters'>, 'charts_created'>;
 
 /**
  * GET /api/admin/analytics
