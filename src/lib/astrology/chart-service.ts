@@ -32,8 +32,7 @@ export async function createChart(userId: string, rawInput: ChartCreateInput) {
     await markOnboardingComplete(userId);
     return { chart, snapshot };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Chart calculation failed';
-    await markChartFailed(chart.id, message);
+    await markChartFailed(chart.id);
     throw error;
   }
 }
