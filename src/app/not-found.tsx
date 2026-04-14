@@ -19,7 +19,7 @@ export default async function NotFound() {
         </p>
 
         {/* Content — overlaid to tuck into the number visually */}
-        <div className="-mt-6 sm:-mt-10 space-y-4 max-w-md">
+        <div className="-mt-6 sm:-mt-10 flex flex-col gap-4 max-w-md">
           <h1 className="text-2xl sm:text-3xl font-bold">{t('heading')}</h1>
           <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
             {t('description')}

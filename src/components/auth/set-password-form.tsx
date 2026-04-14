@@ -112,8 +112,8 @@ export function SetPasswordForm() {
 
   return (
     <AuthShell title={t('setPasswordTitle')} description={t('setPasswordDescription')}>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="password">{t('newPassword')}</Label>
           <Input
             id="password"
@@ -126,7 +126,7 @@ export function SetPasswordForm() {
             required
           />
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
           <Input
             id="confirmPassword"

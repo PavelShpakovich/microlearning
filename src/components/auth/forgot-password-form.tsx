@@ -62,9 +62,9 @@ export function ForgotPasswordForm({ locale }: ForgotPasswordFormProps) {
         </div>
       }
     >
-      {!isSent && (
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
+      {!isSent ? (
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">{t('email')}</Label>
             <Input
               id="email"
@@ -81,7 +81,7 @@ export function ForgotPasswordForm({ locale }: ForgotPasswordFormProps) {
             {isSubmitting ? t('sending') : t('sendResetLink')}
           </Button>
         </form>
-      )}
+      ) : null}
     </AuthShell>
   );
 }

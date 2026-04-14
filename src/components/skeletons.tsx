@@ -2,25 +2,25 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function SettingsSkeleton() {
   return (
-    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <main className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col gap-6">
       {/* Profile Card */}
-      <div className="rounded-lg border bg-card p-6 space-y-6">
+      <div className="rounded-lg border bg-card p-6 flex flex-col gap-6">
         <div>
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-48 mt-2" />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-full" />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-10 w-full" />
         </div>
@@ -31,13 +31,13 @@ export function SettingsSkeleton() {
       </div>
 
       {/* Security Card */}
-      <div className="rounded-lg border bg-card p-6 space-y-6">
+      <div className="rounded-lg border bg-card p-6 flex flex-col gap-6">
         <div>
           <Skeleton className="h-6 w-20" />
           <Skeleton className="h-4 w-40 mt-2" />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-10 w-full" />
         </div>
@@ -52,13 +52,13 @@ export function SettingsSkeleton() {
 
 export function AdminTableSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Mobile skeleton */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden flex flex-col gap-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="border rounded-lg p-4 space-y-3 bg-card">
+          <div key={i} className="border rounded-lg p-4 flex flex-col gap-3 bg-card">
             <div className="flex items-start justify-between gap-2">
-              <div className="space-y-1.5 flex-1">
+              <div className="flex flex-col gap-1.5 flex-1">
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-3 w-32" />
               </div>
@@ -68,7 +68,7 @@ export function AdminTableSkeleton() {
             <div className="flex gap-2 pt-1">
               <Skeleton className="h-8 w-32 rounded-md" />
               <Skeleton className="h-8 w-20 rounded-md" />
-              <Skeleton className="h-8 w-8 rounded-md" />
+              <Skeleton className="size-8 rounded-md" />
             </div>
           </div>
         ))}
@@ -108,7 +108,7 @@ export function AdminTableSkeleton() {
                   <Skeleton className="h-8 w-20 rounded-md" />
                 </td>
                 <td className="px-4 py-3">
-                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="size-8 rounded-md" />
                 </td>
               </tr>
             ))}

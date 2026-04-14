@@ -53,8 +53,6 @@ function activeModelName() {
   switch (env.LLM_PROVIDER) {
     case 'qwen':
       return env.QWEN_MODEL;
-    case 'ollama':
-      return env.OLLAMA_MODEL;
     case 'mock':
       return 'deterministic-reading-mock-v1';
     default:

@@ -17,10 +17,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { chartsApi } from '@/services/charts-api';
+import { useUiLanguage } from '@/hooks/use-ui-language';
+import { searchCities } from '@/lib/cities/cis-cities';
+import type { CityEntry } from '@/lib/cities/cis-cities';
 
 export function ChartIntakeForm() {
   const router = useRouter();
   const t = useTranslations('chartForm');
+  const { locale } = useUiLanguage();
   const [isPending, startTransition] = useTransition();
   const [birthTimeKnown, setBirthTimeKnown] = useState(true);
   const [form, setForm] = useState({
@@ -32,6 +36,8 @@ export function ChartIntakeForm() {
     city: '',
     country: '',
     timezone: '',
+    latitude: '',
+    longitude: '',
     houseSystem: 'placidus',
     notes: '',
   });
@@ -55,6 +61,30 @@ export function ChartIntakeForm() {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
+  // ── City autocomplete ──────────────────────────────────────────────────────
+  const [citySuggestions, setCitySuggestions] = useState<CityEntry[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const handleCityInput = (value: string) => {
+    update('city', value);
+    const suggestions = searchCities(value);
+    setCitySuggestions(suggestions);
+    setShowSuggestions(suggestions.length > 0);
+  };
+
+  const selectCity = (entry: CityEntry) => {
+    setForm((current) => ({
+      ...current,
+      city: entry.city,
+      country: entry.country,
+      latitude: String(entry.lat),
+      longitude: String(entry.lon),
+      timezone: entry.tz,
+    }));
+    setCitySuggestions([]);
+    setShowSuggestions(false);
+  };
+
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -70,9 +100,11 @@ export function ChartIntakeForm() {
           city: form.city,
           country: form.country,
           timezone: form.timezone || undefined,
+          latitude: form.latitude ? Number(form.latitude) : undefined,
+          longitude: form.longitude ? Number(form.longitude) : undefined,
           houseSystem: form.houseSystem as 'placidus' | 'whole_sign' | 'koch' | 'equal',
           notes: form.notes || undefined,
-          locale: 'ru',
+          locale: locale,
         });
 
         toast.success(t('successToast'));
@@ -86,7 +118,7 @@ export function ChartIntakeForm() {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="space-y-3">
+      <section className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           {t('sectionLabel')}
         </p>
@@ -199,13 +231,36 @@ export function ChartIntakeForm() {
             <div className="grid gap-5 md:grid-cols-3">
               <div className="grid gap-2">
                 <Label htmlFor="city">{t('city')}</Label>
-                <Input
-                  id="city"
-                  value={form.city}
-                  onChange={(event) => update('city', event.target.value)}
-                  placeholder={t('cityPlaceholder')}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="city"
+                    value={form.city}
+                    onChange={(event) => handleCityInput(event.target.value)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onFocus={() => {
+                      if (citySuggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    placeholder={t('cityPlaceholder')}
+                    autoComplete="off"
+                    required
+                  />
+                  {showSuggestions ? (
+                    <ul className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border bg-popover shadow-lg">
+                      {citySuggestions.map((entry) => (
+                        <li key={`${entry.city}-${entry.country}`}>
+                          <button
+                            type="button"
+                            className="flex w-full items-baseline gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                            onMouseDown={() => selectCity(entry)}
+                          >
+                            <span className="font-medium">{entry.city}</span>
+                            <span className="text-xs text-muted-foreground">{entry.country}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="country">{t('country')}</Label>
@@ -224,6 +279,35 @@ export function ChartIntakeForm() {
                   value={form.timezone}
                   onChange={(event) => update('timezone', event.target.value)}
                   placeholder={t('timezonePlaceholder')}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="latitude">{t('latitude')}</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  min="-90"
+                  max="90"
+                  value={form.latitude}
+                  onChange={(event) => update('latitude', event.target.value)}
+                  placeholder={t('latitudePlaceholder')}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="longitude">{t('longitude')}</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  min="-180"
+                  max="180"
+                  value={form.longitude}
+                  onChange={(event) => update('longitude', event.target.value)}
+                  placeholder={t('longitudePlaceholder')}
                 />
               </div>
             </div>

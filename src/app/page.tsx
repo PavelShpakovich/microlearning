@@ -1,11 +1,24 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, MoonStar, Orbit, ScrollText } from 'lucide-react';
+import { Accordion } from '@/components/ui/accordion';
+import { HeroSection } from '@/components/landing/hero-section';
+import { FeatureCard } from '@/components/landing/feature-card';
+import { StepItem } from '@/components/landing/step-item';
+import { FaqItem } from '@/components/landing/faq-item';
+import { SectionHeader } from '@/components/landing/section-header';
+import {
+  Orbit,
+  MoonStar,
+  ScrollText,
+  Sparkles,
+  BookOpen,
+  ShieldCheck,
+  MessageCircle,
+} from 'lucide-react';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
 
@@ -36,176 +49,85 @@ export default async function LandingPage() {
   const session = await auth();
   if (session) redirect('/dashboard');
 
-  const locale = await getLocale();
-  const isRu = locale !== 'en';
+  const t = await getTranslations('landing');
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(218,200,255,0.16),transparent_32%),linear-gradient(180deg,rgba(13,16,29,0.02),transparent_40%)]">
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div className="space-y-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-              {isRu ? 'Русскоязычный запуск' : 'Russian-first launch'}
-            </p>
-            <div className="space-y-4">
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-6xl">
-                {isRu
-                  ? 'AI-астрологические разборы на основе структурированных данных карты, а не расплывчатых гороскопов.'
-                  : 'AI astrology readings built from structured chart data, not vague horoscope text.'}
-              </h1>
-              <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
-                {isRu
-                  ? 'Создавайте натальные карты, получайте подробные AI-разборы и продолжайте диалог через follow-up вопросы, опирающиеся на детерминированные расчёты.'
-                  : 'Create natal charts, generate premium AI interpretations, and continue with follow-up questions grounded in deterministic calculations.'}
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/register">{isRu ? 'Начать разбор' : 'Start the reading flow'}</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/login">{isRu ? 'Войти' : 'Sign in'}</Link>
-              </Button>
-            </div>
+    <main className="min-h-screen">
+      {/* Hero */}
+      <HeroSection
+        tagline={t('heroTagline')}
+        headline={t('heroHeadline')}
+        subheadline={t('heroSubheadline')}
+        ctaGetStarted={t('heroCtaStart')}
+        ctaLogin={t('heroCtaLogin')}
+      />
+
+      {/* Stats strip */}
+      <div className="border-y bg-muted/30">
+        <div className="mx-auto grid max-w-4xl grid-cols-3 divide-x px-4 py-6 text-center sm:px-6">
+          <div className="px-4">
+            <p className="text-2xl font-bold">10</p>
+            <p className="mt-1 text-xs text-muted-foreground">планет и углов</p>
           </div>
-
-          <Card className="border-white/40 bg-background/80 backdrop-blur">
-            <CardHeader>
-              <CardDescription>
-                {isRu ? 'Новый продуктовый цикл' : 'New product loop'}
-              </CardDescription>
-              <CardTitle className="text-2xl">
-                {isRu
-                  ? 'От данных рождения к персональному разбору'
-                  : 'From birth data to guided interpretation'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 text-sm text-muted-foreground">
-              <div className="flex items-start gap-3">
-                <MoonStar className="mt-0.5 h-4 w-4 text-primary" />
-                <p>
-                  {isRu
-                    ? 'Собирайте точные данные рождения через onboarding с явным согласием пользователя.'
-                    : 'Collect precise birth data with consent-first onboarding.'}
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <Orbit className="mt-0.5 h-4 w-4 text-primary" />
-                <p>
-                  {isRu
-                    ? 'Стройте снимки натальной карты через детерминированный астрологический движок.'
-                    : 'Compute natal chart snapshots with a deterministic astrology engine.'}
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <ScrollText className="mt-0.5 h-4 w-4 text-primary" />
-                <p>
-                  {isRu
-                    ? 'Генерируйте структурированные разборы и продолжайте их через scoped AI follow-up.'
-                    : 'Generate structured readings and continue with scoped AI follow-up.'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="px-4">
+            <p className="text-2xl font-bold">9</p>
+            <p className="mt-1 text-xs text-muted-foreground">типов разборов</p>
+          </div>
+          <div className="px-4">
+            <p className="text-2xl font-bold">∞</p>
+            <p className="mt-1 text-xs text-muted-foreground">вопросов к разбору</p>
+          </div>
         </div>
+      </div>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="h-4 w-4 text-primary" />{' '}
-                {isRu ? 'Детерминированное ядро' : 'Deterministic core'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {isRu
-                ? 'Астрологический расчёт отделяется от LLM, чтобы каждый разбор можно было связать с конкретными положениями и аспектами.'
-                : 'Astrology calculation is being separated from the LLM so every reading can be traced back to computed placements and aspects.'}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Orbit className="h-4 w-4 text-primary" />{' '}
-                {isRu ? 'Структурированные разборы' : 'Structured readings'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {isRu
-                ? 'Новый продукт хранит снимки карт, версии разборов, версии промптов и будущие артефакты совместимости и прогнозов.'
-                : 'The new product stores chart snapshots, reading versions, prompt versions, and future compatibility and forecast artifacts.'}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <MoonStar className="h-4 w-4 text-primary" />{' '}
-                {isRu ? 'Премиальный формат' : 'Premium guidance'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {isRu
-                ? 'Clario строится как премиальное пространство для астрологических разборов, карт и осмысленной интерпретации.'
-                : 'Clario is a premium astrology analysis workspace built around charts, readings, and guided interpretation.'}
-            </CardContent>
-          </Card>
-        </section>
+      {/* How it works */}
+      <section className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+        <SectionHeader title={t('howTitle')} subtitle={t('howSubtitle')} narrow />
+        <div className="flex flex-col gap-10">
+          <StepItem number="1" title={t('howStep1Title')} desc={t('howStep1Desc')} />
+          <StepItem number="2" title={t('howStep2Title')} desc={t('howStep2Desc')} />
+          <StepItem number="3" title={t('howStep3Title')} desc={t('howStep3Desc')} />
+          <StepItem number="4" title={t('howStep4Title')} desc={t('howStep4Desc')} />
+        </div>
+      </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardDescription>{isRu ? 'Первая фаза' : 'Phase 1'}</CardDescription>
-              <CardTitle>
-                {isRu ? 'Что входит в первый запуск' : 'What the rewrite is shipping first'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                {isRu
-                  ? '1. Onboarding с данными рождения и создание натальной карты.'
-                  : '1. Birth-data onboarding and natal chart creation.'}
-              </p>
-              <p>
-                {isRu
-                  ? '2. Структурированные AI-разборы, сохраняемые как документы.'
-                  : '2. Structured AI natal reports stored as reusable reading documents.'}
-              </p>
-              <p>
-                {isRu
-                  ? '3. Библиотека сохранённых карт и разборов.'
-                  : '3. Saved charts and readings library.'}
-              </p>
-              <p>
-                {isRu
-                  ? '4. Follow-up AI-чат в контексте конкретного разбора.'
-                  : '4. Follow-up AI chat scoped to a reading.'}
-              </p>
-            </CardContent>
-          </Card>
+      {/* Features */}
+      <section className="border-t bg-muted/20">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <SectionHeader title={t('featuresTitle')} subtitle={t('featuresSubtitle')} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <FeatureCard icon={Orbit} title={t('feat1Title')} desc={t('feat1Desc')} />
+            <FeatureCard icon={ScrollText} title={t('feat2Title')} desc={t('feat2Desc')} />
+            <FeatureCard icon={MoonStar} title={t('feat3Title')} desc={t('feat3Desc')} />
+            <FeatureCard icon={BookOpen} title={t('feat4Title')} desc={t('feat4Desc')} />
+            <FeatureCard icon={ShieldCheck} title={t('feat5Title')} desc={t('feat5Desc')} />
+            <FeatureCard icon={MessageCircle} title={t('feat6Title')} desc={t('feat6Desc')} />
+          </div>
+        </div>
+      </section>
 
-          <Card>
-            <CardHeader>
-              <CardDescription>{isRu ? 'Следующие фазы' : 'Later phases'}</CardDescription>
-              <CardTitle>
-                {isRu ? 'Что идёт после базового цикла' : 'What follows after the core loop'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>{isRu ? '1. Разборы совместимости.' : '1. Compatibility reports.'}</p>
-              <p>{isRu ? '2. Прогнозы на основе транзитов.' : '2. Transit-based forecasts.'}</p>
-              <p>
-                {isRu
-                  ? '3. Более глубокие сценарии доступа и лимитов, если они понадобятся после стабилизации core-loop.'
-                  : '3. Deeper access packaging only if it is needed after the core product loop stabilizes.'}
-              </p>
-              <p>
-                {isRu
-                  ? '4. Админ-наблюдаемость по промптам, разборам и сбоям.'
-                  : '4. Admin observability for prompts, readings, and failures.'}
-              </p>
-            </CardContent>
-          </Card>
-        </section>
+      {/* FAQ */}
+      <section className="mx-auto max-w-2xl px-4 py-20 sm:px-6">
+        <SectionHeader title={t('faqTitle')} subtitle={t('faqSubtitle')} narrow />
+        <Accordion type="single" collapsible className="flex flex-col gap-2">
+          <FaqItem value="faq1" question={t('faq1Q')} answer={t('faq1A')} />
+          <FaqItem value="faq2" question={t('faq2Q')} answer={t('faq2A')} />
+          <FaqItem value="faq3" question={t('faq3Q')} answer={t('faq3A')} />
+          <FaqItem value="faq4" question={t('faq4Q')} answer={t('faq4A')} />
+          <FaqItem value="faq5" question={t('faq5Q')} answer={t('faq5A')} />
+        </Accordion>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="border-t bg-primary/5">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6">
+          <Sparkles className="h-8 w-8 text-primary" />
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('ctaTitle')}</h2>
+          <p className="text-muted-foreground">{t('ctaSubtitle')}</p>
+          <Button asChild size="lg">
+            <Link href="/register">{t('ctaButton')}</Link>
+          </Button>
+        </div>
       </section>
     </main>
   );

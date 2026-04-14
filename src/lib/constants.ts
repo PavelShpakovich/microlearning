@@ -3,7 +3,7 @@
 export const TOAST_DURATION_MS = 4000;
 
 // ─── LLM providers ────────────────────────────────────────────────────────────
-export const LLM_PROVIDERS = ['qwen', 'ollama', 'mock'] as const;
+export const LLM_PROVIDERS = ['qwen', 'mock'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
 // ─── Request headers ──────────────────────────────────────────────────────────

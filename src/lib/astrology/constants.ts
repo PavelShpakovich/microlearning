@@ -12,6 +12,8 @@ export const READING_TYPES = [
   'love',
   'career',
   'strengths',
+  'finance',
+  'health',
   'transit',
   'compatibility',
 ] as const;

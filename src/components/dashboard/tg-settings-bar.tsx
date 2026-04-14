@@ -24,9 +24,9 @@ export function TgSettingsBar() {
         </div>
         <div className="flex items-center gap-2">
           <Skeleton className="h-7 w-20 rounded-full" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
+          <Skeleton className="size-8" />
+          <Skeleton className="size-8" />
+          <Skeleton className="size-8" />
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export function TgSettingsBar() {
       <div className="flex items-center gap-2">
         {/* Language */}
         <div className="flex items-center gap-1 rounded-full border border-border bg-background px-1 py-1">
-          <Globe className="mx-1.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Globe className="mx-1.5 size-3.5 text-muted-foreground" />
           {(['en', 'ru'] as const).map((l) => (
             <button
               key={l}
@@ -77,41 +77,41 @@ export function TgSettingsBar() {
           }
         >
           {colorTheme === 'system' || !colorTheme ? (
-            <Monitor className="h-3.5 w-3.5" />
+            <Monitor />
           ) : resolvedTheme === 'dark' ? (
-            <Moon className="h-3.5 w-3.5" />
+            <Moon />
           ) : (
-            <Sun className="h-3.5 w-3.5" />
+            <Sun />
           )}
         </Button>
 
         {/* Settings */}
         <Button variant="ghost" size="icon" asChild title={t('navigation.settings')}>
           <Link href="/settings">
-            <Settings className="h-3.5 w-3.5" />
+            <Settings />
           </Link>
         </Button>
 
         <Button variant="ghost" size="icon" asChild title="Charts">
           <Link href="/charts">
-            <Orbit className="h-3.5 w-3.5" />
+            <Orbit />
           </Link>
         </Button>
 
         <Button variant="ghost" size="icon" asChild title="Readings">
           <Link href="/readings">
-            <ScrollText className="h-3.5 w-3.5" />
+            <ScrollText />
           </Link>
         </Button>
 
         {/* Admin Panel (admin users only) */}
-        {user?.isAdmin && (
+        {user?.isAdmin ? (
           <Button variant="ghost" size="icon" asChild title={t('navigation.adminPanel')}>
             <Link href="/admin">
-              <ShieldCheck className="h-3.5 w-3.5" />
+              <ShieldCheck />
             </Link>
           </Button>
-        )}
+        ) : null}
       </div>
     </div>
   );

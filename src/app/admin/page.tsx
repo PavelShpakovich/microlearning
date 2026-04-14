@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ChevronLeft,
   ChevronRight,
@@ -41,11 +42,11 @@ function StatTile({
   return (
     <div className="flex flex-col gap-1 p-4 rounded-lg border bg-card">
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className="size-3.5" />
         {label}
       </div>
       <p className="text-2xl font-bold">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+      {sub ? <p className="text-xs text-muted-foreground">{sub}</p> : null}
     </div>
   );
 }
@@ -76,7 +77,7 @@ function AnalyticsCard() {
         <h2 className="text-lg font-semibold">{t('analyticsTitle')}</h2>
         <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading}>
           <RotateCcw
-            className={`h-4 w-4 ${loading ? 'animate-[spin_1s_linear_infinite_reverse]' : ''}`}
+            className={loading ? 'animate-[spin_1s_linear_infinite_reverse]' : undefined}
           />
         </Button>
       </div>
@@ -84,12 +85,11 @@ function AnalyticsCard() {
       {loading && !data ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+            <Skeleton key={i} className="h-20 rounded-lg" />
           ))}
         </div>
       ) : data ? (
-        <div className="space-y-4">
-          {/* Primary stat tiles */}
+        <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2">
             <StatTile
               label={t('analyticsTotalUsers')}
@@ -141,21 +141,21 @@ function BotSetupCard() {
       <div className="flex flex-col gap-2">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Bot className="h-5 w-5" />
+            <Bot className="size-5" />
             {t('botSetupTitle')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">{t('botSetupDescription')}</p>
         </div>
         <Button onClick={runSetup} disabled={loading} className="shrink-0 self-end">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {loading ? <Loader2 className="animate-spin mr-2" /> : null}
           {loading ? t('botSetupRunning') : t('botSetupRun')}
         </Button>
       </div>
-      {result && (
+      {result ? (
         <pre className="mt-4 text-xs bg-muted rounded p-3 overflow-x-auto max-h-48">
           {JSON.stringify(result, null, 2)}
         </pre>
-      )}
+      ) : null}
     </Card>
   );
 }
@@ -329,7 +329,7 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
         confirmLabel={confirmLabel}
         cancelLabel={t('cancel')}
       />
-      <div className="border rounded-lg p-4 space-y-3 bg-card">
+      <div className="border rounded-lg p-4 flex flex-col gap-3 bg-card">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="font-medium text-sm truncate">{formatUserIdentifier(user)}</p>
@@ -337,11 +337,11 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
             <VerificationBadge user={user} />
-            {isAdminState && (
+            {isAdminState ? (
               <Badge variant="secondary" className="text-xs">
                 {t('colAdmin')}
               </Badge>
-            )}
+            ) : null}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -362,9 +362,9 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
             disabled={loading}
             title={t('resetUsage')}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw />
           </Button>
-          {!isSelf && (
+          {!isSelf ? (
             <Button
               size="sm"
               variant="destructive"
@@ -372,9 +372,9 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
               disabled={loading}
               title={t('deleteUser')}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
     </>
@@ -437,11 +437,11 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
             disabled={loading}
             title={t('resetUsage')}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw />
           </Button>
         </td>
         <td className="px-4 py-3">
-          {!isSelf && (
+          {!isSelf ? (
             <Button
               size="sm"
               variant="destructive"
@@ -449,9 +449,9 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
               disabled={loading}
               title={t('deleteUser')}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
             </Button>
-          )}
+          ) : null}
         </td>
       </tr>
     </>
@@ -504,9 +504,9 @@ function AdminTableContent() {
   prevUrl.searchParams.set('page', String(page - 1));
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Mobile card list */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden flex flex-col gap-3">
         {data.users.map((user) => (
           <UserMobileCard
             key={user.id}
@@ -547,13 +547,13 @@ function AdminTableContent() {
       <div className="flex items-center justify-between">
         {page === 1 ? (
           <Button variant="outline" size="sm" disabled className="gap-2">
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft />
             {t('previous')}
           </Button>
         ) : (
           <Button variant="outline" size="sm" asChild className="gap-2">
             <Link href={prevUrl.toString()}>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft />
               {t('previous')}
             </Link>
           </Button>
@@ -562,13 +562,13 @@ function AdminTableContent() {
         {data.users.length < perPage ? (
           <Button variant="outline" size="sm" disabled className="gap-2">
             {t('next')}
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight />
           </Button>
         ) : (
           <Button variant="outline" size="sm" asChild className="gap-2">
             <Link href={nextUrl.toString()}>
               {t('next')}
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight />
             </Link>
           </Button>
         )}
@@ -596,7 +596,7 @@ export default function AdminPage() {
           <Suspense
             fallback={
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
               </div>
             }
           >

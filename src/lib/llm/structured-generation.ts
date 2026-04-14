@@ -26,11 +26,9 @@ async function generateStructuredText(systemPrompt: string, userPrompt: string):
   switch (env.LLM_PROVIDER) {
     case 'qwen':
       return generateWithQwen(systemPrompt, userPrompt);
-    case 'ollama':
-      return generateWithOllama(systemPrompt, userPrompt);
     default:
       throw new LlmError({
-        message: `Unsupported LLM_PROVIDER for active runtime: ${String(env.LLM_PROVIDER)}`,
+        message: `Unsupported LLM_PROVIDER: ${String(env.LLM_PROVIDER)}`,
       });
   }
 }
@@ -42,7 +40,7 @@ async function generateWithQwen(systemPrompt: string, userPrompt: string): Promi
 
   const client = new OpenAI({
     apiKey: env.QWEN_API_KEY,
-    baseURL: env.QWEN_BASE_URL ?? 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    baseURL: env.QWEN_BASE_URL,
   });
 
   const response = await client.chat.completions.create({
@@ -59,19 +57,43 @@ async function generateWithQwen(systemPrompt: string, userPrompt: string): Promi
   return response.choices[0]?.message.content ?? '';
 }
 
-async function generateWithOllama(systemPrompt: string, userPrompt: string): Promise<string> {
+export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
+
+/**
+ * Multi-turn chat completion. Used for follow-up questions on a reading.
+ * Returns plain text (no structured JSON parsing).
+ */
+export async function generateChatResponse(messages: ChatMessage[]): Promise<string> {
+  if (env.LLM_PROVIDER === 'mock') {
+    return 'Это тестовый ответ ассистента. В рабочем режиме здесь был бы развёрнутый ответ на ваш вопрос по разбору.';
+  }
+
+  switch (env.LLM_PROVIDER) {
+    case 'qwen':
+      return generateChatWithQwen(messages);
+    default:
+      throw new LlmError({
+        message: `Unsupported LLM_PROVIDER: ${String(env.LLM_PROVIDER)}`,
+      });
+  }
+}
+
+async function generateChatWithQwen(messages: ChatMessage[]): Promise<string> {
+  if (!env.QWEN_API_KEY) {
+    throw new LlmError({ message: 'QWEN_API_KEY is required when LLM_PROVIDER=qwen' });
+  }
+
   const client = new OpenAI({
-    apiKey: 'ollama',
-    baseURL: env.OLLAMA_BASE_URL ?? 'http://127.0.0.1:11434/v1',
+    apiKey: env.QWEN_API_KEY,
+    baseURL: env.QWEN_BASE_URL,
   });
 
   const response = await client.chat.completions.create({
-    model: env.OLLAMA_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: 0.6,
+    model: env.QWEN_MODEL,
+    messages,
+    temperature: 0.7,
+    // @ts-expect-error QWEN-specific flag not in SDK types yet.
+    enable_thinking: false,
   });
 
   return response.choices[0]?.message.content ?? '';

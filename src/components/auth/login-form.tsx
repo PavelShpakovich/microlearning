@@ -86,7 +86,7 @@ export function LoginForm() {
       title={t('loginTitle')}
       description={t('loginDescription')}
       footer={
-        <div className="space-y-2 text-center text-sm text-muted-foreground">
+        <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
           <p>
             {t('noAccount')}{' '}
             <Link href="/register" className="text-primary hover:underline">
@@ -102,18 +102,18 @@ export function LoginForm() {
         </div>
       }
     >
-      {verifiedParam === 'true' && (
+      {verifiedParam === 'true' ? (
         <p className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 dark:bg-green-950/30 dark:border-green-800 dark:text-green-400">
           {t('emailVerified')}
         </p>
-      )}
-      {verifiedParam === 'error' && (
+      ) : null}
+      {verifiedParam === 'error' ? (
         <p className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
           {t('emailVerificationError')}
         </p>
-      )}
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
+      ) : null}
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="email">{t('email')}</Label>
           <Input
             id="email"
@@ -126,7 +126,7 @@ export function LoginForm() {
             required
           />
         </div>
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="password">{t('password')}</Label>
           <Input
             id="password"
@@ -142,7 +142,7 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? t('signingIn') : t('signIn')}
         </Button>
-        {showResend && (
+        {showResend ? (
           <Button
             type="button"
             variant="outline"
@@ -152,7 +152,7 @@ export function LoginForm() {
           >
             {isResending ? t('sending') : t('resendVerification')}
           </Button>
-        )}
+        ) : null}
       </form>
     </AuthShell>
   );

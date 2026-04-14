@@ -13,13 +13,11 @@ const envSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 characters'),
 
-  // LLM
-  LLM_PROVIDER: z.enum(['qwen', 'ollama', 'mock']),
+  // LLM — Qwen is the only production provider; 'mock' is for tests/CI.
+  LLM_PROVIDER: z.enum(['qwen', 'mock']),
   QWEN_API_KEY: z.string().optional(),
   QWEN_MODEL: z.string().default('qwen-plus'),
   QWEN_BASE_URL: z.string().url().optional(),
-  OLLAMA_BASE_URL: z.string().url().optional(),
-  OLLAMA_MODEL: z.string().default('llama3.1'),
 
   // Telegram
   TELEGRAM_BOT_TOKEN: z.string().optional(),

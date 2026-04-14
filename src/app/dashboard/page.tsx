@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { ChartsOverview } from '@/components/astrology/charts-overview';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export const metadata = {
-  title: 'Рабочее пространство',
-  description: 'Астрологическое рабочее пространство для карт и AI-разборов.',
-};
+export async function generateMetadata() {
+  const t = await getTranslations('workspace');
+  return { title: t('pageTitle'), description: t('pageDescription') };
+}
 
 export const dynamic = 'force-dynamic';
 

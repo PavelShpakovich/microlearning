@@ -1,14 +1,15 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export const metadata = {
-  title: 'Настройки',
-  description: 'Управление астрологическим аккаунтом, предпочтениями и настройками приватности.',
-};
+export async function generateMetadata() {
+  const t = await getTranslations('settingsPage');
+  return { title: t('pageTitle'), description: t('pageDescription') };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,8 @@ export default async function SettingsPage() {
   if (!session?.user?.id) {
     redirect('/login');
   }
+
+  const t = await getTranslations('settingsPage');
 
   const [{ data: profile }, { data: preferences }, { data: authUserData }] = await Promise.all([
     db
@@ -43,63 +46,56 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="space-y-3">
+      <section className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Настройки аккаунта
+          {t('sectionLabel')}
         </p>
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Настройки аккаунта и предпочтений
-        </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-          Управляйте профилем, согласием на данные рождения и предпочтениями, которые влияют на
-          структуру и тон астрологических разборов.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{t('heading')}</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground md:text-base">{t('description')}</p>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Профиль</CardTitle>
-            <CardDescription>
-              Основные поля аккаунта и профиля, используемые новым продуктом.
-            </CardDescription>
+            <CardTitle>{t('profileTitle')}</CardTitle>
+            <CardDescription>{t('profileDescription')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="flex flex-col gap-2 text-sm">
             <p>
-              <span className="font-medium">Email:</span> {authEmail || 'Недоступно'}
+              <span className="font-medium">{t('emailLabel')}:</span>{' '}
+              {authEmail || t('emailUnavailable')}
             </p>
             <p>
-              <span className="font-medium">Имя:</span>{' '}
-              {profile?.display_name || session.user.name || 'Не задано'}
+              <span className="font-medium">{t('nameLabel')}:</span>{' '}
+              {profile?.display_name || session.user.name || t('nameNotSet')}
             </p>
             <p>
-              <span className="font-medium">Локаль:</span> {profile?.locale || 'ru'}
+              <span className="font-medium">{t('localeLabel')}:</span> {profile?.locale || 'ru'}
             </p>
             <p>
-              <span className="font-medium">Часовой пояс:</span> {profile?.timezone || 'Не задан'}
+              <span className="font-medium">{t('timezoneLabel')}:</span>{' '}
+              {profile?.timezone || t('timezoneNotSet')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Onboarding и приватность</CardTitle>
-            <CardDescription>
-              Состояние согласия на обработку данных рождения и маркетинг.
-            </CardDescription>
+            <CardTitle>{t('privacyTitle')}</CardTitle>
+            <CardDescription>{t('privacyDescription')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="flex flex-col gap-2 text-sm">
             <p>
-              <span className="font-medium">Onboarding завершён:</span>{' '}
-              {profile?.onboarding_completed_at ? 'Да' : 'Нет'}
+              <span className="font-medium">{t('onboardingDone')}:</span>{' '}
+              {profile?.onboarding_completed_at ? t('yes') : t('no')}
             </p>
             <p>
-              <span className="font-medium">Согласие на данные рождения:</span>{' '}
-              {profile?.birth_data_consent_at ? 'Зафиксировано' : 'Не зафиксировано'}
+              <span className="font-medium">{t('birthConsent')}:</span>{' '}
+              {profile?.birth_data_consent_at ? t('consentRecorded') : t('consentNotRecorded')}
             </p>
             <p>
-              <span className="font-medium">Маркетинговые уведомления:</span>{' '}
-              {profile?.marketing_opt_in ? 'Включены' : 'Выключены'}
+              <span className="font-medium">{t('marketingLabel')}:</span>{' '}
+              {profile?.marketing_opt_in ? t('enabled') : t('disabled')}
             </p>
           </CardContent>
         </Card>
@@ -107,40 +103,39 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Предпочтения для разборов</CardTitle>
-          <CardDescription>
-            Здесь отображается новая модель астрологических предпочтений.
-          </CardDescription>
+          <CardTitle>{t('preferencesTitle')}</CardTitle>
+          <CardDescription>{t('preferencesDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2 text-sm md:grid-cols-2">
           <p>
-            <span className="font-medium">Тон:</span> {preferences?.tone_style || 'balanced'}
+            <span className="font-medium">{t('toneLabel')}:</span>{' '}
+            {preferences?.tone_style || 'balanced'}
           </p>
           <p>
-            <span className="font-medium">Духовный тон:</span>{' '}
-            {preferences?.allow_spiritual_tone ? 'Разрешён' : 'Выключен'}
+            <span className="font-medium">{t('spiritualTone')}:</span>{' '}
+            {preferences?.allow_spiritual_tone ? t('allowed') : t('disabled')}
           </p>
           <p>
-            <span className="font-medium">Фокус на отношениях:</span>{' '}
-            {preferences?.content_focus_love ? 'Включён' : 'Выключен'}
+            <span className="font-medium">{t('focusLove')}:</span>{' '}
+            {preferences?.content_focus_love ? t('enabled') : t('disabled')}
           </p>
           <p>
-            <span className="font-medium">Фокус на карьере:</span>{' '}
-            {preferences?.content_focus_career ? 'Включён' : 'Выключен'}
+            <span className="font-medium">{t('focusCareer')}:</span>{' '}
+            {preferences?.content_focus_career ? t('enabled') : t('disabled')}
           </p>
           <p>
-            <span className="font-medium">Фокус на росте:</span>{' '}
-            {preferences?.content_focus_growth ? 'Включён' : 'Выключен'}
+            <span className="font-medium">{t('focusGrowth')}:</span>{' '}
+            {preferences?.content_focus_growth ? t('enabled') : t('disabled')}
           </p>
         </CardContent>
       </Card>
 
       <div className="flex gap-3">
         <Button asChild>
-          <Link href="/onboarding">Обновить данные карты</Link>
+          <Link href="/onboarding">{t('updateChartData')}</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/charts">Открыть карты</Link>
+          <Link href="/charts">{t('openCharts')}</Link>
         </Button>
       </div>
     </main>

@@ -40,17 +40,17 @@ export function LandingFooter() {
           >
             {t('footerTerms')}
           </Link>
-          {BOT_URL && (
+          {BOT_URL ? (
             <a
               href={BOT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="size-3.5" />
               {t('footerTelegram')}
             </a>
-          )}
+          ) : null}
         </div>
       </div>
     </footer>

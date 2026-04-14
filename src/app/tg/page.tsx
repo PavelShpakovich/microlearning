@@ -152,9 +152,9 @@ export default function TelegramEntryPage() {
   if (phase === 'linked') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+        <div className="flex size-16 items-center justify-center rounded-full bg-green-100 text-green-600">
           <svg
-            className="h-8 w-8"
+            className="size-8"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -189,7 +189,7 @@ export default function TelegramEntryPage() {
   if (phase === 'error') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-        <AlertCircle className="mb-4 h-12 w-12 text-red-600" />
+        <AlertCircle className="mb-4 size-12 text-red-600" />
         <h1 className="mb-2 text-lg font-semibold text-foreground">{t('telegram.signinFailed')}</h1>
         <p className="mb-6 text-sm text-muted-foreground">{errorMsg}</p>
         <Button onClick={() => router.replace('/')}>{t('telegram.useEmailLogin')}</Button>
@@ -199,7 +199,7 @@ export default function TelegramEntryPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       <p className="text-sm text-muted-foreground">
         {phase === 'detecting'
           ? t('telegram.starting')

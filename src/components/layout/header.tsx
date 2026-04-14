@@ -70,7 +70,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <Globe className="w-4 h-4" />
+                  <Globe className="size-4" />
                   <span className="hidden sm:inline text-xs">{locale.toUpperCase()}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -95,11 +95,11 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
                   {theme === 'system' ? (
-                    <Monitor className="w-4 h-4" />
+                    <Monitor className="size-4" />
                   ) : theme === 'dark' ? (
-                    <Moon className="w-4 h-4" />
+                    <Moon className="size-4" />
                   ) : (
-                    <Sun className="w-4 h-4" />
+                    <Sun className="size-4" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -108,19 +108,19 @@ export function Header() {
                   onClick={() => setTheme('light')}
                   className={theme === 'light' ? 'bg-muted' : ''}
                 >
-                  <Sun className="w-4 h-4 mr-2" /> {t('common.themeLight')}
+                  <Sun className="size-4 mr-2" /> {t('common.themeLight')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('dark')}
                   className={theme === 'dark' ? 'bg-muted' : ''}
                 >
-                  <Moon className="w-4 h-4 mr-2" /> {t('common.themeDark')}
+                  <Moon className="size-4 mr-2" /> {t('common.themeDark')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('system')}
                   className={theme === 'system' ? 'bg-muted' : ''}
                 >
-                  <Monitor className="w-4 h-4 mr-2" /> {t('common.themeSystem')}
+                  <Monitor className="size-4 mr-2" /> {t('common.themeSystem')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -152,13 +152,13 @@ export function Header() {
           />
         </Link>
 
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <div className="flex items-center gap-2">
             {/* Language Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <Globe className="w-4 h-4" />
+                  <Globe className="size-4" />
                   <span className="hidden sm:inline text-xs">{locale.toUpperCase()}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -183,11 +183,11 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
                   {theme === 'system' ? (
-                    <Monitor className="w-4 h-4" />
+                    <Monitor className="size-4" />
                   ) : theme === 'dark' ? (
-                    <Moon className="w-4 h-4" />
+                    <Moon className="size-4" />
                   ) : (
-                    <Sun className="w-4 h-4" />
+                    <Sun className="size-4" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -196,19 +196,19 @@ export function Header() {
                   onClick={() => setTheme('light')}
                   className={theme === 'light' ? 'bg-muted' : ''}
                 >
-                  <Sun className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Светлая' : 'Light'}
+                  <Sun className="size-4 mr-2" /> {locale === 'ru' ? 'Светлая' : 'Light'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('dark')}
                   className={theme === 'dark' ? 'bg-muted' : ''}
                 >
-                  <Moon className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Тёмная' : 'Dark'}
+                  <Moon className="size-4 mr-2" /> {locale === 'ru' ? 'Тёмная' : 'Dark'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme('system')}
                   className={theme === 'system' ? 'bg-muted' : ''}
                 >
-                  <Monitor className="w-4 h-4 mr-2" /> {locale === 'ru' ? 'Системная' : 'System'}
+                  <Monitor className="size-4 mr-2" /> {locale === 'ru' ? 'Системная' : 'System'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -217,7 +217,7 @@ export function Header() {
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <User className="w-4 h-4" />
+                  <User className="size-4" />
                   <span className="hidden sm:inline">{displayName}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -233,51 +233,51 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="flex items-center gap-2">
-                    <LayoutDashboard className="w-4 h-4" />
+                    <LayoutDashboard className="size-4" />
                     {t('navigation.workspace')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/charts" className="flex items-center gap-2">
-                    <Orbit className="w-4 h-4" />
+                    <Orbit className="size-4" />
                     {t('navigation.charts')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/readings" className="flex items-center gap-2">
-                    <ScrollText className="w-4 h-4" />
+                    <ScrollText className="size-4" />
                     {t('navigation.readings')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
+                    <Settings className="size-4" />
                     {t('navigation.settings')}
                   </Link>
                 </DropdownMenuItem>
-                {user?.isAdmin && (
+                {user?.isAdmin ? (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4" />
+                        <ShieldCheck className="size-4" />
                         {t('navigation.adminPanel')}
                       </Link>
                     </DropdownMenuItem>
                   </>
-                )}
+                ) : null}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="flex items-center gap-2 text-red-600 cursor-pointer"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="size-4" />
                   {t('navigation.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )}
+        ) : null}
       </div>
     </header>
   );

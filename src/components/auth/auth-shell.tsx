@@ -12,11 +12,11 @@ export function AuthShell({ title, description, children, footer }: AuthShellPro
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
+        <CardHeader className="flex flex-col gap-2 text-center">
           <CardTitle className="text-2xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="flex flex-col gap-6">
           {children}
           {footer}
         </CardContent>
