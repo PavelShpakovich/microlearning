@@ -176,19 +176,17 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? t('signingIn') : t('signIn')}
         </Button>
-        <div className="h-9">
-          {showResend && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => void onResend()}
-              disabled={isResending}
-            >
-              {isResending ? t('sending') : t('resendVerification')}
-            </Button>
-          )}
-        </div>
+        {showResend && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => void onResend()}
+            disabled={isResending}
+          >
+            {isResending ? t('sending') : t('resendVerification')}
+          </Button>
+        )}
       </form>
     </AuthShell>
   );
