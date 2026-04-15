@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { calculateNatalChart } from '@/lib/astrology/engine';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   CalendarDays,
   MapPin,
@@ -54,9 +54,10 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const [t, tChart] = await Promise.all([
+  const [t, tChart, tWorkspace] = await Promise.all([
     getTranslations('dashboard'),
     getTranslations('chartDetail'),
+    getTranslations('workspace'),
   ]);
 
   // Compute today's sky positions (Sun, Moon, Mercury) using Greenwich as reference
@@ -82,23 +83,28 @@ export default async function DashboardPage() {
     // non-critical, skip widget silently
   }
 
-  const [{ data: charts }, { data: readings }, { data: profile }] = await Promise.all([
-    db
-      .from('charts')
-      .select('id, label, person_name, birth_date, city, country, status, subject_type')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false }),
-    db
-      .from('readings')
-      .select('id, title, reading_type, status, created_at')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false }),
-    db
-      .from('profiles')
-      .select('display_name, onboarding_completed_at, timezone')
-      .eq('id', session.user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: charts }, { data: readings }, { data: profile }, { count: totalCompatibility }] =
+    await Promise.all([
+      db
+        .from('charts')
+        .select('id, label, person_name, birth_date, city, country, status, subject_type')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false }),
+      db
+        .from('readings')
+        .select('id, title, reading_type, status, created_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false }),
+      db
+        .from('profiles')
+        .select('display_name, onboarding_completed_at, timezone')
+        .eq('id', session.user.id)
+        .maybeSingle(),
+      db
+        .from('compatibility_reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id),
+    ]);
 
   if (!profile?.onboarding_completed_at) redirect('/onboarding');
 
@@ -251,7 +257,7 @@ export default async function DashboardPage() {
       ) : null}
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 divide-x rounded-xl border bg-card overflow-hidden">
+      <div className="grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0 rounded-xl border bg-card overflow-hidden">
         <Link
           href="/charts"
           className="group flex items-center gap-3 px-5 py-4 hover:bg-muted/40 transition-colors"
@@ -275,6 +281,19 @@ export default async function DashboardPage() {
           <div className="flex-1 min-w-0">
             <p className="text-xl font-bold leading-none tabular-nums">{totalReadings}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{t('statsReadings')}</p>
+          </div>
+          <ArrowRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+        </Link>
+        <Link
+          href="/compatibility"
+          className="group flex items-center gap-3 px-5 py-4 hover:bg-muted/40 transition-colors"
+        >
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Sparkles className="size-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xl font-bold leading-none tabular-nums">{totalCompatibility ?? 0}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('statsCompatibility')}</p>
           </div>
           <ArrowRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
         </Link>
@@ -347,6 +366,20 @@ export default async function DashboardPage() {
                       {chart.city}, {chart.country}
                     </span>
                   </CardContent>
+                  <CardFooter className="pt-0 pb-3 flex items-center justify-between">
+                    <span className="text-[11px] capitalize rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                      {tWorkspace(
+                        `subjectTypes.${chart.subject_type}` as Parameters<typeof tWorkspace>[0],
+                      ) ?? chart.subject_type}
+                    </span>
+                    {chart.status !== 'ready' ? (
+                      <span
+                        className={`text-[11px] ${chart.status === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}
+                      >
+                        {chart.status === 'error' ? t('statusError') : t('statusPending')}
+                      </span>
+                    ) : null}
+                  </CardFooter>
                 </Card>
               </Link>
             ))}

@@ -1,12 +1,9 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
-import { Button } from '@/components/ui/button';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { SettingsForm } from '@/components/settings/settings-form';
 import type { SettingsFormData } from '@/components/settings/settings-form';
-import { Plus } from 'lucide-react';
 
 export async function generateMetadata() {
   const t = await getTranslations('settingsPage');
@@ -65,18 +62,6 @@ export default async function SettingsPage() {
       </section>
 
       <SettingsForm data={formData} />
-
-      <div className="flex flex-wrap gap-3">
-        <Button asChild>
-          <Link href="/charts/new">
-            <Plus className="size-4" />
-            {t('updateChartData')}
-          </Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/charts">{t('openCharts')}</Link>
-        </Button>
-      </div>
     </main>
   );
 }

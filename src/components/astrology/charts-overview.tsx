@@ -23,19 +23,33 @@ interface ChartsOverviewProps {
   bigThreeMap?: Record<string, BigThree>;
 }
 
-const SIGN_ABBR: Record<string, string> = {
-  aries: 'Овн',
-  taurus: 'Тлц',
-  gemini: 'Близ',
-  cancer: 'Рак',
-  leo: 'Лев',
-  virgo: 'Дев',
-  libra: 'Весы',
-  scorpio: 'Скрп',
-  sagittarius: 'Стрл',
-  capricorn: 'Козр',
-  aquarius: 'Вдл',
-  pisces: 'Рыб',
+const SIGN_ELEMENT: Record<string, 'fire' | 'earth' | 'air' | 'water'> = {
+  aries: 'fire',
+  leo: 'fire',
+  sagittarius: 'fire',
+  taurus: 'earth',
+  virgo: 'earth',
+  capricorn: 'earth',
+  gemini: 'air',
+  libra: 'air',
+  aquarius: 'air',
+  cancer: 'water',
+  scorpio: 'water',
+  pisces: 'water',
+};
+
+const ELEMENT_AVATAR: Record<string, string> = {
+  fire: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  earth: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  air: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+  water: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+};
+
+const ELEMENT_ACCENT: Record<string, string> = {
+  fire: 'border-t-2 border-t-orange-400/60',
+  earth: 'border-t-2 border-t-emerald-500/60',
+  air: 'border-t-2 border-t-sky-400/60',
+  water: 'border-t-2 border-t-indigo-400/60',
 };
 
 function formatBirthDate(chart: ChartRecord) {
@@ -50,6 +64,7 @@ export function ChartsOverview({
 }: ChartsOverviewProps) {
   const t = useTranslations('workspace');
   const tCommon = useTranslations('common');
+  const tChart = useTranslations('chartDetail');
   const [charts, setCharts] = useState(initialCharts);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -77,6 +92,9 @@ export function ChartsOverview({
       {/* Hero */}
       <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            {t('sectionLabel')}
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">
             {t('heading')}
           </h1>
@@ -130,15 +148,18 @@ export function ChartsOverview({
                 t(`subjectTypes.${chart.subject_type}` as Parameters<typeof t>[0]) ??
                 chart.subject_type;
               const bigThree = bigThreeMap[chart.id];
+              const element = bigThree?.sun ? SIGN_ELEMENT[bigThree.sun] : undefined;
               return (
                 <Card
                   key={chart.id}
-                  className="group relative h-full transition-all duration-200 hover:border-primary/50 hover:shadow-md"
+                  className={`group relative h-full transition-all duration-200 hover:border-primary/50 hover:shadow-md${element ? ` ${ELEMENT_ACCENT[element]}` : ''}`}
                 >
                   <Link href={`/charts/${chart.id}`} className="absolute inset-0 z-0" />
                   <CardHeader className="pb-3">
                     <div className="flex items-start gap-3">
-                      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+                      <div
+                        className={`flex size-11 shrink-0 items-center justify-center rounded-full text-lg font-bold ${element ? ELEMENT_AVATAR[element] : 'bg-primary/10 text-primary'}`}
+                      >
                         {chart.person_name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -146,30 +167,36 @@ export function ChartsOverview({
                         <p className="mt-0.5 text-sm font-medium text-muted-foreground">
                           {chart.person_name}
                         </p>
-                        {bigThree && (bigThree.sun ?? bigThree.moon ?? bigThree.asc) ? (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {bigThree.sun ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                                <ZodiacIcon sign={bigThree.sun} size={11} />
-                                {SIGN_ABBR[bigThree.sun] ?? bigThree.sun}
-                              </span>
-                            ) : null}
-                            {bigThree.moon ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-300">
-                                <ZodiacIcon sign={bigThree.moon} size={11} />
-                                {SIGN_ABBR[bigThree.moon] ?? bigThree.moon}
-                              </span>
-                            ) : null}
-                            {bigThree.asc ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
-                                <ZodiacIcon sign={bigThree.asc} size={11} />
-                                {SIGN_ABBR[bigThree.asc] ?? bigThree.asc}
-                              </span>
-                            ) : null}
-                          </div>
-                        ) : null}
                       </div>
                     </div>
+                    {bigThree && (bigThree.sun ?? bigThree.moon ?? bigThree.asc) ? (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {bigThree.sun ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                            <span className="text-[9px] opacity-50">☉</span>
+                            <ZodiacIcon sign={bigThree.sun} size={11} />
+                            {tChart(`signs.${bigThree.sun}` as Parameters<typeof tChart>[0]) ??
+                              bigThree.sun}
+                          </span>
+                        ) : null}
+                        {bigThree.moon ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-300">
+                            <span className="text-[9px] opacity-50">☽</span>
+                            <ZodiacIcon sign={bigThree.moon} size={11} />
+                            {tChart(`signs.${bigThree.moon}` as Parameters<typeof tChart>[0]) ??
+                              bigThree.moon}
+                          </span>
+                        ) : null}
+                        {bigThree.asc ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+                            <span className="text-[9px] opacity-50">↑</span>
+                            <ZodiacIcon sign={bigThree.asc} size={11} />
+                            {tChart(`signs.${bigThree.asc}` as Parameters<typeof tChart>[0]) ??
+                              bigThree.asc}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </CardHeader>
                   <CardContent className="pb-3 text-sm">
                     <div className="flex flex-col gap-1 text-muted-foreground">
