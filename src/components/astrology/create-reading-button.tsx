@@ -17,9 +17,10 @@ import type { ReadingType } from '@/lib/astrology/types';
 interface CreateReadingButtonProps {
   chartId: string;
   chartStatus?: string;
+  className?: string;
 }
 
-export function CreateReadingButton({ chartId, chartStatus }: CreateReadingButtonProps) {
+export function CreateReadingButton({ chartId, chartStatus, className }: CreateReadingButtonProps) {
   const router = useRouter();
   const t = useTranslations('createReading');
   const tDetail = useTranslations('chartDetail');
@@ -62,6 +63,7 @@ export function CreateReadingButton({ chartId, chartStatus }: CreateReadingButto
         <Button
           disabled={isPending || chartNotReady}
           title={chartNotReady ? tDetail('createReadingNotReady') : undefined}
+          className={className}
         >
           {isPending ? t('submitting') : t('submit')}
         </Button>

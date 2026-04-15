@@ -298,11 +298,22 @@ export default async function ChartDetailPage({
             </div>
           </div>
           {/* Actions */}
-          <div className="flex shrink-0 flex-col items-end gap-2.5">
-            {/* Primary CTA */}
-            <CreateReadingButton chartId={chart.id} chartStatus={chart.status} />
+          <div className="flex w-full shrink-0 flex-col items-start gap-2.5 sm:w-auto sm:items-end">
+            <div className="flex w-full flex-col gap-2 sm:min-w-48 sm:max-w-48">
+              <CreateReadingButton
+                chartId={chart.id}
+                chartStatus={chart.status}
+                className="w-full justify-center"
+              />
+              <Button asChild variant="outline" className="w-full justify-center">
+                <Link href={`/compatibility/new?primaryChartId=${chart.id}`}>
+                  <Heart className="mr-2 size-4" />
+                  {t('compareWithChart')}
+                </Link>
+              </Button>
+            </div>
             {/* Secondary icon toolbar */}
-            <div className="flex items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+            <div className="flex w-fit items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
               <Button asChild variant="ghost" size="icon" className="size-8" title={t('editChart')}>
                 <Link href={`/charts/${chart.id}/edit`}>
                   <Pencil className="size-3.5" />
@@ -310,18 +321,6 @@ export default async function ChartDetailPage({
               </Button>
               <div className="mx-0.5 h-4 w-px bg-border" />
               <RecalculateButton chartId={chart.id} iconOnly />
-              <div className="mx-0.5 h-4 w-px bg-border" />
-              <Button
-                asChild
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                title={t('compareWithChart')}
-              >
-                <Link href={`/compatibility/new?primaryChartId=${chart.id}`}>
-                  <Heart className="size-3.5" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>
