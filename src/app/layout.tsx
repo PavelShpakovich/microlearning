@@ -110,7 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             session={session}
           >
             <Header />
-            <div className="flex-1 flex flex-col">{children}</div>
+            <div className="flex-1 flex flex-col min-h-0">{children}</div>
             {!session ? <LandingFooter /> : null}
           </RootProviders>
         </Suspense>

@@ -57,5 +57,5 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL('/login?verified=error', appUrl));
   }
 
-  return NextResponse.redirect(new URL('/login?verified=true', appUrl));
+  return NextResponse.redirect(new URL('/login?callbackUrl=/onboarding', appUrl));
 }

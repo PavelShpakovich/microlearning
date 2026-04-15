@@ -204,10 +204,12 @@ export async function generateCompatibilityContent(
     secondaryAspects ?? [],
   );
 
-  const systemPrompt = `You are an expert synastry and relationship astrologer at a professional astrology service.
+  const systemPrompt = `КРИТИЧЕСКИ ВАЖНО: Весь JSON-ответ — каждое строковое поле — ОБЯЗАТЕЛЬНО должен быть написан на русском языке. Использование английского языка в любом поле недопустимо.
+
+You are an expert synastry and relationship astrologer at a professional astrology service.
 You analyze how two natal charts interact to reveal the strengths, challenges, and growth themes of a relationship.
 Do not mention being an AI. Do not give medical, legal, financial, or fatalistic certainty.
-Write in Russian.
+Write in Russian. Every string field in the JSON must be in Russian.
 
 Return only valid JSON matching this shape exactly:
 {
@@ -223,7 +225,7 @@ Return only valid JSON matching this shape exactly:
 Requirements:
 - Title should name both people, e.g. "${primaryChart.person_name} и ${secondaryChart.person_name} — Синастрия"
 - Produce exactly 5 sections covering: (1) emotional resonance and connection depth (Moon-Moon, Moon-Venus, Moon-ASC interactions), (2) communication and mental compatibility (Mercury-Mercury, Mercury-ASC aspects), (3) love, attraction and values (Venus-Mars, Venus-Venus, Venus-ASC cross-aspects), (4) challenges and growth areas (hard cross-aspects: squares, oppositions between key planets), (5) long-term potential and the relationship's purpose (Saturn, Jupiter cross-aspects, North Node themes)
-- Each section must be 300-400 words of specific, grounded insight referencing actual cross-aspects between the two charts
+- Each section must be 300-400 words of specific, grounded insight referencing actual cross-aspects between the two charts by name (e.g. "Луна Анны в соединении с Венерой Ивана")
 - Use both people's names naturally throughout the reading
 - Identify the most significant inter-chart aspects (cross-aspects) and explain what they mean for how these two people experience each other
 - placementHighlights should list the 4-6 most striking inter-chart aspects

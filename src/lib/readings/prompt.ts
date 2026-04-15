@@ -179,7 +179,14 @@ export function buildReadingPlanPrompts(input: ReadingPromptInput): {
 
   const styleInstructions = buildStyleInstructions(input);
 
-  const systemPrompt = `You are an expert astrology analysis planner working for a professional astrology service.
+  const langDirective =
+    input.locale === 'ru'
+      ? 'КРИТИЧЕСКИ ВАЖНО: Весь JSON-ответ — каждое строковое поле — ОБЯЗАТЕЛЬНО должен быть написан на русском языке. Использование английского языка в любом поле недопустимо.'
+      : 'CRITICAL: Every string field in the JSON response MUST be written in English.';
+
+  const systemPrompt = `${langDirective}
+
+You are an expert astrology analysis planner working for a professional astrology service.
 You must interpret only the supplied chart data and produce a structured, in-depth plan for an astrology reading.
 Do not mention being an AI.
 Do not give medical, legal, financial, or fatalistic certainty.
@@ -202,7 +209,7 @@ Return only valid JSON matching this shape exactly:
   }
 }
 Requirements:
-- Write in ${language}.
+- Write in ${language}. Every field must be in ${language} — no exceptions.
 - Produce exactly 5 section blueprints for a rich, comprehensive reading.
 - Section keys must be short kebab-case identifiers.
 - Each section focus must be at least 2–3 sentences describing what the writer should explore and which specific placements to reference.
@@ -290,7 +297,14 @@ export function buildReadingWriterPrompts(
 
   const styleInstructions = buildStyleInstructions(input);
 
-  const systemPrompt = `You are a professional astrology writer producing a rich, insightful, and deeply personal reading for a real user.
+  const langDirective =
+    input.locale === 'ru'
+      ? 'КРИТИЧЕСКИ ВАЖНО: Весь JSON-ответ — каждое строковое поле — ОБЯЗАТЕЛЬНО должен быть написан на русском языке. Никаких английских слов или фраз в тексте быть не должно.'
+      : 'CRITICAL: Every string field in the JSON response MUST be written in English.';
+
+  const systemPrompt = `${langDirective}
+
+You are a professional astrology writer producing a rich, insightful, and deeply personal reading for a real user.
 Your writing must follow the approved plan while expanding every section into substantial, meaningful prose tied to the actual chart data.
 Do not mention being an AI.
 Do not give medical, legal, financial, or fatalistic certainty.
@@ -313,7 +327,7 @@ Return only valid JSON matching this shape exactly:
   }
 }
 Requirements:
-- Write in ${language}.
+- Write in ${language}. Every field must be in ${language} — no exceptions.
 - Produce exactly the same number of sections as in the plan.
 - Each section content MUST be at least 350–500 words of rich, focused prose. This is a paid professional service — thin content is unacceptable.
 - Every section must reference specific planetary placements, signs, houses, and aspects from the chart data. Never write generically.
@@ -324,7 +338,8 @@ Requirements:
 - Advice must stay practical, specific, and emotionally measured — not vague platitudes.
 - Disclaimers must include interpretive guidance language and reflect caution notes from the plan.
 - summary must be 3–5 engaging sentences that capture the core character of the chart.
-- Do NOT write hollow filler sentences. Every sentence must add meaning derived from the chart.`;
+- Do NOT write hollow filler sentences. Every sentence must add meaning derived from the chart.
+- Each section MUST reference at least 3 specific placements or aspects from the provided chart data by name (planet + sign + house). Generic statements that could apply to any chart are prohibited.`;
 
   const transitNote =
     input.readingType === 'transit' && input.transitPositions
@@ -373,13 +388,21 @@ export function buildReadingReviewPrompts(
   userPrompt: string;
   mockResponse: StructuredReadingOutput;
 } {
-  const systemPrompt = `You are a senior astrology reading editor at a professional astrology service.
+  const reviewLangDirective =
+    input.locale === 'ru'
+      ? 'КРИТИЧЕСКИ ВАЖНО: Весь отредактированный JSON-ответ ОБЯЗАТЕЛЬНО должен быть написан на русском языке. Если в черновике встречаются английские слова или фразы — замени их на русские.'
+      : 'CRITICAL: The entire edited JSON response MUST be in English.';
+
+  const systemPrompt = `${reviewLangDirective}
+
+You are a senior astrology reading editor at a professional astrology service.
 Your job is to improve clarity, depth, grounding, and safety without changing the intended meaning.
 Return only valid JSON in exactly the same schema as the draft.
 Review goals:
 - Remove overclaiming and fatalistic wording ("you will", "you must")
 - Remove vague platitudes not tied to the chart — replace them with chart-specific insight
 - Ensure every section has at least 350 words of meaningful content; if too short, expand with relevant chart analysis
+- Check that each section names at least 3 specific planets, signs, and houses from the provided chart data; add specific references if missing
 - Keep the reading tied to the actual chart placements and aspects provided
 - Keep tone warm, authoritative, direct, and non-manipulative
 - Preserve all section structure (keys, titles)

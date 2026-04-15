@@ -66,15 +66,6 @@ export function FollowUpChat({
     ? [t(`starters.${typeKey}.q0`), t(`starters.${typeKey}.q1`), t(`starters.${typeKey}.q2`)]
     : [t('starters.default.q0'), t('starters.default.q1'), t('starters.default.q2')];
 
-  // Lock page scroll — body has min-h-screen and will scroll as messages grow
-  // without this lock. Restored on unmount when navigating away.
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);

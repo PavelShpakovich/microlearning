@@ -104,6 +104,8 @@ export default async function DashboardPage() {
       .maybeSingle(),
   ]);
 
+  if (!profile?.onboarding_completed_at) redirect('/onboarding');
+
   const name = profile?.display_name ?? session.user.name ?? '';
   const hasCharts = (charts ?? []).length > 0;
   // Prefer the user's own natal chart (subject_type='self'), fall back to any ready chart

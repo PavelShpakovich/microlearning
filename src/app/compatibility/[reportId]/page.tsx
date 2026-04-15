@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 
 export const metadata: Metadata = { robots: { index: false } };
+export const dynamic = 'force-dynamic';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -168,7 +169,7 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           stroke="currentColor"
           strokeWidth={sw + 8}
           strokeLinecap="round"
-          style={{ color: 'hsl(var(--foreground) / 0.05)' }}
+          strokeOpacity="0.05"
         />
 
         {zones.map((zone) => (
@@ -210,9 +211,7 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
               stroke="currentColor"
               strokeWidth={isMajor ? 2 : 1.25}
               strokeLinecap="round"
-              style={{
-                color: isMajor ? 'hsl(var(--foreground) / 0.34)' : 'hsl(var(--foreground) / 0.14)',
-              }}
+              strokeOpacity={isMajor ? 0.34 : 0.14}
             />
           );
         })}
@@ -223,17 +222,16 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           strokeWidth={4.5}
           strokeLinecap="round"
           filter="url(#needleGlow)"
-          style={{ color: 'hsl(var(--foreground))' }}
         />
 
         <circle
           cx={cx}
           cy={cy}
           r={18}
-          fill="hsl(var(--card))"
+          style={{ fill: 'var(--card)' }}
           stroke="currentColor"
           strokeWidth={2}
-          style={{ color: 'hsl(var(--foreground) / 0.08)' }}
+          strokeOpacity="0.08"
         />
         <circle cx={cx} cy={cy} r={11} fill={meta.accent} />
 
@@ -244,7 +242,7 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           y={pt(180, r + 22).y + 6}
           textAnchor="middle"
           fontSize={10}
-          style={{ fill: 'hsl(var(--muted-foreground))', fontFamily: 'inherit' }}
+          style={{ fill: 'var(--muted-foreground)', fontFamily: 'inherit' }}
         >
           0
         </text>
@@ -253,7 +251,7 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           y={pt(90, r + 24).y - 2}
           textAnchor="middle"
           fontSize={10}
-          style={{ fill: 'hsl(var(--muted-foreground))', fontFamily: 'inherit' }}
+          style={{ fill: 'var(--muted-foreground)', fontFamily: 'inherit' }}
         >
           50
         </text>
@@ -262,7 +260,7 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           y={pt(0, r + 22).y + 6}
           textAnchor="middle"
           fontSize={10}
-          style={{ fill: 'hsl(var(--muted-foreground))', fontFamily: 'inherit' }}
+          style={{ fill: 'var(--muted-foreground)', fontFamily: 'inherit' }}
         >
           100
         </text>
@@ -449,7 +447,7 @@ export default async function CompatibilityReportPage({
             className="relative overflow-hidden border-b border-border/70 px-6 py-5"
             style={{
               background:
-                'radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 34%), radial-gradient(circle at top right, rgba(15, 23, 42, 0.06), transparent 30%), linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.82))',
+                'radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 34%), radial-gradient(circle at top right, rgba(99, 102, 241, 0.06), transparent 30%)',
             }}
           >
             <div className="flex items-center justify-between gap-3">
@@ -483,7 +481,7 @@ export default async function CompatibilityReportPage({
           </div>
 
           <div className="grid gap-6 px-6 py-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)] xl:items-center">
-            <div className="rounded-[1.75rem] border border-border/70 bg-background/80 px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div className="rounded-[1.75rem] border border-border/70 bg-background/80 px-4 py-6">
               <div className="mb-4 flex items-center justify-between gap-3 px-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                   {t('harmonyIndex')}

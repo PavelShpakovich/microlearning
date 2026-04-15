@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 
 export const metadata: Metadata = { robots: { index: false } };
+export const dynamic = 'force-dynamic';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

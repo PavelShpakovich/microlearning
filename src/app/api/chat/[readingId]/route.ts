@@ -25,6 +25,8 @@ function buildSystemPrompt(
   sections: Array<{ title: string; content: string }>,
 ): string {
   const lines: string[] = [
+    'КРИТИЧЕСКИ ВАЖНО: Отвечай ТОЛЬКО на русском языке, независимо от языка вопроса пользователя.',
+    '',
     'Ты — персональный ассистент-астролог. Ты помогаешь пользователю понять его астрологический разбор.',
     '',
     `Тип разбора: ${reading.reading_type.replace(/_/g, ' ')}`,
