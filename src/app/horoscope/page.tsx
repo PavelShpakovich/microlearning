@@ -37,7 +37,7 @@ export default async function HoroscopePage() {
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle(),
-    db.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle(),
+    db.from('profiles').select('display_name, timezone').eq('id', session.user.id).maybeSingle(),
   ]);
 
   const displayName = profile?.display_name ?? session.user.name ?? chart?.person_name ?? '';
@@ -56,7 +56,9 @@ export default async function HoroscopePage() {
     );
   }
 
-  const forecast = await getOrCreateDailyForecast(session.user.id, chart.id);
+  const userTz = (profile as { timezone?: string | null } | null)?.timezone;
+
+  const forecast = await getOrCreateDailyForecast(session.user.id, chart.id, userTz);
   const content = forecast.rendered_content_json as ForecastContent | null;
   const isReady = content && typeof content.interpretation === 'string';
 
@@ -65,6 +67,7 @@ export default async function HoroscopePage() {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    ...(userTz ? { timeZone: userTz } : {}),
   });
 
   return (

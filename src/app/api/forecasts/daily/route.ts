@@ -9,18 +9,21 @@ const db = supabaseAdmin;
 export const GET = withApiHandler(async () => {
   const { user } = await requireAuth();
 
-  // Get the user's most recently created ready chart
-  const { data: chart } = await db
-    .from('charts')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('status', 'ready')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Get the user's most recently created ready chart + timezone
+  const [{ data: chart }, { data: profile }] = await Promise.all([
+    db
+      .from('charts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'ready')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    db.from('profiles').select('timezone').eq('id', user.id).maybeSingle(),
+  ]);
 
   if (!chart) return NextResponse.json({ forecast: null });
 
-  const forecast = await getOrCreateDailyForecast(user.id, chart.id);
+  const forecast = await getOrCreateDailyForecast(user.id, chart.id, profile?.timezone);
   return NextResponse.json({ forecast });
 });

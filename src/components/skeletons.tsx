@@ -485,6 +485,70 @@ export function ChartDetailSkeleton() {
         ))}
       </div>
 
+      {/* Extended stats — 2-col grid (polarity, dominant signs, stelliums, dignities) */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Polarity */}
+        <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-2.5 w-48" />
+          </div>
+          <div className="flex flex-col gap-3">
+            {[0, 1].map((j) => (
+              <div key={j} className="flex items-center gap-2">
+                <Skeleton className="h-3 w-16 shrink-0" />
+                <div className="flex flex-1 gap-1">
+                  {Array.from({ length: 5 }).map((_, k) => (
+                    <Skeleton key={k} className="size-2 rounded-full" />
+                  ))}
+                </div>
+                <Skeleton className="h-4 w-4" />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Dominant signs */}
+        <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-2.5 w-52" />
+          </div>
+          <div className="flex gap-2">
+            {[0, 1, 2].map((j) => (
+              <Skeleton key={j} className="h-7 w-20 rounded-full" />
+            ))}
+          </div>
+        </div>
+        {/* Stelliums */}
+        <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-2.5 w-56" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+        </div>
+        {/* Dignities */}
+        <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-2.5 w-52" />
+          </div>
+          <div className="flex flex-col gap-2">
+            {[0, 1, 2].map((j) => (
+              <div key={j} className="flex items-center gap-2 rounded-lg px-3 py-1.5">
+                <Skeleton className="size-4 rounded shrink-0" />
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-24 ml-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Chart wheel */}
       <section className="flex flex-col gap-3">
         <Skeleton className="h-4 w-32" />

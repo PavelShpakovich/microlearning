@@ -82,8 +82,6 @@ export default async function DashboardPage() {
     // non-critical, skip widget silently
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-
   const [{ data: charts }, { data: readings }, { data: profile }] = await Promise.all([
     db
       .from('charts')
@@ -97,12 +95,22 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: false }),
     db
       .from('profiles')
-      .select('display_name, onboarding_completed_at')
+      .select('display_name, onboarding_completed_at, timezone')
       .eq('id', session.user.id)
       .maybeSingle(),
   ]);
 
   if (!profile?.onboarding_completed_at) redirect('/onboarding');
+
+  const userTz = profile?.timezone as string | null | undefined;
+  const todayStr = (() => {
+    try {
+      if (userTz) return new Date().toLocaleDateString('sv-SE', { timeZone: userTz });
+    } catch {
+      /* invalid tz */
+    }
+    return new Date().toISOString().slice(0, 10);
+  })();
 
   const name = profile?.display_name ?? session.user.name ?? '';
   const hasCharts = (charts ?? []).length > 0;
@@ -376,12 +384,11 @@ export default async function DashboardPage() {
                       · {new Date(reading.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={`shrink-0 ${reading.status === 'ready' ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : ''}`}
-                  >
-                    {reading.status === 'ready' ? t('statusReady') : t('statusPending')}
-                  </Badge>
+                  {reading.status !== 'ready' ? (
+                    <Badge variant="outline" className="shrink-0">
+                      {t('statusPending')}
+                    </Badge>
+                  ) : null}
                 </div>
               </Link>
             ))}

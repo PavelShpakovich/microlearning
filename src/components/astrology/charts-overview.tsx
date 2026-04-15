@@ -188,21 +188,15 @@ export function ChartsOverview({
                       {subjectLabel}
                     </span>
                     <div className="relative z-10 flex items-center gap-2">
-                      <span
-                        className={
-                          chart.status === 'ready'
-                            ? 'text-green-600 dark:text-green-400'
-                            : chart.status === 'error'
-                              ? 'text-destructive'
-                              : 'text-muted-foreground'
-                        }
-                      >
-                        {chart.status === 'ready'
-                          ? t('statusReady')
-                          : chart.status === 'error'
-                            ? t('statusError')
-                            : t('statusPending')}
-                      </span>
+                      {chart.status !== 'ready' ? (
+                        <span
+                          className={
+                            chart.status === 'error' ? 'text-destructive' : 'text-muted-foreground'
+                          }
+                        >
+                          {chart.status === 'error' ? t('statusError') : t('statusPending')}
+                        </span>
+                      ) : null}
                       <Button
                         variant="ghost"
                         size="icon"

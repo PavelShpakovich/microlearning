@@ -33,16 +33,7 @@ interface CompatibilityOverviewProps {
 
 function StatusBadge({ status }: { status: string }) {
   const t = useTranslations('compatibility');
-  if (status === 'ready') {
-    return (
-      <Badge
-        variant="outline"
-        className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-      >
-        {t('statusReady')}
-      </Badge>
-    );
-  }
+  if (status === 'ready') return null;
   if (status === 'error') {
     return <Badge variant="destructive">{t('statusError')}</Badge>;
   }

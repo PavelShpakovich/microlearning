@@ -9,6 +9,18 @@ import type { Json, TablesInsert } from '@/lib/supabase/types';
 
 const db = supabaseAdmin;
 
+/** Returns today's date string (YYYY-MM-DD) in the given IANA timezone, or UTC if invalid/missing. */
+function todayInTimezone(tz?: string | null): string {
+  try {
+    if (tz) {
+      return new Date().toLocaleDateString('sv-SE', { timeZone: tz });
+    }
+  } catch {
+    // Invalid timezone — fall through to UTC
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 export const dailyForecastSchema = z.object({
   interpretation: z.string(),
   keyTheme: z.string(),
@@ -19,9 +31,28 @@ export const dailyForecastSchema = z.object({
 export type DailyForecastContent = z.infer<typeof dailyForecastSchema>;
 
 /** Returns today's daily forecast for the given chart, creating a pending row if missing.
+ *  Deletes any expired (non-today) daily forecasts for the user first.
  *  If multiple rows exist (race condition), prefers the one that already has generated content. */
-export async function getOrCreateDailyForecast(userId: string, chartId: string) {
-  const today = new Date().toISOString().slice(0, 10);
+export async function getOrCreateDailyForecast(
+  userId: string,
+  chartId: string,
+  userTimezone?: string | null,
+) {
+  const today = todayInTimezone(userTimezone);
+
+  // Clean up expired daily forecasts (any day before today)
+  const { error: deleteError, count: deletedCount } = await db
+    .from('forecasts')
+    .delete({ count: 'exact' })
+    .eq('user_id', userId)
+    .eq('forecast_type', 'daily')
+    .lt('target_start_date', today);
+
+  if (deleteError) {
+    logger.warn({ error: deleteError, userId }, 'forecast: failed to clean up expired forecasts');
+  } else if (deletedCount && deletedCount > 0) {
+    logger.info({ userId, deletedCount }, 'forecast: cleaned up expired daily forecasts');
+  }
 
   const { data: rows } = await db
     .from('forecasts')

@@ -123,16 +123,11 @@ export function ReadingsList({ initialReadings }: ReadingsListProps) {
               ) : null}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Badge
-                    variant={reading.status === 'error' ? 'destructive' : 'outline'}
-                    className={
-                      reading.status === 'ready'
-                        ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
-                        : ''
-                    }
-                  >
-                    {getStatusLabel(reading.status)}
-                  </Badge>
+                  {reading.status !== 'ready' ? (
+                    <Badge variant={reading.status === 'error' ? 'destructive' : 'outline'}>
+                      {getStatusLabel(reading.status)}
+                    </Badge>
+                  ) : null}
                   <span>{new Date(reading.created_at).toLocaleDateString()}</span>
                 </div>
                 <Button

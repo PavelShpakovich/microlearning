@@ -99,6 +99,78 @@ const SIGN_RULER: Record<string, string> = {
 // Personal planets used for element/modality balance
 const BALANCE_BODIES = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'];
 
+// Fire + Air = masculine, Earth + Water = feminine
+const SIGN_POLARITY: Record<string, 'masculine' | 'feminine'> = {
+  aries: 'masculine',
+  taurus: 'feminine',
+  gemini: 'masculine',
+  cancer: 'feminine',
+  leo: 'masculine',
+  virgo: 'feminine',
+  libra: 'masculine',
+  scorpio: 'feminine',
+  sagittarius: 'masculine',
+  capricorn: 'feminine',
+  aquarius: 'masculine',
+  pisces: 'feminine',
+};
+
+// Planetary essential dignities (traditional rulership)
+const PLANET_DOMICILE: Record<string, string[]> = {
+  sun: ['leo'],
+  moon: ['cancer'],
+  mercury: ['gemini', 'virgo'],
+  venus: ['taurus', 'libra'],
+  mars: ['aries', 'scorpio'],
+  jupiter: ['sagittarius', 'pisces'],
+  saturn: ['capricorn', 'aquarius'],
+};
+const PLANET_EXALTATION: Record<string, string> = {
+  sun: 'aries',
+  moon: 'taurus',
+  mercury: 'virgo',
+  venus: 'pisces',
+  mars: 'capricorn',
+  jupiter: 'cancer',
+  saturn: 'libra',
+};
+const PLANET_DETRIMENT: Record<string, string[]> = {
+  sun: ['aquarius'],
+  moon: ['capricorn'],
+  mercury: ['sagittarius', 'pisces'],
+  venus: ['aries', 'scorpio'],
+  mars: ['taurus', 'libra'],
+  jupiter: ['gemini', 'virgo'],
+  saturn: ['cancer', 'leo'],
+};
+const PLANET_FALL: Record<string, string> = {
+  sun: 'libra',
+  moon: 'scorpio',
+  mercury: 'pisces',
+  venus: 'virgo',
+  mars: 'cancer',
+  jupiter: 'capricorn',
+  saturn: 'aries',
+};
+
+function getDignity(
+  bodyKey: string,
+  signKey: string,
+): 'domicile' | 'exaltation' | 'detriment' | 'fall' | null {
+  if (PLANET_DOMICILE[bodyKey]?.includes(signKey)) return 'domicile';
+  if (PLANET_EXALTATION[bodyKey] === signKey) return 'exaltation';
+  if (PLANET_DETRIMENT[bodyKey]?.includes(signKey)) return 'detriment';
+  if (PLANET_FALL[bodyKey] === signKey) return 'fall';
+  return null;
+}
+
+const DIGNITY_COLORS: Record<string, string> = {
+  domicile: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  exaltation: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  detriment: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  fall: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+};
+
 // Tiny custom icon for Conjunction (two circles touching) — no Lucide equivalent
 function ConjunctionIcon({ className }: { className?: string }) {
   return (
@@ -173,7 +245,7 @@ export default async function ChartDetailPage({
   const [{ data: snapshots }, { data: readings }] = await Promise.all([
     db
       .from('chart_snapshots')
-      .select('id, warnings_json')
+      .select('id, warnings_json, computed_chart_json')
       .eq('chart_id', chartId)
       .order('snapshot_version', { ascending: false })
       .limit(1),
@@ -246,6 +318,49 @@ export default async function ChartDetailPage({
   // Day chart = Sun above the horizon (houses 7-12)
   const isDay = sunPos?.house_number != null && sunPos.house_number >= 7;
   const hasTimeData = chart.birth_time_known && asc != null;
+
+  // ── Polarity balance ────────────────────────────────────────────────────
+  const polarityCounts = { masculine: 0, feminine: 0 };
+  for (const p of balancePlanets) {
+    const pol = SIGN_POLARITY[p.sign_key];
+    if (pol) polarityCounts[pol]++;
+  }
+
+  // ── Stelliums (3+ planets in same sign or house) ────────────────────────
+  const signGroups: Record<string, string[]> = {};
+  const houseGroups: Record<number, string[]> = {};
+  for (const p of sortedPlanets) {
+    (signGroups[p.sign_key] ??= []).push(p.body_key);
+    if (p.house_number != null) (houseGroups[p.house_number] ??= []).push(p.body_key);
+  }
+  const signStelliums = Object.entries(signGroups).filter(([, v]) => v.length >= 3);
+  const houseStelliums = Object.entries(houseGroups).filter(([, v]) => v.length >= 3);
+
+  // ── Dominant signs (from computed_chart_json) ───────────────────────────
+  const computedChart = latestSnapshot?.computed_chart_json as
+    | { dominantSigns?: string[]; dominantBodies?: string[] }
+    | null
+    | undefined;
+  const dominantSigns = Array.isArray(computedChart?.dominantSigns)
+    ? computedChart.dominantSigns
+    : [];
+
+  // ── Planetary dignities ─────────────────────────────────────────────────
+  const dignities = sortedPlanets
+    .map((p) => ({
+      body: p.body_key,
+      sign: p.sign_key,
+      dignity: getDignity(p.body_key, p.sign_key),
+    }))
+    .filter((d) => d.dignity !== null);
+
+  // ── Unaspected planets ──────────────────────────────────────────────────
+  const aspectedBodies = new Set<string>();
+  for (const a of aspects ?? []) {
+    aspectedBodies.add(a.body_a);
+    aspectedBodies.add(a.body_b);
+  }
+  const unaspected = sortedPlanets.filter((p) => !aspectedBodies.has(p.body_key));
 
   // Birth time display
   const birthTimeDisplay = chart.birth_time_known && chart.birth_time ? chart.birth_time : null;
@@ -534,6 +649,168 @@ export default async function ChartDetailPage({
         </div>
       ) : null}
 
+      {/* ── Extended Stats ── */}
+      {balancePlanets.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Polarity */}
+          <div className="rounded-2xl border bg-card p-5">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('polarityTitle')}
+            </p>
+            <p className="mb-4 text-[10px] text-muted-foreground/60">{t('polarityDesc')}</p>
+            <div className="grid gap-3">
+              {(['masculine', 'feminine'] as const).map((pol) => {
+                const count = polarityCounts[pol];
+                return (
+                  <div key={pol} className="flex items-center gap-2">
+                    <span className="w-20 shrink-0 text-xs text-muted-foreground">
+                      {t(`polarity.${pol}` as Parameters<typeof t>[0])}
+                    </span>
+                    <div className="flex flex-1 gap-1">
+                      {Array.from({ length: count }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-2 w-2 rounded-full ${pol === 'masculine' ? 'bg-orange-500' : 'bg-indigo-500'}`}
+                        />
+                      ))}
+                      {Array.from({ length: Math.max(0, 7 - count) }).map((_, i) => (
+                        <span key={i} className="h-2 w-2 rounded-full bg-muted" />
+                      ))}
+                    </div>
+                    <span className="w-4 text-right text-sm font-semibold tabular-nums">
+                      {count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dominant Signs */}
+          {dominantSigns.length > 0 ? (
+            <div className="rounded-2xl border bg-card p-5">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('dominantSignsTitle')}
+              </p>
+              <p className="mb-4 text-[10px] text-muted-foreground/60">{t('dominantSignsDesc')}</p>
+              <div className="flex flex-wrap gap-2">
+                {dominantSigns.map((sign) => (
+                  <span
+                    key={sign}
+                    className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium"
+                  >
+                    <ZodiacIcon sign={sign} size={14} />
+                    {t(`signs.${sign}` as Parameters<typeof t>[0])}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Stelliums */}
+          <div className="rounded-2xl border bg-card p-5">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('stelliumsTitle')}
+            </p>
+            <p className="mb-4 text-[10px] text-muted-foreground/60">{t('stelliumsDesc')}</p>
+            {signStelliums.length === 0 && houseStelliums.length === 0 ? (
+              <p className="text-xs text-muted-foreground">{t('noStelliums')}</p>
+            ) : (
+              <div className="grid gap-2">
+                {signStelliums.map(([sign, bodies]) => (
+                  <div key={`s-${sign}`} className="rounded-lg bg-primary/5 px-3 py-2">
+                    <p className="text-xs font-semibold">
+                      {t('stelliumSign', {
+                        sign: t(`signs.${sign}` as Parameters<typeof t>[0]),
+                      })}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      {bodies.map((b) => t(`planets.${b}` as Parameters<typeof t>[0])).join(', ')}
+                    </p>
+                  </div>
+                ))}
+                {houseStelliums.map(([house, bodies]) => (
+                  <div key={`h-${house}`} className="rounded-lg bg-primary/5 px-3 py-2">
+                    <p className="text-xs font-semibold">{t('stelliumHouse', { house })}</p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      {bodies.map((b) => t(`planets.${b}` as Parameters<typeof t>[0])).join(', ')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Planetary Dignities */}
+          {dignities.length > 0 ? (
+            <div className="rounded-2xl border bg-card p-5">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('dignityTitle')}
+              </p>
+              <p className="mb-4 text-[10px] text-muted-foreground/60">{t('dignityDesc')}</p>
+              <div className="grid gap-2">
+                {dignities.map((d) => (
+                  <div
+                    key={d.body}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${DIGNITY_COLORS[d.dignity!]}`}
+                  >
+                    <PlanetIcon
+                      planet={d.body}
+                      size={16}
+                      color={PLANET_COLORS[d.body as keyof typeof PLANET_COLORS] ?? 'currentColor'}
+                    />
+                    <span className="text-xs font-semibold">
+                      {t(`planets.${d.body}` as Parameters<typeof t>[0])}
+                    </span>
+                    <span className="text-xs">
+                      {t(`dignity.${d.dignity}` as Parameters<typeof t>[0])}
+                    </span>
+                    <span className="ml-auto text-[10px] opacity-70">
+                      {t(`dignityShort.${d.dignity}` as Parameters<typeof t>[0])}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Unaspected Planets */}
+          {unaspected.length > 0 ? (
+            <div className="rounded-2xl border bg-card p-5">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('unaspectedTitle')}
+              </p>
+              <p className="mb-4 text-[10px] text-muted-foreground/60">{t('unaspectedDesc')}</p>
+              <div className="grid gap-2">
+                {unaspected.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2"
+                  >
+                    <PlanetIcon
+                      planet={p.body_key}
+                      size={16}
+                      color={
+                        PLANET_COLORS[p.body_key as keyof typeof PLANET_COLORS] ?? 'currentColor'
+                      }
+                    />
+                    <span className="text-xs font-medium">
+                      {t(`planets.${p.body_key}` as Parameters<typeof t>[0])}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {t(`signs.${p.sign_key}` as Parameters<typeof t>[0])}
+                      {p.house_number != null
+                        ? ` · ${t('houseLabel', { number: p.house_number })}`
+                        : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* ── Chart Wheel ── */}
       {sortedPlanets.length > 0 ? (
         <section>
@@ -724,16 +1001,14 @@ export default async function ChartDetailPage({
                         </p>
                       ) : null}
                     </div>
-                    <Badge
-                      variant={reading.status === 'error' ? 'destructive' : 'outline'}
-                      className={`shrink-0 ${reading.status === 'ready' ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400' : ''}`}
-                    >
-                      {reading.status === 'ready'
-                        ? t('statusReady')
-                        : reading.status === 'error'
-                          ? t('statusError')
-                          : t('statusPending')}
-                    </Badge>
+                    {reading.status !== 'ready' ? (
+                      <Badge
+                        variant={reading.status === 'error' ? 'destructive' : 'outline'}
+                        className="shrink-0"
+                      >
+                        {reading.status === 'error' ? t('statusError') : t('statusPending')}
+                      </Badge>
+                    ) : null}
                   </div>
                 </Link>
               );
