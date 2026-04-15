@@ -75,7 +75,7 @@ export default async function ChatPage({ params }: { params: Promise<{ readingId
   const used = msgs.filter((m) => m.role === 'user').length;
 
   return (
-    <main className="flex flex-1 min-h-0 flex-col overflow-hidden">
+    <main className="flex h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] min-h-0 flex-1 flex-col overflow-hidden">
       <FollowUpChat
         readingId={readingId}
         readingTitle={reading.title}

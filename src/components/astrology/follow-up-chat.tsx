@@ -185,7 +185,7 @@ export function FollowUpChat({
   }
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {/* ── Header (pinned top) ── */}
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -228,7 +228,7 @@ export function FollowUpChat({
       </div>
 
       {/* ── Messages (scrollable) ── */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
           {/* Starter questions — shown only before first message */}
           {messages.length === 0 && !isStreaming ? (
