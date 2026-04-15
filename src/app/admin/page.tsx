@@ -22,7 +22,6 @@ import {
   AlertTriangle,
   MessageSquare,
   Coins,
-  RefreshCw,
 } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 import { useTranslations } from 'next-intl';
@@ -267,7 +266,7 @@ function VerificationBadge({ user }: { user: AdminUser }) {
   );
 }
 
-type PendingAction = 'toggleAdmin' | 'deleteUser' | 'resetUsage' | null;
+type PendingAction = 'toggleAdmin' | 'deleteUser' | null;
 
 interface UserRowProps {
   user: AdminUser;
@@ -307,49 +306,25 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
     }
   };
 
-  const executeResetUsage = async () => {
-    setLoading(true);
-    try {
-      await adminApi.resetUsage(user.id);
-      toast.success(t('resetUsageSuccess'));
-      onRefresh();
-    } catch {
-      toast.error(t('failedResetUsage'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const executeConfirmed = async () => {
     const action = pendingAction;
     setPendingAction(null);
     if (action === 'toggleAdmin') await executeToggleAdmin();
     if (action === 'deleteUser') await executeDeleteUser();
-    if (action === 'resetUsage') await executeResetUsage();
   };
 
   const actionLabel = isAdminState ? t('demote').toLowerCase() : t('promote').toLowerCase();
 
-  const dialogTitle =
-    pendingAction === 'deleteUser'
-      ? t('deleteConfirmTitle')
-      : pendingAction === 'resetUsage'
-        ? t('resetUsageConfirmTitle')
-        : t('confirmTitle');
+  const dialogTitle = pendingAction === 'deleteUser' ? t('deleteConfirmTitle') : t('confirmTitle');
 
   const dialogDescription =
     pendingAction === 'toggleAdmin'
       ? t('confirmToggleAdmin', { action: actionLabel })
       : pendingAction === 'deleteUser'
         ? t('confirmDeleteUser', { user: formatUserIdentifier(user) })
-        : t('resetUsageConfirmDesc', { user: formatUserIdentifier(user) });
+        : '';
 
-  const confirmLabel =
-    pendingAction === 'deleteUser'
-      ? t('deleteConfirmAction')
-      : pendingAction === 'resetUsage'
-        ? t('resetUsage')
-        : t('confirm');
+  const confirmLabel = pendingAction === 'deleteUser' ? t('deleteConfirmAction') : t('confirm');
 
   return {
     t,
@@ -357,7 +332,6 @@ function useUserActions(user: AdminUser, onRefresh: () => void) {
     isAdminState,
     handleToggleAdmin: () => setPendingAction('toggleAdmin'),
     handleDeleteUser: () => setPendingAction('deleteUser'),
-    handleResetUsage: () => setPendingAction('resetUsage'),
     dialogOpen: pendingAction !== null,
     dialogTitle,
     dialogDescription,
@@ -377,7 +351,6 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
     isAdminState,
     handleToggleAdmin,
     handleDeleteUser,
-    handleResetUsage,
     dialogOpen,
     dialogTitle,
     dialogDescription,
@@ -434,16 +407,6 @@ function UserMobileCard({ user, onRefresh, currentUserId }: UserRowProps) {
               {isAdminState ? t('demote') : t('promote')}
             </Button>
           )}
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={handleResetUsage}
-            disabled={loading}
-            title={t('resetUsage')}
-            className="size-8"
-          >
-            <RefreshCw className="size-3.5" />
-          </Button>
           {!isSelf && (
             <Button
               size="icon"
@@ -472,7 +435,6 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
     isAdminState,
     handleToggleAdmin,
     handleDeleteUser,
-    handleResetUsage,
     dialogOpen,
     dialogTitle,
     dialogDescription,
@@ -533,16 +495,6 @@ function UserRow({ user, onRefresh, currentUserId }: UserRowProps) {
                 {isAdminState ? t('demote') : t('promote')}
               </Button>
             )}
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={handleResetUsage}
-              disabled={loading}
-              title={t('resetUsage')}
-              className="size-8"
-            >
-              <RefreshCw className="size-3.5" />
-            </Button>
             {!isSelf && (
               <Button
                 size="icon"

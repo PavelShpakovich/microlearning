@@ -70,13 +70,6 @@ class AdminApi {
     if (!res.ok) throw new Error(data.error || 'Не удалось удалить пользователя');
     return data;
   }
-
-  async resetUsage(userId: string): Promise<{ success: boolean }> {
-    const res = await fetch(`/api/admin/users/${userId}/reset-usage`, { method: 'POST' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Не удалось сбросить счётчики');
-    return data;
-  }
 }
 
 export const adminApi = new AdminApi();

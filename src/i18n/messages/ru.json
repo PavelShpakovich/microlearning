@@ -84,7 +84,10 @@
   "validation": {
     "passwordTooShort": "Пароль должен быть не менее 8 символов",
     "invalidEmail": "Пожалуйста, введите корректный адрес электронной почты",
-    "passwordsDoNotMatch": "Пароли не совпадают"
+    "passwordsDoNotMatch": "Пароли не совпадают",
+    "emailRequired": "Введите адрес электронной почты",
+    "passwordRequired": "Введите пароль",
+    "confirmPasswordRequired": "Подтвердите пароль"
   },
   "auth": {
     "loginTitle": "Добро пожаловать",
