@@ -111,12 +111,11 @@ async function searchCitiesNominatim(query: string): Promise<CityOption[]> {
 
 async function lookupTimezone(lat: number, lon: number): Promise<string | null> {
   try {
-    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-    const res = await fetch(url);
+    const res = await fetch(`/api/timezone?lat=${lat}&lon=${lon}`);
     if (!res.ok) return null;
 
-    const data = (await res.json()) as { ianaTimeZoneId?: string };
-    return data.ianaTimeZoneId ?? null;
+    const data = (await res.json()) as { timezone?: string | null };
+    return data.timezone ?? null;
   } catch {
     return null;
   }
@@ -594,14 +593,18 @@ export function ChartIntakeForm({
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="timezone">{t('timezone')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="timezone">{t('timezone')}</Label>
+                    {tzAutoDetecting ? (
+                      <span className="text-xs text-muted-foreground">
+                        {t('timezoneAutoDetecting')}
+                      </span>
+                    ) : null}
+                  </div>
                   <TimezoneSelect
                     value={form.timezone}
                     onValueChange={(value) => update('timezone', value)}
-                    placeholder={
-                      tzAutoDetecting ? t('timezoneAutoDetecting') : t('timezoneSearchPlaceholder')
-                    }
-                    disabled={tzAutoDetecting}
+                    placeholder={t('timezoneSearchPlaceholder')}
                   />
                 </div>
 
