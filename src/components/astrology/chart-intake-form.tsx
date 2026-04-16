@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimezoneSelect } from '@/components/ui/timezone-select';
 import { normalizeHouseSystem, type HouseSystem } from '@/lib/astrology/constants';
 import { chartsApi } from '@/services/charts-api';
 
@@ -121,14 +122,6 @@ async function lookupTimezone(lat: number, lon: number): Promise<string | null> 
   }
 }
 
-function getIanaTimezones(): string[] {
-  try {
-    return Intl.supportedValuesOf('timeZone');
-  } catch {
-    return ['Europe/Moscow', 'Europe/Minsk', 'Asia/Almaty', 'UTC'];
-  }
-}
-
 function normalizeBirthTime(value?: string | null): string {
   if (!value) return '';
 
@@ -166,10 +159,7 @@ export function ChartIntakeForm({
   const [citySearching, setCitySearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [tzAutoDetecting, setTzAutoDetecting] = useState(false);
-  const [tzSearch, setTzSearch] = useState('');
-  const [showTzDropdown, setShowTzDropdown] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const allTimezones = useRef<string[]>([]);
 
   const subjectOptions = [
     { value: 'self', label: t('subjectSelf') },
@@ -211,7 +201,6 @@ export function ChartIntakeForm({
   }, []);
 
   useEffect(() => {
-    allTimezones.current = getIanaTimezones();
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -259,13 +248,6 @@ export function ChartIntakeForm({
       setForm((current) => ({ ...current, timezone }));
     }
   }, []);
-
-  const filteredTimezones =
-    tzSearch.length >= 1
-      ? allTimezones.current
-          .filter((timezone) => timezone.toLowerCase().includes(tzSearch.toLowerCase()))
-          .slice(0, 8)
-      : [];
 
   const validateStep = (step: ChartWizardStep): string | null => {
     if (step === 0 && (!form.label.trim() || !form.personName.trim())) {
@@ -613,45 +595,14 @@ export function ChartIntakeForm({
 
                 <div className="grid gap-2">
                   <Label htmlFor="timezone">{t('timezone')}</Label>
-                  <div className="relative">
-                    <Input
-                      id="timezone"
-                      value={tzAutoDetecting ? t('timezoneAutoDetecting') : form.timezone}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        update('timezone', value);
-                        setTzSearch(value);
-                        setShowTzDropdown(value.length >= 1);
-                      }}
-                      onFocus={() => {
-                        setTzSearch(form.timezone);
-                        if (form.timezone.length >= 1) setShowTzDropdown(true);
-                      }}
-                      onBlur={() => setTimeout(() => setShowTzDropdown(false), 150)}
-                      placeholder={t('timezoneSearchPlaceholder')}
-                      disabled={tzAutoDetecting}
-                      autoComplete="off"
-                    />
-                    {showTzDropdown && filteredTimezones.length > 0 ? (
-                      <ul className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border bg-popover shadow-lg">
-                        {filteredTimezones.map((timezone) => (
-                          <li key={timezone}>
-                            <button
-                              type="button"
-                              className="min-h-[44px] w-full truncate px-3 py-2.5 text-left text-sm hover:bg-accent"
-                              onMouseDown={() => {
-                                update('timezone', timezone);
-                                setTzSearch(timezone);
-                                setShowTzDropdown(false);
-                              }}
-                            >
-                              {timezone}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
+                  <TimezoneSelect
+                    value={form.timezone}
+                    onValueChange={(value) => update('timezone', value)}
+                    placeholder={
+                      tzAutoDetecting ? t('timezoneAutoDetecting') : t('timezoneSearchPlaceholder')
+                    }
+                    disabled={tzAutoDetecting}
+                  />
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
