@@ -17,6 +17,8 @@ const PROGRESS_STEPS = [
   { key: 'finalizing', delayMs: 44000 },
 ] as const;
 
+const POLL_INTERVAL_MS = 4000;
+
 export function ReadingGenerating({ readingId }: ReadingGeneratingProps) {
   const router = useRouter();
   const t = useTranslations('readingGenerating');
@@ -25,7 +27,6 @@ export function ReadingGenerating({ readingId }: ReadingGeneratingProps) {
   const didFire = useRef(false);
 
   // Advance progress indicators independently of network.
-  // Separate effect so timers restart after Strict Mode remount.
   useEffect(() => {
     const timers = PROGRESS_STEPS.slice(1).map(({ delayMs }, i) =>
       setTimeout(() => setStepIndex(i + 1), delayMs),
@@ -46,6 +47,29 @@ export function ReadingGenerating({ readingId }: ReadingGeneratingProps) {
       .catch(() => {
         setFailed(true);
       });
+  }, [readingId, router]);
+
+  // Poll status as a safety net: catches the case where the reading was
+  // already `generating` (idempotency early-return) or when the fetch
+  // response is lost. Unmounts naturally once the parent stops rendering
+  // this component.
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/readings/${readingId}`, { method: 'GET' });
+        if (!res.ok) return;
+        const data = (await res.json()) as { status: string };
+        if (data.status === 'ready') {
+          router.refresh();
+        } else if (data.status === 'error') {
+          setFailed(true);
+        }
+      } catch {
+        // network hiccup — try again next tick
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(id);
   }, [readingId, router]);
 
   if (failed) {
