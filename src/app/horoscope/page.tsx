@@ -8,6 +8,7 @@ export const metadata: Metadata = { robots: { index: false } };
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getOrCreateDailyForecast } from '@/lib/forecasts/service';
 import { HoroscopeGenerating } from '@/components/astrology/horoscope-generating';
+import { HoroscopeRegenerate } from '@/components/astrology/horoscope-regenerate';
 import { Button } from '@/components/ui/button';
 import { Sparkles, CalendarDays } from 'lucide-react';
 
@@ -129,13 +130,14 @@ export default async function HoroscopePage() {
       )}
 
       {/* Footer nav */}
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <Button asChild variant="outline" size="sm">
           <Link href="/dashboard">{t('backToDashboard')}</Link>
         </Button>
         <Button asChild variant="outline" size="sm">
           <Link href="/calendar">{t('calendarLink')}</Link>
         </Button>
+        {isReady ? <HoroscopeRegenerate forecastId={forecast.id} /> : null}
       </div>
     </main>
   );

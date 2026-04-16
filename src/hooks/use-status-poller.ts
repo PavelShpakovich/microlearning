@@ -24,8 +24,10 @@ export function useStatusPoller(url: string, intervalMs = DEFAULT_INTERVAL_MS) {
           ((data.report as Record<string, unknown> | undefined)?.status as string | undefined);
 
         if (status === 'ready') {
+          clearInterval(id);
           router.refresh();
         } else if (status === 'error') {
+          clearInterval(id);
           setFailed(true);
         }
       } catch {

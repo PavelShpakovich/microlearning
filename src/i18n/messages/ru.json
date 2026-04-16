@@ -880,7 +880,9 @@
     "generatingStep4": "Почти готово…",
     "generatingErrorTitle": "Не удалось создать гороскоп",
     "generatingErrorDesc": "Что-то пошло не так. Попробуйте обновить страницу.",
-    "refresh": "Обновить"
+    "refresh": "Обновить",
+    "regenerate": "Обновить гороскоп",
+    "regenerating": "Обновление…"
   },
   "calendar": {
     "eyebrow": "Астрология",

@@ -7,6 +7,153 @@ import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import type { Json, TablesInsert } from '@/lib/supabase/types';
 
+// ── Russian planet/sign labels ────────────────────────────────────────────────
+const BODY_RU: Record<string, string> = {
+  sun: 'Солнце',
+  moon: 'Луна',
+  mercury: 'Меркурий',
+  venus: 'Венера',
+  mars: 'Марс',
+  jupiter: 'Юпитер',
+  saturn: 'Сатурн',
+  uranus: 'Уран',
+  neptune: 'Нептун',
+  pluto: 'Плутон',
+  ascendant: 'Асцендент',
+  midheaven: 'Середина Неба',
+};
+
+const SIGN_RU: Record<string, string> = {
+  aries: 'Овен',
+  taurus: 'Телец',
+  gemini: 'Близнецы',
+  cancer: 'Рак',
+  leo: 'Лев',
+  virgo: 'Дева',
+  libra: 'Весы',
+  scorpio: 'Скорпион',
+  sagittarius: 'Стрелец',
+  capricorn: 'Козерог',
+  aquarius: 'Водолей',
+  pisces: 'Рыбы',
+};
+
+const PLANET_ORDER = [
+  'sun',
+  'moon',
+  'mercury',
+  'venus',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+  'pluto',
+];
+
+// ── Moon phase (deterministic) ────────────────────────────────────────────────
+function computeMoonPhaseRu(sunLon: number, moonLon: number): string {
+  const angle = (moonLon - sunLon + 360) % 360;
+  if (angle < 22.5 || angle >= 337.5) return 'Новолуние — время для новых начинаний';
+  if (angle < 67.5) return 'Растущий серп — энергия нарастает';
+  if (angle < 112.5) return 'Первая четверть — время активных действий';
+  if (angle < 157.5) return 'Растущая луна — сила и рост';
+  if (angle < 202.5) return 'Полнолуние — пик энергии, завершение циклов';
+  if (angle < 247.5) return 'Убывающая луна — время осмысления и отдачи';
+  if (angle < 292.5) return 'Последняя четверть — отпускание и переосмысление';
+  return 'Убывающий серп — завершение, подготовка к новому';
+}
+
+// ── Transit-to-natal aspect computation ──────────────────────────────────────
+const ASPECTS = [
+  { name: 'соединение', angle: 0, orb: 8 },
+  { name: 'секстиль', angle: 60, orb: 6 },
+  { name: 'квадрат', angle: 90, orb: 7 },
+  { name: 'тригон', angle: 120, orb: 7 },
+  { name: 'оппозиция', angle: 180, orb: 8 },
+] as const;
+
+interface TransitAspect {
+  transitBody: string;
+  natalBody: string;
+  aspectName: string;
+  orb: number;
+  applying: boolean;
+}
+
+/** Signed shortest angular distance from A to B (positive = A moving toward exact). */
+function signedAngularDiff(a: number, b: number): number {
+  let d = b - a;
+  if (d > 180) d -= 360;
+  if (d < -180) d += 360;
+  return d;
+}
+
+function computeTransitAspects(
+  natalPositions: Array<{ body_key: string; degree_decimal: number }>,
+  transitPositions: Array<{ bodyKey: string; degreeDecimal: number; retrograde: boolean }>,
+): TransitAspect[] {
+  const aspects: TransitAspect[] = [];
+  const natalPlanets = natalPositions.filter((p) => PLANET_ORDER.includes(p.body_key));
+  const transitPlanets = transitPositions.filter((p) => PLANET_ORDER.includes(p.bodyKey));
+
+  for (const transit of transitPlanets) {
+    for (const natal of natalPlanets) {
+      const raw = Math.abs(signedAngularDiff(transit.degreeDecimal, natal.degree_decimal));
+      const diff = raw > 180 ? 360 - raw : raw;
+      for (const aspect of ASPECTS) {
+        const orb = Math.abs(diff - aspect.angle);
+        if (orb <= aspect.orb) {
+          // Applying = transit is closing in on exact aspect.
+          // For direct planets, if the transit longitude is before the exact point, it's applying.
+          // Retrograde reverses the direction.
+          const exactTarget = (natal.degree_decimal + aspect.angle) % 360;
+          const gap = signedAngularDiff(transit.degreeDecimal, exactTarget);
+          const applying = transit.retrograde ? gap < 0 : gap > 0;
+          aspects.push({
+            transitBody: transit.bodyKey,
+            natalBody: natal.body_key,
+            aspectName: aspect.name,
+            orb,
+            applying,
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  return aspects.sort((a, b) => a.orb - b.orb).slice(0, 10);
+}
+
+/** Compute notable aspects between transiting planets themselves (general day tone). */
+function computeTransitToTransitAspects(
+  transitPositions: Array<{ bodyKey: string; degreeDecimal: number }>,
+): Array<{ bodyA: string; bodyB: string; aspectName: string; orb: number }> {
+  const results: Array<{ bodyA: string; bodyB: string; aspectName: string; orb: number }> = [];
+  // Use tighter orbs for transit-to-transit (general backdrop, not personalized)
+  const tightOrbs = [6, 4, 5, 5, 6]; // conjunction, sextile, square, trine, opposition
+
+  for (let i = 0; i < transitPositions.length; i++) {
+    for (let j = i + 1; j < transitPositions.length; j++) {
+      const a = transitPositions[i];
+      const b = transitPositions[j];
+      const raw = Math.abs(a.degreeDecimal - b.degreeDecimal);
+      const diff = raw > 180 ? 360 - raw : raw;
+      for (let k = 0; k < ASPECTS.length; k++) {
+        const aspect = ASPECTS[k];
+        const orb = Math.abs(diff - aspect.angle);
+        if (orb <= tightOrbs[k]) {
+          results.push({ bodyA: a.bodyKey, bodyB: b.bodyKey, aspectName: aspect.name, orb });
+          break;
+        }
+      }
+    }
+  }
+
+  return results.sort((a, b) => a.orb - b.orb).slice(0, 5);
+}
+
 const db = supabaseAdmin;
 
 /** Returns today's date string (YYYY-MM-DD) in the given IANA timezone, or UTC if invalid/missing. */
@@ -25,7 +172,7 @@ export const dailyForecastSchema = z.object({
   interpretation: z.string(),
   keyTheme: z.string(),
   advice: z.string(),
-  moonPhase: z.string().optional(),
+  moonPhase: z.string().optional(), // set deterministically after generation
 });
 
 export type DailyForecastContent = z.infer<typeof dailyForecastSchema>;
@@ -108,11 +255,12 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
     .from('charts')
     .select('*')
     .eq('id', forecast.chart_id)
+    .eq('subject_type', 'self')
     .maybeSingle();
 
-  if (!chart) throw new NotFoundError({ message: 'Chart not found' });
+  if (!chart) throw new NotFoundError({ message: 'Self chart not found' });
 
-  // Fetch natal positions
+  // Fetch natal positions (including degree for aspect calculation)
   const { data: snapshot } = await db
     .from('chart_snapshots')
     .select('id')
@@ -124,71 +272,143 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
   const { data: positions } = snapshot
     ? await db
         .from('chart_positions')
-        .select('body_key, sign_key, house_number')
+        .select('body_key, sign_key, house_number, degree_decimal, retrograde')
         .eq('chart_snapshot_id', snapshot.id)
     : { data: [] };
 
-  // Compute today's transits
+  // Compute today's transits (geocentric — location does not affect planetary longitudes)
   const today = new Date();
-  let transitPositions: Array<{ bodyKey: string; signKey: string; degreeDecimal: number }> = [];
+  let transitPositions: Array<{
+    bodyKey: string;
+    signKey: string;
+    degreeDecimal: number;
+    retrograde: boolean;
+  }> = [];
   try {
     const transitResult = await calculateNatalChart({
       personName: 'transit',
       birthDate: today.toISOString().slice(0, 10),
       birthTime: '12:00',
       birthTimeKnown: true,
-      city: chart.city ?? 'London',
-      country: chart.country ?? 'GB',
-      latitude: chart.latitude ?? 51.5,
-      longitude: chart.longitude ?? 0,
+      city: 'London',
+      country: 'GB',
+      latitude: 51.5,
+      longitude: 0,
       houseSystem: 'equal',
       label: 'transit',
       subjectType: 'other',
     });
-    transitPositions = transitResult.positions.map((p) => ({
-      bodyKey: p.bodyKey,
-      signKey: p.signKey,
-      degreeDecimal: p.degreeDecimal,
-    }));
+    // Only the 10 main planets — angles (ASC/MC) are not real transiting bodies
+    transitPositions = transitResult.positions
+      .filter((p) => PLANET_ORDER.includes(p.bodyKey))
+      .map((p) => ({
+        bodyKey: p.bodyKey,
+        signKey: p.signKey,
+        degreeDecimal: p.degreeDecimal,
+        retrograde: p.retrograde,
+      }));
   } catch (err) {
     logger.error({ err }, 'Failed to compute transits for daily forecast');
   }
 
+  // Deterministic moon phase (not LLM-generated)
+  const transitSun = transitPositions.find((p) => p.bodyKey === 'sun');
+  const transitMoon = transitPositions.find((p) => p.bodyKey === 'moon');
+  const moonPhase =
+    transitSun && transitMoon
+      ? computeMoonPhaseRu(transitSun.degreeDecimal, transitMoon.degreeDecimal)
+      : undefined;
+
+  // Transit-to-natal aspects
+  const natalWithDegree = (positions ?? []).filter((p) => p.degree_decimal != null);
+  const transitAspects = computeTransitAspects(natalWithDegree, transitPositions);
+
+  // Transit-to-transit aspects (general day backdrop)
+  const skyAspects = computeTransitToTransitAspects(transitPositions);
+
+  // Retrograde transits highlight
+  const retrogradeTransits = transitPositions.filter((p) => p.retrograde);
+
+  // ── Prompt data ────────────────────────────────────────────────────────────
   const natalLines = (positions ?? [])
-    .slice(0, 10)
-    .map(
-      (p) => `  - ${p.body_key} в ${p.sign_key}${p.house_number ? `, дом ${p.house_number}` : ''}`,
-    )
+    .filter((p) => PLANET_ORDER.includes(p.body_key))
+    .map((p) => {
+      const bodyRu = BODY_RU[p.body_key] ?? p.body_key;
+      const signRu = SIGN_RU[p.sign_key] ?? p.sign_key;
+      const housePart = p.house_number ? `, дом ${p.house_number}` : '';
+      const retroPart = p.retrograde ? ' (ретро)' : '';
+      return `  - ${bodyRu} в ${signRu}${housePart}${retroPart}`;
+    })
     .join('\n');
 
   const transitLines = transitPositions
-    .slice(0, 8)
-    .map((p) => `  - ${p.bodyKey} в ${p.signKey} (${p.degreeDecimal.toFixed(1)}°)`)
+    .map((p) => {
+      const bodyRu = BODY_RU[p.bodyKey] ?? p.bodyKey;
+      const signRu = SIGN_RU[p.signKey] ?? p.signKey;
+      const retroPart = p.retrograde ? ' ℞' : '';
+      return `  - ${bodyRu}: ${signRu} (${p.degreeDecimal.toFixed(1)}°)${retroPart}`;
+    })
     .join('\n');
+
+  const aspectLines =
+    transitAspects.length > 0
+      ? transitAspects
+          .map((a) => {
+            const tRu = BODY_RU[a.transitBody] ?? a.transitBody;
+            const nRu = BODY_RU[a.natalBody] ?? a.natalBody;
+            const phase = a.applying ? 'сближение' : 'расхождение';
+            return `  - ${tRu} ${a.aspectName} натальный ${nRu} (орб ${a.orb.toFixed(1)}°, ${phase})`;
+          })
+          .join('\n')
+      : '  — активных аспектов нет';
+
+  const skyAspectLines =
+    skyAspects.length > 0
+      ? skyAspects
+          .map((a) => {
+            const aRu = BODY_RU[a.bodyA] ?? a.bodyA;
+            const bRu = BODY_RU[a.bodyB] ?? a.bodyB;
+            return `  - ${aRu} ${a.aspectName} ${bRu} (орб ${a.orb.toFixed(1)}°)`;
+          })
+          .join('\n')
+      : '';
+
+  const retroLines =
+    retrogradeTransits.length > 0
+      ? retrogradeTransits.map((p) => `  - ${BODY_RU[p.bodyKey] ?? p.bodyKey}`).join('\n')
+      : '';
 
   const systemPrompt = `КРИТИЧЕСКИ ВАЖНО: Весь JSON-ответ ОБЯЗАТЕЛЬНО должен быть написан на русском языке.
 
-Ты пишешь персональный ежедневный гороскоп простым, понятным языком для обычного человека.
-Пиши тепло, по-человечески — как будто говоришь с другом. Никаких сложных астрологических терминов (не используй слова "транзит", "оппозиция", "квадратура", "соединение", "куспид", "аспект" и т.п.).
-Вместо "Транзитный Марс входит в соединение с натальным Сатурном" пиши просто: "Сегодня ощущается напряжение — лучше не спешить с важными решениями."
+Ты — опытный астролог, который пишет персональный ежедневный гороскоп. Тебе предоставлены ФАКТИЧЕСКИЕ астрологические данные, вычисленные по эфемеридам. Используй их точно — не изменяй и не противоречь указанным положениям планет.
+
+ПРАВИЛА ИНТЕРПРЕТАЦИИ:
+1. ПРИОРИТЕТ АСПЕКТОВ: Сближающиеся аспекты с малым орбом (< 2°) — самые сильные влияния дня. Расходящиеся аспекты — фоновые.
+2. РЕТРОГРАДНЫЕ ПЛАНЕТЫ: Ретроградный Меркурий — пересмотр, коммуникационные сбои. Ретроградная Венера — переоценка отношений. Ретроградный Марс — внутренняя переработка энергии. Если ретроградов нет — не упоминай ретроградность.
+3. ЛУННАЯ ФАЗА: Учитывай фазу луны как эмоциональный фон дня.
+4. ОБЩИЙ ФОН: Аспекты между транзитными планетами задают тон дня для всех людей. Аспекты к натальной карте — персональные.
+
+Пиши тепло и по-человечески. Избегай сложных астрологических терминов в тексте (не используй слова "транзит", "оппозиция", "квадратура", "орб", "аспект", "куспид", "ретроградный"). Вместо этого выражай смысл простым языком.
 Прогноз должен быть конкретным, жизненным и полезным. Минимум общих фраз.
 Выведи ответ ТОЛЬКО как JSON без markdown-блоков.`;
 
   const userPrompt = `Дата: ${today.toISOString().slice(0, 10)}
-Имя: ${chart.person_name}
+Имя: ${chart.person_name}${moonPhase ? `\nЛунная фаза: ${moonPhase}` : ''}
 
-Натальная карта (ключевые позиции):
+Положение планет на небе СЕГОДНЯ (фактические данные по эфемеридам, ℞ = ретроградная):
+${transitLines || '  — нет данных'}${retroLines ? `\n\nРетроградные планеты сегодня:\n${retroLines}` : ''}${skyAspectLines ? `\n\nОбщий астрологический фон дня (аспекты между транзитными планетами):\n${skyAspectLines}` : ''}
+
+Персональные влияния (аспекты транзитных планет к натальной карте ${chart.person_name}):
+${aspectLines}
+
+Натальная карта ${chart.person_name}:
 ${natalLines || '  — нет данных'}
 
-Текущие планеты на небе:
-${transitLines || '  — нет данных'}
-
-Напиши персональный гороскоп на сегодня для ${chart.person_name}. Используй данные карты как контекст, но пиши простым языком без астрологических терминов. Ответь JSON:
+Напиши персональный гороскоп на сегодня. Опирайся прежде всего на персональные аспекты (особенно сближающиеся с малым орбом). Учти общий фон и фазу луны. Ответь JSON:
 {
-  "interpretation": "2-3 абзаца (минимум 150 слов), разделённых двойным переносом строки. Пиши просто и по-человечески: что может происходить сегодня, на что обратить внимание, как использовать день.",
-  "keyTheme": "Одна ключевая тема дня, 2-4 слова, простыми словами (например: 'Время для общения', 'Фокус на себе', 'День решений')",
-  "advice": "Один практический совет на сегодня, 1-2 предложения простым языком",
-  "moonPhase": "Простое описание лунной энергии дня, без терминов (опционально)"
+  "interpretation": "2-3 абзаца (минимум 150 слов), разделённых двойным переносом строки. Что может происходить сегодня, на что обратить внимание, как использовать день.",
+  "keyTheme": "Одна ключевая тема дня, 2-4 слова (например: 'Время для общения', 'Фокус на себе', 'День решений')",
+  "advice": "Один практический совет, 1-2 предложения"
 }`;
 
   const modelName = env.LLM_PROVIDER === 'qwen' ? env.QWEN_MODEL : 'mock';
@@ -203,13 +423,14 @@ ${transitLines || '  — нет данных'}
       schema: dailyForecastSchema,
       mockResponse: {
         interpretation:
-          'Сегодня звёзды благоприятствуют новым начинаниям. Транзитное Солнце освещает вашу натальную карту, принося ясность и уверенность.\n\nЛуна усиливает интуицию — доверяйте своим ощущениям в принятии решений. Это хороший момент для завершения старых дел и планирования будущего.\n\nОбратите внимание на свои отношения с близкими. Искреннее общение сегодня принесёт положительные результаты.',
+          'Сегодня ощущается прилив ясности и желание двигаться вперёд. Если давно откладывали какое-то дело — сегодня хороший момент взяться за него: энергия благоприятствует активным шагам.\n\nОбратите внимание на общение с близкими — сегодня слова находят отклик особенно легко. Искренний разговор может прояснить то, что давно оставалось невысказанным.\n\nВечером стоит замедлиться и уделить время себе: небольшой отдых или прогулка помогут переработать впечатления дня и восстановить силы.',
         keyTheme: 'Ясность и движение',
-        advice: 'Используйте сегодняшнюю энергию для принятия важных решений. Действуйте уверенно.',
-        moonPhase: 'Растущая луна — время для роста и новых начинаний',
+        advice: 'Начните день с самого важного дела — сейчас для этого есть и силы, и настрой.',
       },
     });
     result = generation.content;
+    // Inject deterministic moon phase (overrides any LLM hallucination)
+    if (moonPhase) result.moonPhase = moonPhase;
 
     const generationLogRow: TablesInsert<'generation_logs'> = {
       user_id: userId,
@@ -276,4 +497,27 @@ ${transitLines || '  — нет данных'}
     'Daily forecast generated',
   );
   return result;
+}
+
+/** Clears existing content for a forecast so it can be re-generated.
+ *  Returns instantly — the client should then trigger the generate flow. */
+export async function clearDailyForecastContent(forecastId: string, userId: string) {
+  const { data: forecast } = await db
+    .from('forecasts')
+    .select('id, user_id')
+    .eq('id', forecastId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!forecast) throw new NotFoundError({ message: 'Forecast not found' });
+
+  // Column is NOT NULL — use empty object instead of null.
+  // The isReady check (typeof content.interpretation === 'string') will correctly fail for {}.
+  await db
+    .from('forecasts')
+    .update({
+      rendered_content_json: {} as Json,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', forecastId);
 }
