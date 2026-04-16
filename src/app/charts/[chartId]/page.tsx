@@ -22,7 +22,6 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 import { CreateReadingButton } from '@/components/astrology/create-reading-button';
-import { RecalculateButton } from '@/components/astrology/recalculate-button';
 import { ChartWheel } from '@/components/astrology/chart-wheel';
 import {
   ZodiacIcon,
@@ -422,29 +421,35 @@ export default async function ChartDetailPage({
             </div>
           </div>
           {/* Actions */}
-          <div className="flex w-full shrink-0 flex-col items-start gap-2.5 sm:w-auto sm:items-end">
-            <div className="flex w-full flex-col gap-2 sm:min-w-48 sm:max-w-48">
-              <CreateReadingButton
-                chartId={chart.id}
-                chartStatus={chart.status}
-                className="w-full justify-center"
-              />
-              <Button asChild variant="outline" className="w-full justify-center">
-                <Link href={`/compatibility/new?primaryChartId=${chart.id}`}>
-                  <Heart className="mr-2 size-4" />
-                  {t('compareWithChart')}
-                </Link>
-              </Button>
-            </div>
-            {/* Secondary icon toolbar */}
-            <div className="flex w-fit items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
-              <Button asChild variant="ghost" size="icon" className="size-8" title={t('editChart')}>
-                <Link href={`/charts/${chart.id}/edit`}>
-                  <Pencil className="size-3.5" />
-                </Link>
-              </Button>
-              <div className="mx-0.5 h-4 w-px bg-border" />
-              <RecalculateButton chartId={chart.id} iconOnly />
+          <div className="w-full shrink-0 sm:w-64">
+            <div className="rounded-2xl border border-border/60 bg-muted/30 p-2.5 shadow-sm shadow-black/5">
+              <div className="flex flex-col gap-2">
+                <CreateReadingButton
+                  chartId={chart.id}
+                  chartStatus={chart.status}
+                  className="h-11 w-full justify-center rounded-xl px-4 shadow-sm"
+                />
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-11 w-full justify-center rounded-xl border-border/70 bg-background/90 px-4"
+                >
+                  <Link href={`/compatibility/new?primaryChartId=${chart.id}`}>
+                    <Heart className="size-4" />
+                    {t('compareWithChart')}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="h-10 w-full justify-center rounded-xl text-muted-foreground hover:text-foreground"
+                >
+                  <Link href={`/charts/${chart.id}/edit`}>
+                    <Pencil className="size-4" />
+                    {t('editChart')}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

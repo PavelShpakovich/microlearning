@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { Json } from '@/lib/supabase/types';
 import type { ChartComputationResult } from '@/lib/astrology/types';
 import type { ChartCreateInput } from '@/lib/astrology/chart-schema';
+import { NotFoundError } from '@/lib/errors';
 
 const db = supabaseAdmin;
 
@@ -54,6 +55,50 @@ export async function markChartFailed(chartId: string) {
   if (error) {
     throw error;
   }
+}
+
+export async function getChartWithBirthData(chartId: string, userId: string) {
+  const { data: chart, error } = await db
+    .from('charts')
+    .select('*')
+    .eq('id', chartId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!chart) throw new NotFoundError({ message: 'Chart not found' });
+
+  return chart;
+}
+
+export async function deleteChartSnapshots(chartId: string) {
+  const { data: existingSnapshots, error: snapshotsError } = await db
+    .from('chart_snapshots')
+    .select('id')
+    .eq('chart_id', chartId);
+
+  if (snapshotsError) throw snapshotsError;
+
+  if (!existingSnapshots || existingSnapshots.length === 0) {
+    return;
+  }
+
+  const snapshotIds = existingSnapshots.map((snapshot) => snapshot.id);
+
+  const { error: aspectsError } = await db
+    .from('chart_aspects')
+    .delete()
+    .in('chart_snapshot_id', snapshotIds);
+  if (aspectsError) throw aspectsError;
+
+  const { error: positionsError } = await db
+    .from('chart_positions')
+    .delete()
+    .in('chart_snapshot_id', snapshotIds);
+  if (positionsError) throw positionsError;
+
+  const { error: deleteError } = await db.from('chart_snapshots').delete().eq('chart_id', chartId);
+  if (deleteError) throw deleteError;
 }
 
 export async function saveChartSnapshot(chartId: string, result: ChartComputationResult) {

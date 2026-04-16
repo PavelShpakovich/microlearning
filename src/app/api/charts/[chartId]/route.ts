@@ -5,6 +5,8 @@ import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { HOUSE_SYSTEMS, CHART_SUBJECT_TYPES } from '@/lib/astrology/constants';
+import { recalculateChart } from '@/lib/astrology/chart-service';
+import { clearDailyForecastsForChart } from '@/lib/forecasts/service';
 
 const db = supabaseAdmin;
 
@@ -99,7 +101,7 @@ export const PATCH = withApiHandler(async (req, ctx) => {
   // Verify ownership
   const { data: chart } = await db
     .from('charts')
-    .select('id')
+    .select('*')
     .eq('id', chartId)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -121,6 +123,20 @@ export const PATCH = withApiHandler(async (req, ctx) => {
   if (d.houseSystem !== undefined) updates.house_system = d.houseSystem;
   if (d.notes !== undefined) updates.notes = d.notes;
 
+  const astrologyInputsChanged =
+    (d.birthDate !== undefined && d.birthDate !== chart.birth_date) ||
+    (d.birthTime !== undefined && (d.birthTime ?? null) !== (chart.birth_time ?? null)) ||
+    (d.birthTimeKnown !== undefined && d.birthTimeKnown !== chart.birth_time_known) ||
+    (d.city !== undefined && d.city !== chart.city) ||
+    (d.country !== undefined && d.country !== chart.country) ||
+    (d.timezone !== undefined && (d.timezone ?? null) !== (chart.timezone ?? null)) ||
+    (d.latitude !== undefined && (d.latitude ?? null) !== (chart.latitude ?? null)) ||
+    (d.longitude !== undefined && (d.longitude ?? null) !== (chart.longitude ?? null)) ||
+    (d.houseSystem !== undefined && d.houseSystem !== chart.house_system);
+
+  const subjectTypeChanged = d.subjectType !== undefined && d.subjectType !== chart.subject_type;
+  const shouldRecalculate = astrologyInputsChanged;
+
   const { data: updated, error } = await db
     .from('charts')
     .update(updates)
@@ -131,7 +147,33 @@ export const PATCH = withApiHandler(async (req, ctx) => {
 
   if (error || !updated) throw error ?? new Error('Failed to update chart');
 
-  return NextResponse.json({ chart: updated });
+  const affectsSelfForecast =
+    (astrologyInputsChanged || subjectTypeChanged) &&
+    (chart.subject_type === 'self' || updated.subject_type === 'self');
+
+  let recalcResult:
+    | {
+        snapshot: { id: string; snapshot_version: number };
+        positionCount: number;
+        aspectCount: number;
+        warnings: unknown;
+      }
+    | undefined;
+
+  if (shouldRecalculate) {
+    recalcResult = await recalculateChart(chartId, user.id);
+  }
+
+  if (affectsSelfForecast) {
+    await clearDailyForecastsForChart(chartId, user.id);
+  }
+
+  return NextResponse.json({
+    chart: updated,
+    recalculated: shouldRecalculate,
+    forecastInvalidated: affectsSelfForecast,
+    snapshot: recalcResult?.snapshot,
+  });
 });
 
 export const DELETE = withApiHandler(async (_req, ctx) => {

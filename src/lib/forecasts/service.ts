@@ -521,3 +521,19 @@ export async function clearDailyForecastContent(forecastId: string, userId: stri
     })
     .eq('id', forecastId);
 }
+
+export async function clearDailyForecastsForChart(chartId: string, userId: string) {
+  const { error } = await db
+    .from('forecasts')
+    .update({
+      rendered_content_json: {} as Json,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('chart_id', chartId)
+    .eq('forecast_type', 'daily');
+
+  if (error) {
+    throw new Error(`Failed to clear daily forecasts: ${error.message}`);
+  }
+}
