@@ -49,7 +49,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_KEY=your-service-role-key
 
 # NextAuth
-NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=replace-with-strong-random-secret
 
 # Telegram

@@ -982,7 +982,7 @@ export default async function ChartDetailPage({
         </div>
 
         {readings && readings.length > 0 ? (
-          <div className="grid gap-3">
+          <div className="flex flex-col gap-3">
             {readings.map((reading) => {
               return (
                 <Link
