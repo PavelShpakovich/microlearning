@@ -2,9 +2,10 @@ import { renderHook, act } from '@testing-library/react';
 import { useStatusPoller } from '@/hooks/use-status-poller';
 
 // Mock next/navigation
-const mockRefresh = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mockRefresh }),
+  useRouter: () => ({ replace: mockReplace }),
+  usePathname: () => '/readings/test-id',
 }));
 
 // Helper: make fetch resolve with a given JSON body and optional status code
@@ -17,7 +18,7 @@ function mockFetch(body: unknown, status = 200) {
 
 beforeEach(() => {
   jest.useFakeTimers();
-  mockRefresh.mockClear();
+  mockReplace.mockClear();
 });
 
 afterEach(() => {
@@ -26,16 +27,16 @@ afterEach(() => {
 });
 
 describe('useStatusPoller', () => {
-  it('does not call refresh or set failed before the first interval fires', () => {
+  it('does not call navigate or set failed before the first interval fires', () => {
     mockFetch({ status: 'generating' });
     const { result } = renderHook(() => useStatusPoller('/api/test/123', 1000));
 
     expect(global.fetch).not.toHaveBeenCalled();
-    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
     expect(result.current.failed).toBe(false);
   });
 
-  it('calls refresh when { status: "ready" }', async () => {
+  it('navigates via replace when { status: "ready" }', async () => {
     mockFetch({ status: 'ready' });
     renderHook(() => useStatusPoller('/api/test/123', 1000));
 
@@ -44,7 +45,8 @@ describe('useStatusPoller', () => {
     });
 
     expect(global.fetch).toHaveBeenCalledWith('/api/test/123');
-    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledWith('/readings/test-id');
   });
 
   it('sets failed when { status: "error" }', async () => {
@@ -56,7 +58,7 @@ describe('useStatusPoller', () => {
     });
 
     expect(result.current.failed).toBe(true);
-    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('does nothing for intermediate statuses', async () => {
@@ -68,7 +70,7 @@ describe('useStatusPoller', () => {
     });
 
     expect(result.current.failed).toBe(false);
-    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('handles nested { report: { status: "ready" } } response shape', async () => {
@@ -79,7 +81,7 @@ describe('useStatusPoller', () => {
       jest.advanceTimersByTime(1000);
     });
 
-    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
   it('handles nested { report: { status: "error" } } response shape', async () => {
@@ -102,7 +104,7 @@ describe('useStatusPoller', () => {
     });
 
     expect(result.current.failed).toBe(false);
-    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('silently ignores network errors and retries on next tick', async () => {
@@ -114,7 +116,7 @@ describe('useStatusPoller', () => {
     });
 
     expect(result.current.failed).toBe(false);
-    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
