@@ -107,7 +107,7 @@ export function parseStructuredJson<T>(raw: string, schema: ZodType<T>): T {
  */
 function tryFixKeyNames(
   parsed: unknown,
-  issues: Array<{ code: string; path: (string | number)[] }>,
+  issues: Array<{ code: string; path: PropertyKey[] }>,
 ): Record<string, unknown> | null {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
 
