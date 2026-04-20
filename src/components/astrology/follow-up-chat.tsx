@@ -57,6 +57,20 @@ export function FollowUpChat({
   const limitReached = used >= limit;
   const remaining = Math.max(0, limit - used);
 
+  // Lock body scroll on mount so iOS Safari doesn't create a second scrollbar
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
+
   const typeKey =
     readingType && (STARTER_KEYS as readonly string[]).includes(readingType)
       ? (readingType as (typeof STARTER_KEYS)[number])
