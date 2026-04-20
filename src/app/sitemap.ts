@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tryclario.by';
 
-// Stable build date — avoids marking every page as modified on every deploy
-const BUILD_DATE = new Date('2025-01-01');
+// Stable build date — update when landing page content changes
+const BUILD_DATE = new Date('2026-04-20');
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

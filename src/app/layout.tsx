@@ -35,14 +35,23 @@ export async function generateMetadata(): Promise<Metadata> {
       template: '%s | Clario',
     },
     description,
-    keywords: [
-      'AI astrology',
-      'natal chart',
-      'astrology reading',
-      'birth data interpretation',
-      'birth chart',
-      'structured astrology insights',
-    ],
+    keywords: isRu
+      ? [
+          'AI астрология',
+          'натальная карта',
+          'астрологический разбор',
+          'натальная карта онлайн',
+          'разбор натальной карты',
+          'персональный гороскоп',
+        ]
+      : [
+          'AI astrology',
+          'natal chart',
+          'astrology reading',
+          'birth chart',
+          'online astrologer',
+          'personal horoscope',
+        ],
     authors: [{ name: 'Clario' }],
     creator: 'Clario',
     openGraph: {
@@ -62,6 +71,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     alternates: {
       canonical: APP_URL,
+      languages: {
+        ru: APP_URL,
+        en: APP_URL,
+        'x-default': APP_URL,
+      },
     },
     icons: {
       icon: [

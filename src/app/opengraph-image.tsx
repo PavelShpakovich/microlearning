@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Clario — AI Astrology Readings';
+export const alt = 'Clario — AI-астрологические разборы';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -32,7 +32,7 @@ export default function Image() {
           marginBottom: 28,
         }}
       >
-        Astrology Workspace
+        Астрологическое пространство
       </div>
 
       <div
@@ -75,8 +75,8 @@ export default function Image() {
           lineHeight: 1.4,
         }}
       >
-        Structured natal charts, AI readings, and follow-up guidance built on deterministic chart
-        data
+        Натальные карты, AI-разборы и персональные прогнозы на основе точных астрономических
+        расчётов
       </div>
 
       <div
