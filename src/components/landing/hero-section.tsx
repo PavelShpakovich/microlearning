@@ -62,10 +62,10 @@ export function HeroSection({
 
       <div className="relative z-10 flex flex-col items-center">
         {/* Tagline pill */}
-        <span className="inline-flex items-center gap-2 mb-6 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-widest uppercase text-primary">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-          {tagline}
-        </span>
+        <div className="flex items-center gap-2 mb-6 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5">
+          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          <p className=" flex-1 text-xs font-semibold uppercase text-primary">{tagline}</p>
+        </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight max-w-3xl mb-6 text-balance leading-[1.1]">
           {headline}
