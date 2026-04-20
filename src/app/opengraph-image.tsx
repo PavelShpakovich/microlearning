@@ -37,25 +37,6 @@ export default function Image() {
 
       <div
         style={{
-          width: 104,
-          height: 104,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #c7a86a 0%, #f0d8a2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 30,
-          fontSize: 50,
-          color: '#172334',
-          fontWeight: 'bold',
-          boxShadow: '0 18px 48px rgba(0,0,0,0.24)',
-        }}
-      >
-        C
-      </div>
-
-      <div
-        style={{
           fontSize: 74,
           fontWeight: 700,
           color: 'white',
