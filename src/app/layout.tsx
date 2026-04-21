@@ -6,7 +6,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import { LandingFooter } from '@/components/layout/landing-footer';
-import { FeedbackWidget } from '@/components/common/feedback-widget';
+
 import { auth } from '@/auth';
 import './globals.css';
 
@@ -127,7 +127,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Header />
             <div className="flex-1 flex flex-col min-h-0">{children}</div>
             {!session ? <LandingFooter /> : null}
-            {session ? <FeedbackWidget /> : null}
           </RootProviders>
         </Suspense>
         <Analytics />

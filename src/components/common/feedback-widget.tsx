@@ -1,36 +1,35 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { MessageSquarePlus, X, Send, Check, Loader2 } from 'lucide-react';
+import { MessageSquarePlus, Send, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-type State = 'closed' | 'open' | 'submitting' | 'success';
+type FormState = 'idle' | 'submitting' | 'success';
 
-export function FeedbackWidget() {
-  const pathname = usePathname();
-  const [state, setState] = useState<State>('closed');
+export function FeedbackButton() {
+  const [open, setOpen] = useState(false);
+  const [formState, setFormState] = useState<FormState>('idle');
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const isOpen = state !== 'closed';
-
   useEffect(() => {
-    if (state === 'open') {
-      setTimeout(() => textareaRef.current?.focus(), 200);
+    if (open && formState === 'idle') {
+      setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [state]);
+  }, [open, formState]);
 
   useEffect(() => {
-    if (state === 'success') {
+    if (formState === 'success') {
       const t = setTimeout(() => {
-        setState('closed');
+        setOpen(false);
+        setFormState('idle');
         setMessage('');
-      }, 3000);
+      }, 2500);
       return () => clearTimeout(t);
     }
-  }, [state]);
+  }, [formState]);
 
   async function handleSubmit() {
     const text = message.trim();
@@ -39,7 +38,7 @@ export function FeedbackWidget() {
       return;
     }
     setError(null);
-    setState('submitting');
+    setFormState('submitting');
     try {
       const res = await fetch('/api/feedback', {
         method: 'POST',
@@ -50,10 +49,10 @@ export function FeedbackWidget() {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(data.error ?? 'Ошибка');
       }
-      setState('success');
+      setFormState('success');
     } catch (err) {
       setError((err as Error).message ?? 'Не удалось отправить');
-      setState('open');
+      setFormState('idle');
     }
   }
 
@@ -64,30 +63,28 @@ export function FeedbackWidget() {
     }
   }
 
-  function toggle() {
-    if (state === 'submitting' || state === 'success') return;
-    if (state === 'closed') setState('open');
-    else {
-      setState('closed');
+  function handleOpenChange(next: boolean) {
+    if (formState === 'submitting') return;
+    setOpen(next);
+    if (!next && formState !== 'success') {
       setError(null);
     }
   }
 
-  if (pathname.startsWith('/chat')) return null;
-
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-      {/* Panel */}
-      <div
-        className={[
-          'w-80 rounded-2xl border bg-card shadow-lg shadow-black/10 overflow-hidden',
-          'transition-all duration-200 origin-bottom-right',
-          isOpen
-            ? 'opacity-100 scale-100 pointer-events-auto'
-            : 'opacity-0 scale-95 pointer-events-none',
-        ].join(' ')}
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Обратная связь">
+          <MessageSquarePlus className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        collisionPadding={8}
+        className="w-80 max-w-[calc(100vw-16px)] p-0"
       >
-        {state === 'success' ? (
+        {formState === 'success' ? (
           <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
             <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30">
               <Check className="size-6" />
@@ -97,16 +94,9 @@ export function FeedbackWidget() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between border-b px-4 py-3">
+            <div className="border-b px-4 py-3">
               <p className="text-sm font-semibold">Обратная связь</p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-foreground"
-                onClick={toggle}
-              >
-                <X className="size-4" />
-              </Button>
+              <p className="text-xs text-muted-foreground mt-0.5">Что думаете о Clario?</p>
             </div>
             <div className="p-4 flex flex-col gap-3">
               <textarea
@@ -117,7 +107,7 @@ export function FeedbackWidget() {
                 placeholder="Расскажите, что думаете или что можно улучшить…"
                 rows={4}
                 maxLength={2000}
-                disabled={state === 'submitting'}
+                disabled={formState === 'submitting'}
                 className="w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
               />
               {error ? <p className="text-xs text-destructive">{error}</p> : null}
@@ -128,10 +118,10 @@ export function FeedbackWidget() {
                 <Button
                   size="sm"
                   onClick={() => void handleSubmit()}
-                  disabled={state === 'submitting' || message.trim().length < 5}
+                  disabled={formState === 'submitting' || message.trim().length < 5}
                   className="gap-1.5"
                 >
-                  {state === 'submitting' ? (
+                  {formState === 'submitting' ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
                     <Send className="size-3.5" />
@@ -142,24 +132,7 @@ export function FeedbackWidget() {
             </div>
           </>
         )}
-      </div>
-
-      {/* FAB */}
-      <button
-        onClick={toggle}
-        aria-label="Обратная связь"
-        className={[
-          'flex size-10 items-center justify-center rounded-full border bg-background/80 backdrop-blur-sm',
-          'text-muted-foreground shadow-sm',
-          'opacity-30 transition-all duration-200 hover:opacity-100 hover:shadow-md hover:text-foreground hover:border-border',
-          'active:scale-95',
-          isOpen && 'opacity-100 border-border text-foreground',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        {isOpen ? <X className="size-4" /> : <MessageSquarePlus className="size-4" />}
-      </button>
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -33,6 +33,7 @@ import {
   Heart,
   CalendarDays,
 } from 'lucide-react';
+import { FeedbackButton } from '@/components/common/feedback-widget';
 
 // ─── Shared constants ────────────────────────────────────────────────────────
 const HEADER_CLASS =
@@ -218,6 +219,7 @@ export function Header() {
 
         {/* Right controls */}
         <div className="flex items-center gap-1">
+          <FeedbackButton />
           <ThemeToggle theme={theme} resolvedTheme={resolvedTheme} setTheme={setTheme} t={t} />
 
           {/* User menu */}
