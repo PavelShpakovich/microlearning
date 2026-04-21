@@ -164,7 +164,7 @@ export default async function ReadingDetailPage({
       ) : null}
 
       {/* Summary */}
-      {(reading.summary ?? content.summary) ? (
+      {reading.status !== 'error' && (reading.summary ?? content.summary) ? (
         <div className="rounded-2xl border bg-primary/5 p-6 md:p-8">
           <p className="text-[15px] leading-[1.75] text-foreground italic">
             {reading.summary ?? content.summary}
@@ -173,7 +173,7 @@ export default async function ReadingDetailPage({
       ) : null}
 
       {/* Key Takeaways */}
-      {content.advice && content.advice.length > 0 ? (
+      {reading.status !== 'error' && content.advice && content.advice.length > 0 ? (
         <div className="rounded-2xl border border-primary/20 bg-card p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary">
             {t('keyTakeaways')}
@@ -192,7 +192,7 @@ export default async function ReadingDetailPage({
       ) : null}
 
       {/* Sections */}
-      {readingSections.length > 0 ? (
+      {reading.status !== 'error' && readingSections.length > 0 ? (
         <div className="flex flex-col gap-8">
           {readingSections.map((section: ReadingSectionRow, idx: number) => (
             <section key={section.id} className="flex flex-col gap-3">
@@ -213,7 +213,7 @@ export default async function ReadingDetailPage({
             </section>
           ))}
         </div>
-      ) : content.sections && content.sections.length > 0 ? (
+      ) : reading.status !== 'error' && content.sections && content.sections.length > 0 ? (
         <div className="flex flex-col gap-8">
           {content.sections.map((section, idx) => (
             <section key={section.key} className="flex flex-col gap-3">
@@ -237,7 +237,9 @@ export default async function ReadingDetailPage({
       ) : null}
 
       {/* Placement Highlights */}
-      {content.placementHighlights && content.placementHighlights.length > 0 ? (
+      {reading.status !== 'error' &&
+      content.placementHighlights &&
+      content.placementHighlights.length > 0 ? (
         <div>
           <h2 className="mb-3 text-base font-semibold">{t('placementHighlights')}</h2>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -251,7 +253,7 @@ export default async function ReadingDetailPage({
       ) : null}
 
       {/* Disclaimers */}
-      {content.disclaimers && content.disclaimers.length > 0 ? (
+      {reading.status !== 'error' && content.disclaimers && content.disclaimers.length > 0 ? (
         <Card className="border-muted">
           <CardContent className="pt-6">
             <p className="text-xs text-muted-foreground">{content.disclaimers.join(' ')}</p>

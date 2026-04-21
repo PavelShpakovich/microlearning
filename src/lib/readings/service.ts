@@ -121,6 +121,7 @@ async function runStructuredStage<T>({
   userPrompt,
   schema,
   mockResponse,
+  maxTokens,
   requestPayload,
   traces,
 }: {
@@ -129,6 +130,7 @@ async function runStructuredStage<T>({
   userPrompt: string;
   schema: ZodType<T>;
   mockResponse: T;
+  maxTokens?: number;
   requestPayload: JsonObject;
   traces: GenerationLogDraft[];
 }): Promise<T> {
@@ -140,6 +142,7 @@ async function runStructuredStage<T>({
       userPrompt,
       schema,
       mockResponse,
+      maxTokens,
     });
 
     traces.push({
@@ -410,6 +413,7 @@ export async function generateReadingContent(readingId: string, userId: string):
       userPrompt: writerPrompts.userPrompt,
       schema: structuredReadingSchema,
       mockResponse: writerPrompts.mockResponse,
+      maxTokens: 8192,
       requestPayload: {
         ...stageContext,
         stage: 'writer',
@@ -426,6 +430,7 @@ export async function generateReadingContent(readingId: string, userId: string):
       userPrompt: reviewPrompts.userPrompt,
       schema: structuredReadingSchema,
       mockResponse: reviewPrompts.mockResponse,
+      maxTokens: 8192,
       requestPayload: {
         ...stageContext,
         stage: 'reviewer',
@@ -440,19 +445,19 @@ export async function generateReadingContent(readingId: string, userId: string):
     content = {
       title: stableReadingTitle(readingType, chart.label, locale),
       summary:
-        'The reading could not be generated automatically in this attempt. The chart data was saved and can be retried.',
+        'Разбор не удалось сгенерировать автоматически. Данные карты сохранены — попробуйте ещё раз.',
       sections: [
         {
           key: 'generation-failed',
-          title: 'Generation Failed',
+          title: 'Генерация не выполнена',
           content:
-            'The structured reading request failed during AI synthesis. The chart snapshot is available, so this reading can be retried without recreating the chart.',
+            'Запрос к AI завершился ошибкой. Снимок карты доступен, поэтому разбор можно повторить без пересоздания карты.',
         },
       ],
       placementHighlights: [],
-      advice: ['Retry the reading after confirming the LLM configuration is available.'],
+      advice: ['Повторите генерацию после проверки настроек AI-провайдера.'],
       disclaimers: [
-        'Astrology output is interpretive guidance and not medical, legal, or financial advice.',
+        'Астрологический разбор носит интерпретационный характер и не является медицинской, юридической или финансовой рекомендацией.',
       ],
       metadata: {
         locale,
