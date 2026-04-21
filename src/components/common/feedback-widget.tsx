@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { MessageSquarePlus, Send, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 type FormState = 'idle' | 'submitting' | 'success';
 
 export function FeedbackButton() {
+  const t = useTranslations('feedback');
   const [open, setOpen] = useState(false);
   const [formState, setFormState] = useState<FormState>('idle');
   const [message, setMessage] = useState('');
@@ -34,7 +36,7 @@ export function FeedbackButton() {
   async function handleSubmit() {
     const text = message.trim();
     if (text.length < 5) {
-      setError('Минимум 5 символов');
+      setError(t('minLength'));
       return;
     }
     setError(null);
@@ -47,11 +49,11 @@ export function FeedbackButton() {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? 'Ошибка');
+        throw new Error(data.error ?? t('errorFallback'));
       }
       setFormState('success');
     } catch (err) {
-      setError((err as Error).message ?? 'Не удалось отправить');
+      setError((err as Error).message ?? t('errorFallback'));
       setFormState('idle');
     }
   }
@@ -74,7 +76,7 @@ export function FeedbackButton() {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Обратная связь">
+        <Button variant="ghost" size="icon" aria-label={t('trigger')}>
           <MessageSquarePlus className="size-4" />
         </Button>
       </PopoverTrigger>
@@ -89,14 +91,14 @@ export function FeedbackButton() {
             <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30">
               <Check className="size-6" />
             </span>
-            <p className="text-sm font-semibold">Спасибо за отзыв!</p>
-            <p className="text-xs text-muted-foreground">Мы обязательно прочитаем</p>
+            <p className="text-sm font-semibold">{t('success')}</p>
+            <p className="text-xs text-muted-foreground">{t('successDetail')}</p>
           </div>
         ) : (
           <>
             <div className="border-b px-4 py-3">
-              <p className="text-sm font-semibold">Обратная связь</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Что думаете о Clario?</p>
+              <p className="text-sm font-semibold">{t('title')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('subtitle')}</p>
             </div>
             <div className="p-4 flex flex-col gap-3">
               <textarea
@@ -104,7 +106,7 @@ export function FeedbackButton() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Расскажите, что думаете или что можно улучшить…"
+                placeholder={t('placeholder')}
                 rows={4}
                 maxLength={2000}
                 disabled={formState === 'submitting'}
@@ -113,7 +115,7 @@ export function FeedbackButton() {
               {error ? <p className="text-xs text-destructive">{error}</p> : null}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] text-muted-foreground">
-                  {message.length > 0 ? `${message.length}/2000` : '⌘↵ для отправки'}
+                  {message.length > 0 ? `${message.length}/2000` : t('hint')}
                 </span>
                 <Button
                   size="sm"
@@ -126,7 +128,7 @@ export function FeedbackButton() {
                   ) : (
                     <Send className="size-3.5" />
                   )}
-                  Отправить
+                  {t('submit')}
                 </Button>
               </div>
             </div>

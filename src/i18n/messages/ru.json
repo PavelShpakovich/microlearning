@@ -1,4 +1,16 @@
 {
+  "feedback": {
+    "trigger": "Обратная связь",
+    "title": "Обратная связь",
+    "subtitle": "Что думаете о Clario?",
+    "placeholder": "Расскажите, что думаете или что можно улучшить…",
+    "submit": "Отправить",
+    "hint": "⌘↵ для отправки",
+    "minLength": "Минимум 5 символов",
+    "errorFallback": "Не удалось отправить",
+    "success": "Спасибо за отзыв!",
+    "successDetail": "Мы обязательно прочитаем"
+  },
   "common": {
     "appName": "Clario",
     "themeLight": "Светлая",
