@@ -154,7 +154,7 @@ function computeTransitToTransitAspects(
 ): Array<{ bodyA: string; bodyB: string; aspectName: string; orb: number }> {
   const results: Array<{ bodyA: string; bodyB: string; aspectName: string; orb: number }> = [];
   // Use tighter orbs for transit-to-transit (general backdrop, not personalized)
-  const tightOrbs = [6, 4, 5, 5, 6]; // conjunction, sextile, square, trine, opposition
+  const tightOrbs = [3, 2, 3, 3, 3]; // conjunction, sextile, square, trine, opposition
 
   for (let i = 0; i < transitPositions.length; i++) {
     for (let j = i + 1; j < transitPositions.length; j++) {
@@ -191,9 +191,9 @@ function todayInTimezone(tz?: string | null): string {
 }
 
 export const dailyForecastSchema = z.object({
-  interpretation: z.string(),
-  keyTheme: z.string(),
-  advice: z.string(),
+  interpretation: z.string().min(100, 'Interpretation must be at least 100 characters'),
+  keyTheme: z.string().min(5, 'Key theme must be at least 5 characters'),
+  advice: z.string().min(20, 'Advice must be at least 20 characters'),
   moonPhase: z.string().optional(), // set deterministically after generation
 });
 
@@ -208,20 +208,6 @@ export async function getOrCreateDailyForecast(
   userTimezone?: string | null,
 ) {
   const today = todayInTimezone(userTimezone);
-
-  // Clean up expired daily forecasts (any day before today)
-  const { error: deleteError, count: deletedCount } = await db
-    .from('forecasts')
-    .delete({ count: 'exact' })
-    .eq('user_id', userId)
-    .eq('forecast_type', 'daily')
-    .lt('target_start_date', today);
-
-  if (deleteError) {
-    logger.warn({ error: deleteError, userId }, 'forecast: failed to clean up expired forecasts');
-  } else if (deletedCount && deletedCount > 0) {
-    logger.info({ userId, deletedCount }, 'forecast: cleaned up expired daily forecasts');
-  }
 
   const { data: rows } = await db
     .from('forecasts')
@@ -259,7 +245,11 @@ export async function getOrCreateDailyForecast(
 }
 
 /** Runs LLM to generate the daily horoscope content. Idempotent — skips if already generated. */
-export async function generateDailyForecast(forecastId: string, userId: string) {
+export async function generateDailyForecast(
+  forecastId: string,
+  userId: string,
+  userTimezone?: string | null,
+) {
   const { data: forecast } = await db
     .from('forecasts')
     .select('*')
@@ -298,8 +288,37 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
         .eq('chart_snapshot_id', snapshot.id)
     : { data: [] };
 
-  // Compute today's transits (geocentric — location does not affect planetary longitudes)
-  const today = new Date();
+  // Compute today's transits at the user's local noon for maximum daily accuracy.
+  // Geocentric positions don't depend on observer location, only on time.
+  const transitDate = todayInTimezone(userTimezone);
+  // Build a Date object representing noon in the user's timezone
+  let transitTime = '12:00';
+  try {
+    if (userTimezone) {
+      // Find the UTC time that corresponds to noon in the user's timezone
+      const noonLocal = new Date(`${transitDate}T12:00:00`);
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: userTimezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      });
+      // Get UTC offset by comparing formatted local time with UTC
+      const parts = formatter.formatToParts(noonLocal);
+      const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+      const displayed = new Date(
+        Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute')),
+      );
+      const offsetMs = displayed.getTime() - noonLocal.getTime();
+      const noonUtc = new Date(noonLocal.getTime() - offsetMs);
+      transitTime = `${String(noonUtc.getUTCHours()).padStart(2, '0')}:${String(noonUtc.getUTCMinutes()).padStart(2, '0')}`;
+    }
+  } catch {
+    // Invalid timezone — fall back to 12:00 UTC
+  }
   let transitPositions: Array<{
     bodyKey: string;
     signKey: string;
@@ -309,8 +328,8 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
   try {
     const transitResult = await calculateNatalChart({
       personName: 'transit',
-      birthDate: today.toISOString().slice(0, 10),
-      birthTime: '12:00',
+      birthDate: transitDate,
+      birthTime: transitTime,
       birthTimeKnown: true,
       city: 'London',
       country: 'GB',
@@ -341,8 +360,24 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
       ? computeMoonPhaseRu(transitSun.degreeDecimal, transitMoon.degreeDecimal)
       : undefined;
 
-  // Transit-to-natal aspects
+  // Validate that we have natal positions — without them the forecast is generic and unhelpful
   const natalWithDegree = (positions ?? []).filter((p) => p.degree_decimal != null);
+  if (natalWithDegree.length === 0) {
+    logger.error(
+      { forecastId, userId },
+      'forecast: no natal positions found — cannot generate personalized forecast',
+    );
+    await db
+      .from('forecasts')
+      .update({
+        rendered_content_json: { status: 'error' } as Json,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', forecastId);
+    throw new Error('Cannot generate forecast: natal chart positions are missing');
+  }
+
+  // Transit-to-natal aspects
   const transitAspects = computeTransitAspects(natalWithDegree, transitPositions);
 
   // Transit-to-transit aspects (general day backdrop)
@@ -385,6 +420,10 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
 
   // Key natal planets for daily context (Sun, Moon, ASC are most personal)
   const KEY_NATAL_BODIES = ['sun', 'moon', 'ascendant', 'mercury', 'venus', 'mars'];
+
+  const hasHouseData = (positions ?? []).some(
+    (p) => KEY_NATAL_BODIES.includes(p.body_key) && p.house_number != null,
+  );
 
   const natalKeyLines = (positions ?? [])
     .filter((p) => KEY_NATAL_BODIES.includes(p.body_key))
@@ -461,7 +500,7 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
 АСТРОЛОГИЧЕСКАЯ ЛОГИКА:
 - Транзитные аспекты к натальной карте — главный материал. Аспекты с пометкой "нарастает" и "пик сегодня" самые важные — они максимально активны именно сейчас.
 - Аспекты с пометкой "ослабевает" — уже уходящие фоновые влияния, упоминай кратко.
-- Знак зодиака и дом натальной планеты определяют, в какой СФЕРЕ ЖИЗНИ проявится влияние.
+- Знак зодиака натальной планеты определяет СТИЛЬ проявления, а дом (если указан) — СФЕРУ ЖИЗНИ.
 - Если личных аспектов нет — опирайся на общий фон (аспекты транзитных планет между собой) и фазу луны.
 - Луна в натальной карте — ключ к эмоциональному отклику человека. Учитывай её знак.
 - Ретроградная планета: замедление, пересмотр, внутренняя работа в сфере этой планеты.
@@ -475,7 +514,7 @@ export async function generateDailyForecast(forecastId: string, userId: string) 
 
 Выведи ответ ТОЛЬКО как JSON-объект с ровно тремя ключами: "interpretation", "keyTheme", "advice". Используй эти имена ключей точно как написано (латиницей). Никаких других ключей. Никаких markdown-блоков.`;
 
-  const userPrompt = `Дата: ${today.toISOString().slice(0, 10)}
+  const userPrompt = `Дата: ${transitDate}
 Имя: ${chart.person_name}${moonPhase ? `\nФаза луны: ${moonPhase}` : ''}
 
 Ключевые планеты в натальной карте ${chart.person_name} (определяют личный контекст):
@@ -488,7 +527,7 @@ ${transitLines || '  — нет данных'}${retroLines ? `\n\nПланеты
 (✦ = гармоничный, △ = напряжённый, • = нейтральный/усиливающий)
 ${aspectLines}
 
-Напиши персональный гороскоп на сегодня для ${chart.person_name}. Опирайся прежде всего на активные транзитные аспекты (особенно нарастающие). При интерпретации учитывай знак и дом натальной планеты, к которой идёт транзит. Ответь JSON:
+Напиши персональный гороскоп на сегодня для ${chart.person_name}. Опирайся прежде всего на активные транзитные аспекты (особенно нарастающие). При интерпретации учитывай знак натальной планеты${hasHouseData ? ' и дом' : ''}, к которой идёт транзит.${!hasHouseData ? ' Данные о домах недоступны (время рождения неизвестно) — опирайся только на знаки.' : ''} Ответь JSON:
 {
   "interpretation": "3-4 абзаца, разделённых двойным переносом строки. Первый абзац — общее настроение и энергия дня. Далее — конкретные сферы жизни (отношения, работа, здоровье или творчество). Последний — вечер и завершение дня. Пиши живо и конкретно.",
   "keyTheme": "Одна ключевая тема дня, 3-5 слов, разговорным языком (например: 'День для смелых решений', 'Время заботы о себе', 'Фокус на близких')",

@@ -80,7 +80,7 @@ async function generateWithQwen(
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.6,
+    temperature: 0.4,
     max_tokens: maxTokens,
     response_format: { type: 'json_object' },
     // @ts-expect-error QWEN-specific flag not in SDK types yet.

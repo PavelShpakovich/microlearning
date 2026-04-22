@@ -4,6 +4,7 @@ import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { generateDailyForecast } from '@/lib/forecasts/service';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const maxDuration = 90;
 
@@ -18,7 +19,13 @@ export const POST = withApiHandler(async (_req, ctx) => {
   if (!uuidSchema.safeParse(forecastId).success)
     throw new ValidationError({ message: 'Invalid forecast ID' });
 
-  await generateDailyForecast(forecastId, user.id);
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  await generateDailyForecast(forecastId, user.id, profile?.timezone);
 
   return NextResponse.json({ ok: true });
 });

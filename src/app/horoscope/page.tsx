@@ -63,7 +63,11 @@ export default async function HoroscopePage() {
   const content = forecast.rendered_content_json as ForecastContent | null;
   const isReady = content && typeof content.interpretation === 'string';
 
-  const today = new Date().toLocaleDateString('ru', {
+  // Use the forecast's target date to ensure header matches the forecast data
+  const forecastDate = forecast.target_start_date
+    ? new Date(`${forecast.target_start_date}T12:00:00`)
+    : new Date();
+  const today = forecastDate.toLocaleDateString('ru', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
