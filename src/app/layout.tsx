@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import { Suspense } from 'react';
-import { Analytics } from '@vercel/analytics/next';
 import { getLocale, getMessages } from 'next-intl/server';
 import { RootProviders } from '@/components/root-providers';
 import { Header } from '@/components/layout/header';
 import { LandingFooter } from '@/components/layout/landing-footer';
 
+import { CookieConsent } from '@/components/common/cookie-consent';
 import { auth } from '@/auth';
 import './globals.css';
 
@@ -105,16 +104,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head>
-        <Script id="yandex-metrica" strategy="afterInteractive">{`
-          (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-          m[i].l=1*new Date();
-          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-          (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-          ym(107270131, "init", { clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true });
-        `}</Script>
-      </head>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
         <Suspense fallback={<div className="min-h-screen bg-background" />}>
           <RootProviders
@@ -127,19 +116,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Header />
             <div className="flex-1 flex flex-col min-h-0">{children}</div>
             {!session ? <LandingFooter /> : null}
+            <CookieConsent />
           </RootProviders>
         </Suspense>
-        <Analytics />
-        <noscript>
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://mc.yandex.ru/watch/107270131"
-              style={{ position: 'absolute', left: '-9999px' }}
-              alt=""
-            />
-          </div>
-        </noscript>
       </body>
     </html>
   );

@@ -33,6 +33,8 @@ export default async function PrivacyPage() {
     { title: t('section7Title'), body: t('section7Body') },
     { title: t('section8Title'), body: t('section8Body') },
     { title: t('section9Title'), body: t('section9Body') },
+    { title: t('section10Title'), body: t('section10Body') },
+    { title: t('section11Title'), body: t('section11Body') },
   ];
 
   return (
@@ -58,8 +60,8 @@ export default async function PrivacyPage() {
         ))}
 
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-3">{t('section10Title')}</h2>
-          <p className="text-muted-foreground leading-relaxed mb-2">{t('section10Body')}</p>
+          <h2 className="text-xl font-semibold mb-3">{t('section12Title')}</h2>
+          <p className="text-muted-foreground leading-relaxed mb-2">{t('section12Body')}</p>
           <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-medium">
             {supportEmail}
           </a>

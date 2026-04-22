@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { authApi } from '@/services/auth-api';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { FormField } from '@/components/auth/form-field';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,6 +24,8 @@ export function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [consentError, setConsentError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
@@ -76,7 +79,12 @@ export function RegisterForm() {
       confirmPassword: validate('confirmPassword', confirmPassword),
     };
     setErrors(next);
-    if (Object.values(next).some(Boolean)) return;
+
+    if (!consentChecked) {
+      setConsentError(v('consentRequired'));
+    }
+
+    if (Object.values(next).some(Boolean) || !consentChecked) return;
 
     try {
       setIsSubmitting(true);
@@ -215,6 +223,44 @@ export function RegisterForm() {
             required
           />
         </FormField>
+        <div className="space-y-1">
+          <div className="flex items-start gap-3 pt-1">
+            <Checkbox
+              id="register-consent"
+              checked={consentChecked}
+              onCheckedChange={(checked) => {
+                const val = checked === true;
+                setConsentChecked(val);
+                if (val) setConsentError(undefined);
+              }}
+              disabled={isSubmitting}
+              aria-describedby="register-consent-error"
+              className={cn(consentError && 'border-destructive/50')}
+            />
+            <label
+              htmlFor="register-consent"
+              className="text-sm text-muted-foreground leading-snug cursor-pointer"
+            >
+              {t.rich('consentLabel', {
+                privacy: (chunks) => (
+                  <Link href="/privacy" className="text-primary hover:underline">
+                    {chunks}
+                  </Link>
+                ),
+                terms: (chunks) => (
+                  <Link href="/terms" className="text-primary hover:underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </label>
+          </div>
+          {consentError && (
+            <p id="register-consent-error" className="text-xs text-destructive pl-7">
+              {consentError}
+            </p>
+          )}
+        </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? t('signingUp') : t('signUp')}
         </Button>
