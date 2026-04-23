@@ -26,23 +26,34 @@ interface PositionRow {
   degree_decimal: number;
 }
 
+// Orbs aligned with SYNASTRY_ASPECT_DEFS in compatibility/service.ts.
+// Weights follow standard Western synastry practice:
+//   conjunction is the strongest aspect (Ptolemy, Lilly, Al-Biruni),
+//   trine is the most harmonious, sextile is mildly positive,
+//   square produces friction, opposition creates tension.
 const ASPECT_DEFS = [
-  { key: 'conjunction', angle: 0, orb: 8, weight: 0.33 },
-  { key: 'sextile', angle: 60, orb: 4, weight: 0.67 },
-  { key: 'square', angle: 90, orb: 6, weight: -0.5 },
-  { key: 'trine', angle: 120, orb: 6, weight: 1 },
-  { key: 'opposition', angle: 180, orb: 8, weight: -0.33 },
+  { key: 'conjunction', angle: 0, orb: 8, weight: 0.85 },
+  { key: 'sextile', angle: 60, orb: 4, weight: 0.6 },
+  { key: 'square', angle: 90, orb: 7, weight: -0.5 },
+  { key: 'trine', angle: 120, orb: 7, weight: 1 },
+  { key: 'opposition', angle: 180, orb: 8, weight: -0.35 },
 ] as const;
 
+// Weights reflect astrological significance in synastry.
+// Keys use DB body_key values (e.g. 'ascendant', not 'asc').
 const PLANET_WEIGHT: Record<string, number> = {
   sun: 3,
   moon: 3,
-  asc: 2.5,
+  ascendant: 2.5,
   venus: 2.5,
   mars: 2.5,
   mercury: 2,
   jupiter: 1.5,
   saturn: 1.5,
+  uranus: 1,
+  neptune: 1,
+  pluto: 1.2,
+  midheaven: 1,
 };
 
 const KEY_PLANETS = new Set([
@@ -53,7 +64,11 @@ const KEY_PLANETS = new Set([
   'mars',
   'jupiter',
   'saturn',
-  'asc',
+  'uranus',
+  'neptune',
+  'pluto',
+  'ascendant',
+  'midheaven',
 ]);
 
 function computeHarmonyScore(primary: PositionRow[], secondary: PositionRow[]): number {
@@ -69,11 +84,13 @@ function computeHarmonyScore(primary: PositionRow[], secondary: PositionRow[]): 
       const diff = Math.abs(pA.degree_decimal - pB.degree_decimal);
       const angular = Math.min(diff, 360 - diff);
       for (const def of ASPECT_DEFS) {
-        const orb = Math.abs(angular - def.angle);
-        if (orb <= def.orb) {
+        const orbDistance = Math.abs(angular - def.angle);
+        if (orbDistance <= def.orb) {
+          // Tighter aspects are stronger: linear falloff from 1.0 (exact) to 0.3 (at max orb)
+          const tightness = 1 - (orbDistance / def.orb) * 0.7;
           const pairWeight = (PLANET_WEIGHT[pA.body_key] ?? 1) * (PLANET_WEIGHT[pB.body_key] ?? 1);
-          totalScore += def.weight * pairWeight;
-          totalWeight += pairWeight;
+          totalScore += def.weight * pairWeight * tightness;
+          totalWeight += pairWeight * tightness;
           break; // one aspect per planet pair
         }
       }
@@ -81,8 +98,9 @@ function computeHarmonyScore(primary: PositionRow[], secondary: PositionRow[]): 
   }
 
   if (totalWeight === 0) return 50;
-  const ratio = totalScore / totalWeight; // roughly -0.5 to 1
-  return Math.round(Math.max(5, Math.min(98, 50 + ratio * 50)));
+  // Normalise ratio symmetrically so the 0–100 range is centered at 50
+  const ratio = totalScore / totalWeight;
+  return Math.round(Math.max(5, Math.min(98, 50 + ratio * 48)));
 }
 
 function getHarmonyColors(score: number) {
