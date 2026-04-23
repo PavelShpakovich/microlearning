@@ -875,9 +875,7 @@ export function CompatibilityReportSkeleton() {
           {/* Gauge area */}
           <div className="rounded-[1.75rem] border bg-background/80 px-4 py-6 flex flex-col items-center gap-4">
             <Skeleton className="h-3 w-28" />
-            <Skeleton className="w-full max-w-80 aspect-[260/190] rounded-2xl" />
-            <Skeleton className="h-8 w-32 rounded-full" />
-            <Skeleton className="h-7 w-28 rounded-full" />
+            <Skeleton className="w-full max-w-80 aspect-260/190 rounded-2xl" />
           </div>
           {/* Info column */}
           <div className="flex flex-col gap-5">

@@ -111,13 +111,11 @@ function getHarmonyText(score: number, t: HarmonyT): { label: string; descriptio
 
 interface SpeedometerProps {
   score: number;
-  label: string;
-  outOf100: string;
   meta: { accent: string; softAccent: string };
   ariaLabel: string;
 }
 
-function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: SpeedometerProps) {
+function SpeedometerGauge({ score, meta, ariaLabel }: SpeedometerProps) {
   const cx = 130,
     cy = 138,
     r = 90,
@@ -266,24 +264,6 @@ function SpeedometerGauge({ score, label, outOf100, meta, ariaLabel }: Speedomet
           100
         </text>
       </svg>
-
-      <div className="flex items-center gap-3 rounded-full border border-border/70 bg-background/90 px-4 py-2 shadow-sm">
-        <span className="text-2xl font-semibold tracking-tight text-foreground">{score}</span>
-        <span className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-          {outOf100}
-        </span>
-      </div>
-
-      <span
-        className="rounded-full border px-4 py-1.5 text-sm font-semibold tracking-tight"
-        style={{
-          backgroundColor: meta.softAccent,
-          borderColor: `${meta.accent}22`,
-          color: meta.accent,
-        }}
-      >
-        {label}
-      </span>
     </div>
   );
 }
@@ -492,8 +472,6 @@ export default async function CompatibilityReportPage({
               </div>
               <SpeedometerGauge
                 score={harmonyScore}
-                label={harmonyText.label}
-                outOf100={t('outOf100')}
                 meta={harmonyColors}
                 ariaLabel={t('harmonyIndexAriaLabel', { score: harmonyScore })}
               />
