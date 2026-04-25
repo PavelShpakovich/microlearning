@@ -3,10 +3,11 @@ import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAdmin } from '@/lib/api/auth';
 import { addCredits } from '@/lib/credits/service';
+import { ADMIN_CREDIT_ADJUSTMENT_MAX } from '@/lib/constants';
 
 const grantSchema = z.object({
   userId: z.string().uuid(),
-  amount: z.number().int().min(1).max(1000),
+  amount: z.number().int().min(1).max(ADMIN_CREDIT_ADJUSTMENT_MAX),
   note: z.string().max(500).optional(),
 });
 

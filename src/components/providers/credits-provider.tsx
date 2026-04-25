@@ -13,6 +13,7 @@ import {
   creditsApi,
   type CreditBalanceSnapshot,
   type CreditCosts,
+  type CreditHistorySnapshot,
   type CreditPack,
   type CreditTransaction,
   type CreditsPricingSnapshot,
@@ -25,12 +26,15 @@ interface CreditsContextValue {
   freeProducts: string[];
   packs: CreditPack[];
   transactions: CreditTransaction[];
+  historyPage: number;
+  historyPageSize: number;
+  historyTotal: number;
   creditsReady: boolean;
   storeReady: boolean;
   isRefreshing: boolean;
   isStoreLoading: boolean;
   refreshCredits: () => Promise<void>;
-  loadStoreData: (pageSize?: number) => Promise<void>;
+  loadStoreData: (options?: { page?: number; pageSize?: number }) => Promise<void>;
   syncCredits: (snapshot: Partial<CreditBalanceSnapshot> & { newBalance?: number }) => void;
   isFreeProduct: (productKind: string) => boolean;
   getCost: (productKind: string, fallback?: number) => number;
@@ -45,6 +49,9 @@ interface CreditsState {
   freeProducts: string[];
   packs: CreditPack[];
   transactions: CreditTransaction[];
+  historyPage: number;
+  historyPageSize: number;
+  historyTotal: number;
   creditsReady: boolean;
   storeReady: boolean;
   isRefreshing: boolean;
@@ -66,7 +73,7 @@ type CreditsAction =
       balance: CreditBalanceSnapshot;
       pricing: CreditsPricingSnapshot;
       packs: CreditPack[];
-      transactions: CreditTransaction[];
+      history: CreditHistorySnapshot;
     }
   | { type: 'store:finish' }
   | { type: 'sync'; snapshot: Partial<CreditBalanceSnapshot> & { newBalance?: number } };
@@ -78,6 +85,9 @@ const initialState: CreditsState = {
   freeProducts: [],
   packs: [],
   transactions: [],
+  historyPage: 1,
+  historyPageSize: 5,
+  historyTotal: 0,
   creditsReady: false,
   storeReady: false,
   isRefreshing: false,
@@ -111,7 +121,10 @@ function creditsReducer(state: CreditsState, action: CreditsAction): CreditsStat
         costs: action.pricing.costs,
         freeProducts: action.pricing.freeProducts,
         packs: action.packs,
-        transactions: action.transactions,
+        transactions: action.history.transactions,
+        historyPage: action.history.page,
+        historyPageSize: action.history.pageSize,
+        historyTotal: action.history.total,
         creditsReady: true,
         storeReady: true,
       };
@@ -155,25 +168,28 @@ export function CreditsProvider({ children, enabled }: { children: ReactNode; en
   }, [enabled]);
 
   const loadStoreData = useCallback(
-    async (pageSize = 10) => {
+    async (options?: { page?: number; pageSize?: number }) => {
       if (!enabled) return;
+
+      const page = options?.page ?? 1;
+      const pageSize = options?.pageSize ?? state.historyPageSize;
 
       dispatch({ type: 'store:start' });
       try {
-        const snapshot = await creditsApi.getStoreSnapshot(pageSize);
+        const snapshot = await creditsApi.getStoreSnapshot({ page, pageSize });
 
         dispatch({
           type: 'store:success',
           balance: snapshot.balance,
           pricing: snapshot.pricing,
           packs: snapshot.packs,
-          transactions: snapshot.history.transactions,
+          history: snapshot.history,
         });
       } finally {
         dispatch({ type: 'store:finish' });
       }
     },
-    [enabled],
+    [enabled, state.historyPageSize],
   );
 
   const syncCredits = useCallback(
@@ -202,6 +218,9 @@ export function CreditsProvider({ children, enabled }: { children: ReactNode; en
       freeProducts: state.freeProducts,
       packs: state.packs,
       transactions: state.transactions,
+      historyPage: state.historyPage,
+      historyPageSize: state.historyPageSize,
+      historyTotal: state.historyTotal,
       creditsReady: state.creditsReady,
       storeReady: state.storeReady,
       isRefreshing: state.isRefreshing,

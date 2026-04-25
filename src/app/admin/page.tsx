@@ -32,6 +32,7 @@ import { AdminTableSkeleton } from '@/components/skeletons';
 import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { useCredits } from '@/components/providers/credits-provider';
 import { adminApi, type AdminUser, type AdminAnalytics } from '@/services/admin-api';
+import { ADMIN_CREDIT_ADJUSTMENT_MAX } from '@/lib/constants';
 import {
   Dialog,
   DialogContent,
@@ -110,11 +111,15 @@ function CreditActionDialog({
             <input
               type="number"
               min="1"
+              max={String(ADMIN_CREDIT_ADJUSTMENT_MAX)}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               disabled={loading}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('amountLimit', { max: ADMIN_CREDIT_ADJUSTMENT_MAX })}
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium">{t('note')}</label>

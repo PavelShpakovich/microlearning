@@ -108,12 +108,19 @@ class CreditsApi {
     };
   }
 
-  async getStoreSnapshot(pageSize = 10): Promise<CreditsStoreSnapshot> {
+  async getStoreSnapshot(options?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<CreditsStoreSnapshot> {
     const [balance, pricing, packs, history] = await Promise.all([
       this.getBalance(true),
       this.getPricing(true),
       this.getPacks({ noCache: true }),
-      this.getHistory({ pageSize, noCache: true }),
+      this.getHistory({
+        page: options?.page,
+        pageSize: options?.pageSize,
+        noCache: true,
+      }),
     ]);
 
     return {
