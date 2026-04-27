@@ -10,6 +10,7 @@ interface StructuredGenerationRequest<T> {
   schema: ZodType<T>;
   mockResponse: T;
   maxTokens?: number;
+  temperature?: number;
 }
 
 export interface StructuredGenerationResult<T> {
@@ -38,6 +39,7 @@ export async function generateStructuredOutputWithUsage<T>(
     request.systemPrompt,
     request.userPrompt,
     request.maxTokens,
+    request.temperature,
   );
   return {
     content: parseStructuredJson(result.text, request.schema),
@@ -49,10 +51,11 @@ async function generateStructuredText(
   systemPrompt: string,
   userPrompt: string,
   maxTokens?: number,
+  temperature?: number,
 ): Promise<{ text: string; usageTokens: number | null }> {
   switch (env.LLM_PROVIDER) {
     case 'qwen':
-      return generateWithQwen(systemPrompt, userPrompt, maxTokens);
+      return generateWithQwen(systemPrompt, userPrompt, maxTokens, temperature);
     default:
       throw new LlmError({
         message: `Unsupported LLM_PROVIDER: ${String(env.LLM_PROVIDER)}`,
@@ -64,6 +67,7 @@ async function generateWithQwen(
   systemPrompt: string,
   userPrompt: string,
   maxTokens = 4096,
+  temperature = 0.4,
 ): Promise<{ text: string; usageTokens: number | null }> {
   if (!env.QWEN_API_KEY) {
     throw new LlmError({ message: 'QWEN_API_KEY is required when LLM_PROVIDER=qwen' });
@@ -80,7 +84,7 @@ async function generateWithQwen(
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.4,
+    temperature,
     max_tokens: maxTokens,
     response_format: { type: 'json_object' },
     // @ts-expect-error QWEN-specific flag not in SDK types yet.

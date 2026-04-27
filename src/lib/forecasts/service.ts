@@ -341,6 +341,33 @@ export async function generateDailyForecast(
   // Compute today's transits at the user's local noon for maximum daily accuracy.
   // Geocentric positions don't depend on observer location, only on time.
   const transitDate = todayInTimezone(userTimezone);
+
+  // ── Fetch yesterday's forecast for anti-repetition context ─────────────
+  const yesterdayDate = (() => {
+    const d = new Date(`${transitDate}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  const { data: yesterdayForecast } = await db
+    .from('forecasts')
+    .select('rendered_content_json, transit_snapshot_json')
+    .eq('user_id', userId)
+    .eq('chart_id', forecast.chart_id)
+    .eq('forecast_type', 'daily')
+    .eq('target_start_date', yesterdayDate)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const yesterdayContent = yesterdayForecast?.rendered_content_json as Record<
+    string,
+    unknown
+  > | null;
+  const yesterdayKeyTheme =
+    yesterdayContent && typeof yesterdayContent.keyTheme === 'string'
+      ? yesterdayContent.keyTheme
+      : null;
   // Build a Date object representing noon in the user's timezone
   let transitTime = '12:00';
   try {
@@ -501,6 +528,21 @@ export async function generateDailyForecast(
     })
     .join('\n');
 
+  // ── Compare today's aspects with yesterday's transits for narrative context ──
+  const yesterdayTransits = (yesterdayForecast?.transit_snapshot_json ?? []) as Array<{
+    bodyKey: string;
+    signKey: string;
+    degreeDecimal: number;
+    retrograde: boolean;
+  }>;
+  const yesterdayAspectKeys = new Set<string>();
+  if (yesterdayTransits.length > 0 && natalWithDegree.length > 0) {
+    const yAspects = computeTransitAspects(natalWithDegree, yesterdayTransits);
+    for (const a of yAspects) {
+      yesterdayAspectKeys.add(`${a.transitBody}-${a.natalBody}-${a.aspectName}`);
+    }
+  }
+
   const aspectLines =
     transitAspects.length > 0
       ? transitAspects
@@ -515,7 +557,11 @@ export async function generateDailyForecast(
                 ? ' — уже точно, пик сегодня'
                 : ' — нарастает'
               : ' — уже прошёл пик, ослабевает';
-            return `  ${tone} ${tBodyRu} ${phrase} ${nArea}${urgency}`;
+            const aspectKey = `${a.transitBody}-${a.natalBody}-${a.aspectName}`;
+            const persistence = yesterdayAspectKeys.has(aspectKey)
+              ? ' (продолжается со вчера)'
+              : ' (новый аспект сегодня)';
+            return `  ${tone} ${tBodyRu} ${phrase} ${nArea}${urgency}${yesterdayAspectKeys.size > 0 ? persistence : ''}`;
           })
           .join('\n')
       : '  — сегодня нет плотных личных аспектов (нейтральный день)';
@@ -546,6 +592,40 @@ export async function generateDailyForecast(
           .join('\n')
       : '';
 
+  // ── Day-of-week context (natural variety signal) ───────────────────────
+  const DAY_NAMES_RU = [
+    'воскресенье',
+    'понедельник',
+    'вторник',
+    'среда',
+    'четверг',
+    'пятница',
+    'суббота',
+  ];
+  const transitDateObj = new Date(`${transitDate}T12:00:00Z`);
+  const dayOfWeekRu = DAY_NAMES_RU[transitDateObj.getUTCDay()];
+
+  // ── Rotate interpretation angle by day-of-week ────────────────────────
+  // These suggest a narrative LENS, not forced life areas — the actual content
+  // must always follow the astrological data provided in the prompt.
+  const INTERPRETATION_ANGLES = [
+    // Sunday (0)
+    'Начни с общего эмоционального фона дня. Далее — как влияния проявятся в личной жизни и внутреннем мире. Заверши — чем завершить день.',
+    // Monday (1)
+    'Начни с энергии и настроя на начало недели. Далее — как влияния отразятся на делах и общении. Заверши — как переключиться вечером.',
+    // Tuesday (2)
+    'Начни с того, что сегодня требует действий. Далее — где стоит проявить инициативу, а где осторожность. Заверши — вечерний ритм.',
+    // Wednesday (3)
+    'Начни с новых импульсов и идей, которые несёт день. Далее — общение и обмен мнениями. Заверши — творческий или спокойный вечер.',
+    // Thursday (4)
+    'Начни с того, что набирает силу к середине недели. Далее — где открываются возможности. Заверши — чему стоит уделить внимание вечером.',
+    // Friday (5)
+    'Начни с настроения и ожиданий от дня. Далее — как влияния затронут отношения и общение. Заверши — планы на вечер.',
+    // Saturday (6)
+    'Начни с ощущения свободы и личного пространства. Далее — как использовать энергию дня для себя. Заверши — атмосфера вечера.',
+  ];
+  const interpretationAngle = INTERPRETATION_ANGLES[transitDateObj.getUTCDay()];
+
   const systemPrompt = `Весь JSON-ответ ОБЯЗАТЕЛЬНО должен быть написан на русском языке.
 
 Ты пишешь персональный ежедневный гороскоп, основанный на реальных астрологических данных. Твоя задача — точно перевести астрологические влияния дня в конкретный, понятный прогноз для обычного человека.
@@ -567,10 +647,17 @@ export async function generateDailyForecast(
 - Тон: тёплый, дружелюбный, конкретный. Как умный друг, а не предсказатель судьбы
 - Разнообразие: охвати разные сферы (настроение, работа, общение, вечер)
 
+ВАЖНО — УНИКАЛЬНОСТЬ КАЖДОГО ДНЯ:
+- Прогноз всегда должен точно отражать предоставленные астрологические данные. Это главный приоритет.
+- Если те же влияния активны несколько дней подряд — это нормально, тема может повторяться. Но формулировки, образы, метафоры и стиль подачи должны быть свежими каждый день.
+- Если аспект помечен «продолжается со вчера» — покажи развитие: как влияние углубляется, к чему ведёт, что изменилось в его проявлении.
+- Если аспект помечен «новый аспект сегодня» — подчеркни его появление как свежий импульс дня.
+- Учитывай день недели как контекст для подачи (рабочий ритм vs. отдых), но не подменяй им астрологические данные.
+
 Выведи ответ ТОЛЬКО как JSON-объект с ровно тремя ключами: "interpretation", "keyTheme", "advice". Используй эти имена ключей точно как написано (латиницей). Никаких других ключей. Никаких markdown-блоков. Весь текст в значениях ключей — исключительно на русском языке.`;
 
-  const userPrompt = `Дата: ${transitDate}
-Имя: ${chart.person_name}${moonPhase ? `\nФаза луны: ${moonPhase}` : ''}
+  const userPrompt = `Дата: ${transitDate} (${dayOfWeekRu})
+Имя: ${chart.person_name}${moonPhase ? `\nФаза луны: ${moonPhase}` : ''}${yesterdayKeyTheme ? `\n\nВчерашняя ключевая тема: «${yesterdayKeyTheme}». Если сегодня астрологические данные указывают на ту же тему — раскрой её с другого ракурса, другими словами. Если данные изменились — следуй новым данным.` : ''}
 
 Ключевые планеты в натальной карте ${chart.person_name} (определяют личный контекст):
 ${natalKeyLines || '  — нет данных'}
@@ -595,9 +682,9 @@ ${aspectLines}${
       : ''
   }
 
-Напиши персональный гороскоп на сегодня для ${chart.person_name}. Опирайся прежде всего на активные транзитные аспекты (особенно нарастающие). При интерпретации учитывай знак натальной планеты${hasHouseData ? ' и дом' : ''}, к которой идёт транзит.${!hasHouseData ? ' Данные о домах недоступны (время рождения неизвестно) — опирайся только на знаки.' : ''} Ответь JSON:
+Напиши персональный гороскоп на сегодня (${dayOfWeekRu}) для ${chart.person_name}. Опирайся прежде всего на активные транзитные аспекты (особенно нарастающие). При интерпретации учитывай знак натальной планеты${hasHouseData ? ' и дом' : ''}, к которой идёт транзит.${!hasHouseData ? ' Данные о домах недоступны (время рождения неизвестно) — опирайся только на знаки.' : ''} Ответь JSON:
 {
-  "interpretation": "3-4 абзаца, разделённых двойным переносом строки. Первый абзац — общее настроение и энергия дня. Далее — конкретные сферы жизни (отношения, работа, здоровье или творчество). Последний — вечер и завершение дня. Пиши живо и конкретно.",
+  "interpretation": "3-4 абзаца, разделённых двойным переносом строки. ${interpretationAngle} Пиши живо и конкретно, опираясь на предоставленные астрологические данные.",
   "keyTheme": "Одна ключевая тема дня, 3-5 слов, разговорным языком (например: 'День для смелых решений', 'Время заботы о себе', 'Фокус на близких')",
   "advice": "Один практический совет на день, 1-2 предложения. Конкретное действие, а не общая мудрость."
 }
@@ -614,6 +701,7 @@ ${aspectLines}${
       userPrompt,
       schema: dailyForecastSchema,
       maxTokens: 2000,
+      temperature: 0.6,
       mockResponse: {
         interpretation:
           'Сегодня день обещает быть продуктивным — голова свежая, мысли структурированные. Если есть задачи, которые требуют концентрации или важного разговора, первая половина дня для этого идеальна.\n\nВо второй половине дня может захотеться переключиться на что-то более лёгкое. Хорошее время позаботиться о деталях, написать кому-то, кому давно собирались, или просто навести порядок в делах.\n\nВечером стоит уделить время себе — почитать, прогуляться или провести время с теми, кто заряжает. Не перегружайте себя: завтра будет не менее насыщенным.',
