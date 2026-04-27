@@ -9,6 +9,7 @@ import {
   type ChartStub,
   type CompatibilityReportRecord,
 } from '@/components/astrology/compatibility-overview';
+import { CompatibilityType } from '@/lib/compatibility/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,9 @@ export default async function CompatibilityPage() {
 
   const { data: rawReports } = await db
     .from('compatibility_reports')
-    .select('id, status, summary, created_at, primary_chart_id, secondary_chart_id')
+    .select(
+      'id, status, summary, created_at, primary_chart_id, secondary_chart_id, compatibility_type',
+    )
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false });
 
@@ -31,6 +34,7 @@ export default async function CompatibilityPage() {
     created_at: r.created_at,
     primary_chart_id: r.primary_chart_id,
     secondary_chart_id: r.secondary_chart_id,
+    compatibility_type: r.compatibility_type as CompatibilityType,
   }));
 
   const uniqueChartIds = [
