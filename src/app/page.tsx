@@ -26,14 +26,16 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const isRu = locale === 'ru';
 
-  const title = isRu ? 'Clario — AI-астрологические разборы' : 'Clario — AI Astrology Readings';
+  const title = isRu
+    ? 'Clario — Персональный разбор по дате рождения'
+    : 'Clario — Personal AI Reading by Birth Date';
   const description = isRu
-    ? 'Создавайте натальные карты, получайте структурированные AI-разборы и возвращайтесь к сохранённым инсайтам. Персональная астрология на основе точных астрономических расчётов.'
-    : 'Create natal charts, generate structured AI astrology readings, and revisit saved insights. Personal astrology powered by precise astronomical calculations.';
+    ? 'Получите развёрнутый персональный разбор по дате рождения: характер, отношения, карьера, сильные стороны. Точные расчёты + AI-интерпретация. Бесплатно.'
+    : 'Get a detailed personal reading by birth date: personality, relationships, career, strengths. Precise calculations + AI interpretation. Free to try.';
 
   const keywords = isRu
-    ? 'натальная карта, астрологический разбор, AI астрология, натальная карта онлайн, разбор натальной карты, астролог онлайн, нейросеть астрология, персональный гороскоп'
-    : 'natal chart, astrology reading, AI astrology, birth chart, natal chart reading, online astrologer, personal horoscope';
+    ? 'разбор личности, персональный разбор по дате рождения, AI разбор, карта личности онлайн, анализ личности, самопознание, персональный профиль, психологический портрет'
+    : 'personality reading, birth date analysis, AI personal reading, personality profile online, self-knowledge, personal profile, psychological portrait';
 
   return {
     title,
@@ -74,10 +76,12 @@ export default async function LandingPage() {
   const locale = await getLocale();
   const isRu = locale === 'ru';
 
-  const appName = isRu ? 'Clario — AI-астрологические разборы' : 'Clario — AI Astrology Readings';
+  const appName = isRu
+    ? 'Clario — Персональный разбор по дате рождения'
+    : 'Clario — Personal AI Reading by Birth Date';
   const appDesc = isRu
-    ? 'Создавайте натальные карты, получайте структурированные AI-разборы и возвращайтесь к сохранённым инсайтам. Персональная астрология на основе точных астрономических расчётов.'
-    : 'Create natal charts, generate structured AI astrology readings, and revisit saved insights. Personal astrology powered by precise astronomical calculations.';
+    ? 'Получите развёрнутый персональный разбор по дате рождения: характер, отношения, карьера, сильные стороны. Точные расчёты + AI-интерпретация. Бесплатно.'
+    : 'Get a detailed personal reading by birth date: personality, relationships, career, strengths. Precise calculations + AI interpretation. Free to try.';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -138,6 +142,11 @@ export default async function LandingPage() {
             '@type': 'Question',
             name: t('faq5Q'),
             acceptedAnswer: { '@type': 'Answer', text: t('faq5A') },
+          },
+          {
+            '@type': 'Question',
+            name: t('faq6Q'),
+            acceptedAnswer: { '@type': 'Answer', text: t('faq6A') },
           },
         ],
       },
@@ -218,6 +227,7 @@ export default async function LandingPage() {
           <FaqItem value="faq3" question={t('faq3Q')} answer={t('faq3A')} />
           <FaqItem value="faq4" question={t('faq4Q')} answer={t('faq4A')} />
           <FaqItem value="faq5" question={t('faq5Q')} answer={t('faq5A')} />
+          <FaqItem value="faq6" question={t('faq6Q')} answer={t('faq6A')} />
         </Accordion>
       </section>
 
