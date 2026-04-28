@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { useCredits } from '@/components/providers/credits-provider';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +19,7 @@ export function CreditBalance() {
       )}
       title="Кредиты"
     >
-      <Sparkles className="size-3.5" />
+      <Coins className="size-3.5" />
       <span>{balance}</span>
     </Link>
   );

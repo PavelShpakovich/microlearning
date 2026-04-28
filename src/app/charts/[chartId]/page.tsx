@@ -8,7 +8,6 @@ export const metadata: Metadata = { robots: { index: false } };
 import { normalizeHouseSystem } from '@/lib/astrology/constants';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { Tables } from '@/lib/supabase/types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Pencil,
@@ -21,6 +20,7 @@ import {
   Triangle,
   ArrowLeftRight,
 } from 'lucide-react';
+import LinkedReadings from '@/components/astrology/linked-readings';
 import { CreateReadingButton } from '@/components/astrology/create-reading-button';
 import { ChartWheel } from '@/components/astrology/chart-wheel';
 import {
@@ -241,7 +241,9 @@ export default async function ChartDetailPage({
 
   if (!chart) notFound();
 
-  const [{ data: snapshots }, { data: readings }] = await Promise.all([
+  const PAGE_SIZE = 5;
+
+  const [{ data: snapshots }, readingsResult] = await Promise.all([
     db
       .from('chart_snapshots')
       .select('id, warnings_json, computed_chart_json')
@@ -250,11 +252,23 @@ export default async function ChartDetailPage({
       .limit(1),
     db
       .from('readings')
-      .select('id, title, reading_type, status, created_at, summary')
+      .select('id, title, reading_type, status, created_at, summary', { count: 'exact' })
       .eq('chart_id', chartId)
       .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })
+      .range(0, PAGE_SIZE - 1),
   ]);
+
+  const initialReadings = (readingsResult.data ?? []) as Array<{
+    id: string;
+    title: string;
+    reading_type: string;
+    status: string;
+    created_at: string;
+    summary: string | null;
+  }>;
+  const initialTotal =
+    typeof readingsResult.count === 'number' ? readingsResult.count : initialReadings.length;
 
   const latestSnapshot = snapshots?.[0];
   const snapshotId = latestSnapshot?.id;
@@ -981,50 +995,12 @@ export default async function ChartDetailPage({
           <h2 className="text-base font-semibold">{t('linkedReadings')}</h2>
         </div>
 
-        {readings && readings.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {readings.map((reading) => {
-              return (
-                <Link
-                  key={reading.id}
-                  href={`/readings/${reading.id}`}
-                  className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold group-hover:text-primary">
-                        {reading.title}
-                      </p>
-                      <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-                        {t(`readingTypes.${reading.reading_type}` as Parameters<typeof t>[0]) ??
-                          String(reading.reading_type).replace(/_/g, ' ')}{' '}
-                        · {new Date(reading.created_at).toLocaleDateString()}
-                      </p>
-                      {reading.summary ? (
-                        <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground">
-                          {reading.summary}
-                        </p>
-                      ) : null}
-                    </div>
-                    {reading.status !== 'ready' ? (
-                      <Badge
-                        variant={reading.status === 'error' ? 'destructive' : 'outline'}
-                        className="shrink-0"
-                      >
-                        {reading.status === 'error' ? t('statusError') : t('statusPending')}
-                      </Badge>
-                    ) : null}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="rounded-xl border-2 border-dashed py-10 text-center">
-            <p className="text-sm text-muted-foreground">{t('noReadingsYet')}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{t('noReadingsHint')}</p>
-          </div>
-        )}
+        <LinkedReadings
+          chartId={chart.id}
+          initialReadings={initialReadings}
+          initialTotal={initialTotal}
+          pageSize={PAGE_SIZE}
+        />
       </section>
     </main>
   );

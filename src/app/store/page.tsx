@@ -2,7 +2,7 @@
 
 import { useEffect, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, History, Package, Sparkles, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History, Coins, Package, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -152,7 +152,7 @@ export default function StorePage() {
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="flex items-center gap-4 p-6">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/15">
-                <Sparkles className="size-6 text-primary" />
+                <Coins className="size-6 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{t('yourBalance')}</p>

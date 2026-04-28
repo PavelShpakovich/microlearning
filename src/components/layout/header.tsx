@@ -31,7 +31,7 @@ import {
   ScrollText,
   Orbit,
   CalendarDays,
-  Sparkles,
+  Coins,
   Link2,
 } from 'lucide-react';
 import { FeedbackButton } from '@/components/common/feedback-widget';
@@ -286,7 +286,7 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/store" className="flex items-center gap-2">
-                  <Sparkles className="size-4" />
+                  <Coins className="size-4" />
                   {t('credits.store')}
                 </Link>
               </DropdownMenuItem>

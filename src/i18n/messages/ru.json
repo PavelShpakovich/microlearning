@@ -467,6 +467,9 @@
     "noReadingsYet": "Пока нет разборов",
     "noReadingsHint": "Нажмите «Создать разбор», чтобы получить первый анализ.",
     "linkedReadings": "Связанные разборы",
+    "previousPage": "Назад",
+    "nextPage": "Вперёд",
+    "pageLabel": "Стр. {current} из {total}",
     "planets": {
       "sun": "Солнце",
       "moon": "Луна",
@@ -1087,6 +1090,7 @@
     "reasonCompatibilityDebit": "Совместимость",
     "reasonForecastPackDebit": "Прогноз",
     "reasonChatPackDebit": "Чат",
+    "reasonWelcomeBonus": "Бонус при регистрации",
     "reasonRefundLlmFailure": "Возврат (ошибка генерации)",
     "reasonRefundAdmin": "Возврат администратором"
   },
