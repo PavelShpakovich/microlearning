@@ -23,47 +23,79 @@ async function getReadingId(ctx: unknown): Promise<string | undefined> {
 function buildSystemPrompt(
   reading: { title: string; reading_type: string; summary: string | null },
   sections: Array<{ title: string; content: string }>,
-  chartPositions?: Array<{
-    body_key: string;
-    sign_key: string;
-    house_number: number | null;
-  }>,
+  chartPositions:
+    | Array<{
+        body_key: string;
+        sign_key: string;
+        house_number: number | null;
+      }>
+    | undefined,
+  locale: string,
 ): string {
-  const lines: string[] = [
-    'КРИТИЧЕСКИ ВАЖНО: Отвечай ТОЛЬКО на русском языке, независимо от языка вопроса пользователя.',
-    '',
-    'Ты — персональный ассистент-астролог. Ты помогаешь пользователю понять его астрологический разбор.',
-    '',
-    `Тип разбора: ${reading.reading_type.replace(/_/g, ' ')}`,
-    `Название: ${reading.title}`,
-  ];
+  const isEn = locale === 'en';
+
+  const lines: string[] = isEn
+    ? [
+        "CRITICAL: Respond ONLY in English, regardless of the language of the user's question.",
+        '',
+        'You are a personal astrology assistant. You help the user understand their astrology reading.',
+        '',
+        `Reading type: ${reading.reading_type.replace(/_/g, ' ')}`,
+        `Title: ${reading.title}`,
+      ]
+    : [
+        'КРИТИЧЕСКИ ВАЖНО: Отвечай ТОЛЬКО на русском языке, независимо от языка вопроса пользователя.',
+        '',
+        'Ты — персональный ассистент-астролог. Ты помогаешь пользователю понять его астрологический разбор.',
+        '',
+        `Тип разбора: ${reading.reading_type.replace(/_/g, ' ')}`,
+        `Название: ${reading.title}`,
+      ];
 
   if (reading.summary) {
-    lines.push('', 'Краткое содержание разбора:', reading.summary.slice(0, 600));
+    lines.push(
+      '',
+      isEn ? 'Reading summary:' : 'Краткое содержание разбора:',
+      reading.summary.slice(0, 600),
+    );
   }
 
   if (chartPositions && chartPositions.length > 0) {
-    lines.push('', 'Натальная карта пользователя:');
+    lines.push('', isEn ? 'User natal chart:' : 'Натальная карта пользователя:');
     for (const p of chartPositions) {
-      const housePart = p.house_number ? `, дом ${p.house_number}` : '';
-      lines.push(`  - ${p.body_key} в ${p.sign_key}${housePart}`);
+      const housePart = p.house_number
+        ? isEn
+          ? `, house ${p.house_number}`
+          : `, дом ${p.house_number}`
+        : '';
+      lines.push(`  - ${p.body_key} in ${p.sign_key}${housePart}`);
     }
   }
 
   if (sections.length > 0) {
-    lines.push('', 'Секции разбора:');
+    lines.push('', isEn ? 'Reading sections:' : 'Секции разбора:');
     for (const s of sections.slice(0, 5)) {
       lines.push('', `## ${s.title}`, s.content.slice(0, 500));
     }
   }
 
-  lines.push(
-    '',
-    'Отвечай на русском языке. Будь конкретным, опирайся на данные этого разбора и натальную карту.',
-    'Если пользователь спрашивает о конкретных планетах или знаках, используй данные натальной карты.',
-    'Не давай медицинских, юридических или финансовых советов как специалист.',
-    'Представляй ответы как астрологическую интерпретацию.',
-  );
+  if (isEn) {
+    lines.push(
+      '',
+      'Respond in English. Be specific, reference data from this reading and the natal chart.',
+      'If the user asks about specific planets or signs, use the natal chart data.',
+      'Do not give medical, legal, or financial advice as a specialist.',
+      'Present answers as astrological interpretation.',
+    );
+  } else {
+    lines.push(
+      '',
+      'Отвечай на русском языке. Будь конкретным, опирайся на данные этого разбора и натальную карту.',
+      'Если пользователь спрашивает о конкретных планетах или знаках, используй данные натальной карты.',
+      'Не давай медицинских, юридических или финансовых советов как специалист.',
+      'Представляй ответы как астрологическую интерпретацию.',
+    );
+  }
 
   return lines.join('\n');
 }
@@ -170,8 +202,8 @@ export async function POST(req: Request, ctx: unknown) {
 
   const { message } = parsed.data;
 
-  // Fetch reading + sections + chart positions for context
-  const [{ data: reading }, { data: sections }] = await Promise.all([
+  // Fetch reading + sections + chart positions + user locale for context
+  const [{ data: reading }, { data: sections }, { data: profile }] = await Promise.all([
     db
       .from('readings')
       .select('id, title, reading_type, summary, chart_id, chart_snapshot_id')
@@ -183,7 +215,10 @@ export async function POST(req: Request, ctx: unknown) {
       .select('title, content')
       .eq('reading_id', readingId)
       .order('sort_order', { ascending: true }),
+    db.from('profiles').select('locale').eq('id', user.id).single(),
   ]);
+
+  const locale = profile?.locale ?? 'ru';
 
   if (!reading) {
     return new Response(JSON.stringify({ error: 'Reading not found' }), {
@@ -271,6 +306,7 @@ export async function POST(req: Request, ctx: unknown) {
     { title: reading.title, reading_type: reading.reading_type, summary: reading.summary },
     sections ?? [],
     chartPositions,
+    locale,
   );
 
   const llmMessages: ChatMessage[] = [

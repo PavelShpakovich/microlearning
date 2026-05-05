@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { authApi } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { AuthBackground } from '@/components/AuthBackground';
 import { toast } from '@/lib/toast';
@@ -266,14 +266,14 @@ export default function RegisterScreen() {
                 {tAuth('consentPrefix')}{' '}
                 <Text
                   style={styles.consentLink}
-                  onPress={() => void Linking.openURL(`${API_URL}/privacy`)}
+                  onPress={() => void Linking.openURL(`${API_URL}/privacy?lang=${getLocale()}`)}
                 >
                   {tAuth('consentPrivacy')}
                 </Text>{' '}
                 {tAuth('consentAnd')}{' '}
                 <Text
                   style={styles.consentLink}
-                  onPress={() => void Linking.openURL(`${API_URL}/terms`)}
+                  onPress={() => void Linking.openURL(`${API_URL}/terms?lang=${getLocale()}`)}
                 >
                   {tAuth('consentTerms')}
                 </Text>

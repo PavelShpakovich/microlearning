@@ -293,7 +293,7 @@ export default function SettingsScreen() {
             style={[styles.pickerButtonText, !timezone && styles.pickerButtonPlaceholder]}
             numberOfLines={1}
           >
-            {timezone ? timezoneLabel(timezone) : tSettings('timezonePlaceholder')}
+            {timezone ? timezoneLabel(timezone, locale) : tSettings('timezonePlaceholder')}
           </Text>
           <Ionicons name="chevron-down" size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
@@ -303,7 +303,7 @@ export default function SettingsScreen() {
         <TimezonePickerModal
           visible={tzPickerOpen}
           value={timezone}
-          placeholder={tSettings('timezonePlaceholder')}
+          locale={locale}
           onSelect={(tz) => {
             setTimezone(tz);
           }}

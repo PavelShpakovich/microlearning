@@ -37,6 +37,12 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
+  // Forward explicit ?lang= param (e.g. from mobile app deep-links to /privacy or /terms)
+  const langParam = request.nextUrl.searchParams.get('lang');
+  if (langParam) {
+    requestHeaders.set('x-lang', langParam);
+  }
+
   // ── Mobile-only mode ────────────────────────────────────────────────────────
   // When MOBILE_ONLY=true all page routes except landing, privacy, terms and
   // auth/callback redirect to /. API routes are always allowed.
