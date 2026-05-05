@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslations } from '@/lib/i18n';
 import { useColors } from '@/lib/colors';
@@ -91,6 +91,12 @@ export default function TabsLayout() {
             />
           ),
         }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.replace('/(tabs)/charts');
+          },
+        }}
       />
       <Tabs.Screen
         name="horoscope"
@@ -119,6 +125,12 @@ export default function TabsLayout() {
             />
           ),
         }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.replace('/(tabs)/compatibility');
+          },
+        }}
       />
       <Tabs.Screen
         name="readings"
@@ -132,6 +144,12 @@ export default function TabsLayout() {
               inactiveName="book-outline"
             />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.replace('/(tabs)/readings');
+          },
         }}
       />
       <Tabs.Screen
