@@ -252,7 +252,6 @@ export default function StoreScreen() {
         <Ionicons name="cube-outline" size={18} color={colors.foreground} />
         <Text style={styles.sectionTitle}>{tCredits('creditPacks')}</Text>
       </View>
-      <Text style={styles.sectionDesc}>{tCredits('betaNote')}</Text>
       {packs.map((pack) => (
         <View key={pack.id} style={styles.packCard}>
           <View style={styles.packInfo}>

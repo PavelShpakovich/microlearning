@@ -8,6 +8,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { configureApiClient } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermissions } from '@/lib/notifications';
+import { initializeLocale } from '@/lib/i18n';
+import { LocaleProvider, initializeLocaleFromStorage } from '@/lib/locale-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { ConfirmDialogProvider } from '@/components/ConfirmDialog';
@@ -25,6 +27,10 @@ export default function RootLayout() {
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   useEffect(() => {
+    // Initialize i18n: detect device language and load saved preference
+    initializeLocale();
+    void initializeLocaleFromStorage();
+
     configureApiClient();
     void requestNotificationPermissions();
 
@@ -73,29 +79,31 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <ErrorBoundary>
-          <ConfirmDialogProvider>
-            <InsufficientCreditsProvider>
-              <View style={{ flex: 1 }}>
-                <OfflineBanner />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    gestureEnabled: true,
-                    contentStyle: { backgroundColor: themeColors.background },
-                  }}
-                />
-                <StatusBar style={isDark ? 'light' : 'auto'} />
-                {(!authReady || !splashDone) && (
-                  <SplashAnimation onDone={() => setSplashDone(true)} />
-                )}
-              </View>
-              <Toast position="bottom" bottomOffset={32} config={toastConfig} />
-            </InsufficientCreditsProvider>
-          </ConfirmDialogProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
+      <LocaleProvider>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <ConfirmDialogProvider>
+              <InsufficientCreditsProvider>
+                <View style={{ flex: 1 }}>
+                  <OfflineBanner />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      gestureEnabled: true,
+                      contentStyle: { backgroundColor: themeColors.background },
+                    }}
+                  />
+                  <StatusBar style={isDark ? 'light' : 'auto'} />
+                  {(!authReady || !splashDone) && (
+                    <SplashAnimation onDone={() => setSplashDone(true)} />
+                  )}
+                </View>
+                <Toast position="bottom" bottomOffset={32} config={toastConfig} />
+              </InsufficientCreditsProvider>
+            </ConfirmDialogProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </LocaleProvider>
     </GestureHandlerRootView>
   );
 }

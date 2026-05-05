@@ -14,9 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { readingsApi } from '@clario/api-client';
 import type { ReadingRecord } from '@clario/api-client';
 import { READING_TYPES } from '@clario/types';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useConfirm } from '@/components/ConfirmDialog';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -88,8 +88,6 @@ function ReadingsListSkeleton() {
     </View>
   );
 }
-
-const readingTypeLabelsMap = messages.readingsPage.readingTypes as Record<string, string>;
 
 export default function ReadingsListScreen() {
   const colors = useColors();
@@ -186,7 +184,10 @@ export default function ReadingsListScreen() {
     }
   }
 
-  const readingTypeLabels: Record<string, string> = readingTypeLabelsMap;
+  const readingTypeLabels = allMessages[getLocale()].readingsPage.readingTypes as Record<
+    string,
+    string
+  >;
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();

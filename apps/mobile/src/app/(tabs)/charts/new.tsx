@@ -232,7 +232,7 @@ export default function NewChartScreen() {
             <Text style={styles.stepTitle}>{tForm('stepBirthTitle')}</Text>
             <Text style={styles.stepDesc}>{tForm('stepBirthDesc')}</Text>
 
-            <Text style={styles.label}>{tForm('birthDate')} (ГГГГ-ММ-ДД)</Text>
+            <Text style={styles.label}>{tForm('birthDate')}</Text>
             <DateTimePickerField
               mode="date"
               value={form.birthDate}

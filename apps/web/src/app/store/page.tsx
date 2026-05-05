@@ -181,7 +181,6 @@ export default function StorePage() {
                   <Package className="size-5" />
                   {t('creditPacks')}
                 </CardTitle>
-                <CardDescription>{t('betaNote')}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 {packs.map((pack) => (

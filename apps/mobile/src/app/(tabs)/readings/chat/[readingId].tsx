@@ -17,17 +17,14 @@ import { Skeleton } from '@/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { chatApi, ApiClientError } from '@clario/api-client';
 import type { UnlockFollowUpResponse } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
-
-const chatStarters =
-  (messages.chat.starters as Record<string, Record<string, string>>).default ?? {};
 
 interface Message {
   id: string;
@@ -52,6 +49,9 @@ export default function ChatScreen() {
   const [messagesUsed, setMessagesUsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<FlatList<Message>>(null);
+  const chatStarters =
+    (allMessages[getLocale()].chat.starters as Record<string, Record<string, string>>).default ??
+    {};
 
   const tChat = useTranslations('chat');
   const { showInsufficientCredits } = useInsufficientCredits();

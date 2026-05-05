@@ -23,10 +23,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { chartsApi, readingsApi } from '@clario/api-client';
 import type { ChartDetail, ChartReadingRow } from '@clario/api-client';
 import { READING_TYPES } from '@clario/types';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
 import { runToastMutation } from '@/lib/mutation-toast';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { getSignElement, getElementColors } from '@/lib/chart-utils';
@@ -92,19 +92,6 @@ function ChartDetailSkeleton() {
     </ScrollView>
   );
 }
-
-// ── Translation map references ────────────────────────────────────────────────
-const signLabels = messages.chartDetail.signs as Record<string, string>;
-const planetLabels = messages.chartDetail.planets as Record<string, string>;
-const signKeywords = messages.chartDetail.signKeywords as Record<string, string>;
-const planetMeanings = messages.chartDetail.planetMeanings as Record<string, string>;
-const aspectNames = messages.chartDetail.aspectNames as Record<string, string>;
-const subjectTypeLabels = messages.workspace.subjectTypes as Record<string, string>;
-const elementLabels = messages.chartDetail.elements as Record<string, string>;
-const modalityLabels = messages.chartDetail.modalities as Record<string, string>;
-const dignityLabels = messages.chartDetail.dignity as Record<string, string>;
-const dignityShortLabels = messages.chartDetail.dignityShort as Record<string, string>;
-const polarityLabels = messages.chartDetail.polarity as Record<string, string>;
 
 // ── Astrology maps ─────────────────────────────────────────────────────────────
 const SIGN_ELEMENT: Record<string, 'fire' | 'earth' | 'air' | 'water'> = {
@@ -328,6 +315,21 @@ export default function ChartDetailScreen() {
 
   const tCommon = useTranslations('common');
   const tDashboard = useTranslations('dashboard');
+
+  // Translation map references (locale-aware)
+  const m = allMessages[getLocale()];
+  const signLabels = m.chartDetail.signs as Record<string, string>;
+  const planetLabels = m.chartDetail.planets as Record<string, string>;
+  const signKeywords = m.chartDetail.signKeywords as Record<string, string>;
+  const planetMeanings = m.chartDetail.planetMeanings as Record<string, string>;
+  const aspectNames = m.chartDetail.aspectNames as Record<string, string>;
+  const subjectTypeLabels = m.workspace.subjectTypes as Record<string, string>;
+  const elementLabels = m.chartDetail.elements as Record<string, string>;
+  const modalityLabels = m.chartDetail.modalities as Record<string, string>;
+  const dignityLabels = m.chartDetail.dignity as Record<string, string>;
+  const dignityShortLabels = m.chartDetail.dignityShort as Record<string, string>;
+  const polarityLabels = m.chartDetail.polarity as Record<string, string>;
+
   const backTarget = resolveParentRoute(returnTo, routes.tabs.charts);
   const backLabel = backTarget === routes.tabs.home ? tDashboard('pageTitle') : tChart('allCharts');
   const { showInsufficientCredits } = useInsufficientCredits();
@@ -1130,7 +1132,7 @@ export default function ChartDetailScreen() {
             <View style={readingsLoading ? { opacity: 0.5, gap: 8 } : { gap: 8 }}>
               {linkedReadings.map((r) => {
                 const readingTypeLabel =
-                  (messages.chartDetail.readingTypes as Record<string, string>)[r.reading_type] ??
+                  (m.chartDetail.readingTypes as Record<string, string>)[r.reading_type] ??
                   r.reading_type.replace(/_/g, ' ');
                 const dateStr = new Date(r.created_at).toLocaleDateString('ru-RU');
                 return (

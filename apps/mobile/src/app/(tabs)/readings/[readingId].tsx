@@ -22,18 +22,15 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { readingsApi, getAuthHeaders, resolveUrl } from '@clario/api-client';
 import type { ReadingDetail } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
-import { messages } from '@clario/i18n';
-const notifMessages = messages.notifications;
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
-
-const readingTypeLabelsMap = messages.readingDetail.readingTypes as Record<string, string>;
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -128,6 +125,7 @@ export default function ReadingDetailScreen() {
 
   const tDetail = useTranslations('readingDetail');
   const tGenerating = useTranslations('readingGenerating');
+  const notifMessages = allMessages[getLocale()].notifications;
 
   const tDashboard = useTranslations('dashboard');
   const backTarget = resolveParentRoute(returnTo, routes.tabs.readings);
@@ -264,7 +262,10 @@ export default function ReadingDetailScreen() {
     }
   }
 
-  const readingTypeLabels: Record<string, string> = readingTypeLabelsMap;
+  const readingTypeLabels = allMessages[getLocale()].readingDetail.readingTypes as Record<
+    string,
+    string
+  >;
 
   if (loading) {
     return <ReadingDetailSkeleton />;

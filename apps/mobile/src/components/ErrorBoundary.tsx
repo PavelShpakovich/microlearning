@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
+import { getLocale } from '@/lib/i18n';
 import { useColors, colors as staticColors } from '@/lib/colors';
 
 // Module-level styles for the class component (uses static light theme)
@@ -32,13 +33,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   override render() {
     if (this.state.hasError) {
+      const currentMessages = allMessages[getLocale()];
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>{messages.errors.generic as string}</Text>
+          <Text style={styles.title}>{currentMessages.errors.generic as string}</Text>
           <Text style={styles.message}>{this.state.message}</Text>
           <TouchableOpacity style={styles.button} onPress={this.handleReset}>
             <Text style={styles.buttonText}>
-              {messages.readingGenerating.retryButton as string}
+              {currentMessages.readingGenerating.retryButton as string}
             </Text>
           </TouchableOpacity>
         </View>

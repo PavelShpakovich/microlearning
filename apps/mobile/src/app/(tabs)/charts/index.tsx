@@ -5,9 +5,9 @@ import { openChartDetail, openNewChart, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { chartsApi } from '@clario/api-client';
 import type { ChartRecord } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useConfirm } from '@/components/ConfirmDialog';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { getChartElement, getElementColors } from '@/lib/chart-utils';
@@ -15,9 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { SwipeToDeleteRow } from '@/components/SwipeToDeleteRow';
 import { usePullToRefresh } from '@/lib/refresh';
-
-const subjectTypeLabelsMap = messages.workspace.subjectTypes as Record<string, string>;
-const signsMap = messages.chartDetail.signs as Record<string, string>;
 
 function ChartsListSkeleton() {
   const colors = useColors();
@@ -124,7 +121,11 @@ export default function ChartsListScreen() {
     setCharts((prev) => prev.filter((c) => c.id !== chart.id));
   }
 
-  const subjectTypeLabels: Record<string, string> = subjectTypeLabelsMap;
+  const subjectTypeLabels = allMessages[getLocale()].workspace.subjectTypes as Record<
+    string,
+    string
+  >;
+  const signsMap = allMessages[getLocale()].chartDetail.signs as Record<string, string>;
 
   if (loading) {
     return <ChartsListSkeleton />;

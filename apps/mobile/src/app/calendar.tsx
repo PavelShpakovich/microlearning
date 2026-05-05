@@ -4,17 +4,14 @@ import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { calendarApi } from '@clario/api-client';
 import type { CalendarDay } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
-import { messages } from '@clario/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { goBackTo, routes } from '@/lib/navigation';
 import { usePullToRefresh } from '@/lib/refresh';
-
-const signLabels = messages.chartDetail.signs as Record<string, string>;
-const phaseLabels = (messages.calendar as { phases: Record<string, string> }).phases;
 
 function CalendarSkeleton() {
   const colors = useColors();
@@ -112,6 +109,9 @@ export default function CalendarScreen() {
 
   const tCal = useTranslations('calendar');
   const tNav = useTranslations('navigation');
+  const signLabels = allMessages[getLocale()].chartDetail.signs as Record<string, string>;
+  const phaseLabels = (allMessages[getLocale()].calendar as { phases: Record<string, string> })
+    .phases;
 
   const loadCalendar = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);

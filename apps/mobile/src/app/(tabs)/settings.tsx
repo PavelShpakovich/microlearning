@@ -17,6 +17,7 @@ import { profileApi, preferencesApi, getAuthHeaders, resolveUrl } from '@clario/
 import type { UserPreferencesResponse } from '@clario/api-client';
 import { supabase } from '@/lib/supabase';
 import { useTranslations } from '@/lib/i18n';
+import { useLocale } from '@/lib/locale-context';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useColors, cardShadow } from '@/lib/colors';
@@ -122,6 +123,7 @@ export default function SettingsScreen() {
   const tFeedback = useTranslations('feedback');
   const tAdmin = useTranslations('admin');
   const confirm = useConfirm();
+  const { locale, setLocalePreference } = useLocale();
 
   const loadSettings = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -451,6 +453,29 @@ export default function SettingsScreen() {
                 {tSettings(
                   opt === 'light' ? 'themeLight' : opt === 'dark' ? 'themeDark' : 'themeSystem',
                 )}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Language card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="language-outline" size={16} color={colors.primary} />
+          <Text style={styles.cardSectionTitle}>{tSettings('languageTitle')}</Text>
+        </View>
+        <View style={styles.themeButtons}>
+          {(['ru', 'en'] as const).map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              style={[styles.themeButton, locale === lang && styles.themeButtonActive]}
+              onPress={() => void setLocalePreference(lang)}
+            >
+              <Text
+                style={[styles.themeButtonText, locale === lang && styles.themeButtonTextActive]}
+              >
+                {tSettings(lang === 'ru' ? 'languageRu' : 'languageEn')}
               </Text>
             </TouchableOpacity>
           ))}

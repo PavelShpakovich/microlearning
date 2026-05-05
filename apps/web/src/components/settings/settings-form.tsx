@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { DisplayNameForm } from '@/components/settings/display-name-form';
 import { TimezoneSelect } from '@/components/ui/timezone-select';
-import { User, Sparkles, Trash2 } from 'lucide-react';
+import { User, Sparkles, Trash2, Languages } from 'lucide-react';
 import { profileApi, preferencesApi } from '@clario/api-client';
 
 export interface SettingsFormData {
@@ -57,6 +57,17 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
   const t = useTranslations('settingsPage');
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [currentLocale, setCurrentLocale] = useState<'ru' | 'en'>(() =>
+    typeof document !== 'undefined'
+      ? ((document.cookie.match(/NEXT_LOCALE=(ru|en)/)?.[1] as 'ru' | 'en') ?? 'ru')
+      : 'ru',
+  );
+
+  function handleLocaleChange(lang: 'ru' | 'en') {
+    document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+    setCurrentLocale(lang);
+    window.location.reload();
+  }
 
   // Profile state
   const [timezone, setTimezone] = useState(data.timezone ?? '');
@@ -263,6 +274,33 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
             <Button onClick={handleSavePreferences} disabled={isPending} size="sm">
               {isPending ? t('saving') : t('savePreferences')}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Language card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Languages className="size-4 text-primary" />
+            <CardTitle className="text-base">{t('languageTitle')}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            {(['ru', 'en'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => handleLocaleChange(lang)}
+                className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                  currentLocale === lang
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                }`}
+              >
+                {t(lang === 'ru' ? 'languageRu' : 'languageEn')}
+              </button>
+            ))}
           </div>
         </CardContent>
       </Card>

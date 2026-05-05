@@ -22,17 +22,15 @@ import Svg, {
 } from 'react-native-svg';
 import { compatibilityApi } from '@clario/api-client';
 import type { CompatibilityReport } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
-import { messages } from '@clario/i18n';
+import { allMessages } from '@clario/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
-
-const notifMessages = messages.notifications;
 
 type CompatType = 'romantic' | 'friendship' | 'business' | 'family';
 
@@ -333,6 +331,7 @@ export default function CompatibilityDetailScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const tCompat = useTranslations('compatibility');
+  const notifMessages = allMessages[getLocale()].notifications;
 
   const loadReport = useCallback(
     async (isRefresh = false) => {

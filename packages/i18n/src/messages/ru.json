@@ -741,7 +741,10 @@
     "themeTitle": "Тема оформления",
     "themeLight": "Светлая",
     "themeDark": "Тёмная",
-    "themeSystem": "Системная"
+    "themeSystem": "Системная",
+    "languageTitle": "Язык",
+    "languageRu": "Русский",
+    "languageEn": "English"
   },
   "createReading": {
     "submit": "Создать разбор",
@@ -1117,7 +1120,6 @@
     "nextPage": "Вперёд",
     "pageLabel": "Стр. {current} из {total}",
     "comingSoon": "Скоро",
-    "betaNote": "В период бета-тестирования кредиты начисляются администратором",
     "insufficientTitle": "Недостаточно кредитов",
     "insufficientDescription": "Для этого действия нужно {required} кр., у вас {balance} кр.",
     "insufficientDescriptionShort": "Пополните баланс, чтобы продолжить.",
