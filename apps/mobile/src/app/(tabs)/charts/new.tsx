@@ -167,7 +167,7 @@ export default function NewChartScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.headerBar, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}>
         <TouchableOpacity
@@ -250,7 +250,8 @@ export default function NewChartScreen() {
                   update('birthTimeKnown', v);
                   if (!v) update('birthTime', '');
                 }}
-                trackColor={{ true: colors.primary }}
+                trackColor={{ false: colors.muted, true: colors.primary }}
+                thumbColor={form.birthTimeKnown ? colors.primaryForeground : colors.mutedForeground}
               />
             </View>
 

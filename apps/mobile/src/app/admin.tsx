@@ -447,7 +447,7 @@ function CreditForm({ user, mode, onClose, onDone }: CreditFormProps) {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.creditForm}>
         <View style={styles.creditFormHeader}>
           <Text style={styles.creditFormTitle}>

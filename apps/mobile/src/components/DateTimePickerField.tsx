@@ -106,6 +106,14 @@ export function DateTimePickerField({
     setVisible(false);
   }
 
+  // Android: native dialog handles its own OK/Cancel
+  function handleAndroidChange(_: unknown, selectedDate?: Date) {
+    setVisible(false);
+    if (selectedDate) {
+      onChange(toStoredValue(mode, selectedDate));
+    }
+  }
+
   return (
     <>
       <TouchableOpacity style={styles.fieldButton} onPress={handleOpen} activeOpacity={0.8}>
@@ -119,39 +127,52 @@ export function DateTimePickerField({
         />
       </TouchableOpacity>
 
-      <Modal
-        visible={visible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        transparent={Platform.OS !== 'ios'}
-        onRequestClose={handleClose}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={handleClose} hitSlop={8}>
-                <Text style={styles.modalActionText}>{tCommon('cancel')}</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>{title}</Text>
-              <TouchableOpacity onPress={handleConfirm} hitSlop={8}>
-                <Text style={styles.modalActionText}>Готово</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Android: show native dialog directly, no custom Modal */}
+      {Platform.OS === 'android' && visible && (
+        <DateTimePicker
+          value={draftValue}
+          mode={mode}
+          display="default"
+          maximumDate={mode === 'date' ? maximumDate : undefined}
+          onChange={handleAndroidChange}
+        />
+      )}
 
-            <View style={styles.pickerWrap}>
-              <DateTimePicker
-                value={draftValue}
-                mode={mode}
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                maximumDate={mode === 'date' ? maximumDate : undefined}
-                onChange={(_, selectedDate) => {
-                  if (selectedDate) setDraftValue(selectedDate);
-                }}
-              />
+      {/* iOS: custom bottom sheet Modal with spinner */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={visible}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          transparent={false}
+          onRequestClose={handleClose}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={handleClose} hitSlop={8}>
+                  <Text style={styles.modalActionText}>{tCommon('cancel')}</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>{title}</Text>
+                <TouchableOpacity onPress={handleConfirm} hitSlop={8}>
+                  <Text style={styles.modalActionText}>Готово</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.pickerWrap}>
+                <DateTimePicker
+                  value={draftValue}
+                  mode={mode}
+                  display="spinner"
+                  maximumDate={mode === 'date' ? maximumDate : undefined}
+                  onChange={(_, selectedDate) => {
+                    if (selectedDate) setDraftValue(selectedDate);
+                  }}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </>
   );
 }
