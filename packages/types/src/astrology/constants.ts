@@ -1,4 +1,4 @@
-export const ASTROLOGY_SUPPORTED_LOCALES = ['ru'] as const;
+export const ASTROLOGY_SUPPORTED_LOCALES = ['ru', 'en'] as const;
 
 export const HOUSE_SYSTEMS = [
   'placidus',

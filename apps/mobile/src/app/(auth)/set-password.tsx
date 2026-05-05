@@ -53,19 +53,6 @@ export default function SetPasswordScreen() {
       return;
     }
 
-    const {
-      data: { session: recoverySession },
-    } = await supabase.auth.getSession();
-
-    if (recoverySession?.access_token) {
-      try {
-        await authApi.confirmPasswordReset(recoverySession.access_token);
-      } catch {
-        setError(tAuth('error'));
-        return;
-      }
-    }
-
     await supabase.auth.signOut({ scope: 'local' });
 
     setDone(true);

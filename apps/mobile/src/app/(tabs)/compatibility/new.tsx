@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
+  Pressable,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,13 @@ import type { ChartRecord } from '@clario/api-client';
 import { COMPATIBILITY_TYPES } from '@clario/types';
 import type { CompatibilityType } from '@clario/types';
 import { useTranslations } from '@/lib/i18n';
-import { goBackTo, openCompatibilityDetail, resolveParentRoute, routes } from '@/lib/navigation';
+import {
+  goBackTo,
+  openCompatibilityDetail,
+  openNewChart,
+  resolveParentRoute,
+  routes,
+} from '@/lib/navigation';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
@@ -376,7 +383,10 @@ export default function NewCompatibilityScreen() {
               const selected = item.id === currentId;
               return (
                 <Pressable
-                  style={({ pressed }) => [styles.modalItem, pressed && styles.modalItemPressed]}
+                  style={({ pressed }: { pressed: boolean }) => [
+                    styles.modalItem,
+                    pressed && styles.modalItemPressed,
+                  ]}
                   onPress={() => handlePickerSelect(item.id)}
                 >
                   <View style={styles.modalItemContent}>
