@@ -64,10 +64,11 @@ export default function NewChartScreen() {
     country: '',
     lat: null,
     lon: null,
-    timezone: '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [cityDisplay, setCityDisplay] = useState('');
   const [cityModalOpen, setCityModalOpen] = useState(false);
+  const [houseExpanded, setHouseExpanded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -268,20 +269,39 @@ export default function NewChartScreen() {
               </>
             )}
 
-            <Text style={styles.label}>{tForm('houseSystem')}</Text>
-            <View style={styles.chipRow}>
-              {HOUSE_SYSTEMS.map((hs) => (
-                <TouchableOpacity
-                  key={hs}
-                  style={[styles.chip, form.houseSystem === hs && styles.chipActive]}
-                  onPress={() => update('houseSystem', hs)}
-                >
-                  <Text style={[styles.chipText, form.houseSystem === hs && styles.chipTextActive]}>
-                    {houseLabels[hs]}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity
+              style={styles.collapsibleHeader}
+              onPress={() => setHouseExpanded((v) => !v)}
+            >
+              <Text style={styles.label}>
+                {tForm('houseSystemToggle', { name: houseLabels[form.houseSystem] })}
+              </Text>
+              <Ionicons
+                name={houseExpanded ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={colors.mutedForeground}
+              />
+            </TouchableOpacity>
+            {houseExpanded && (
+              <View style={styles.chipRow}>
+                {HOUSE_SYSTEMS.map((hs) => (
+                  <TouchableOpacity
+                    key={hs}
+                    style={[styles.chip, form.houseSystem === hs && styles.chipActive]}
+                    onPress={() => {
+                      update('houseSystem', hs);
+                      setHouseExpanded(false);
+                    }}
+                  >
+                    <Text
+                      style={[styles.chipText, form.houseSystem === hs && styles.chipTextActive]}
+                    >
+                      {houseLabels[hs]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -446,6 +466,12 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     },
     chipTextActive: {
       color: '#fff',
+    },
+    collapsibleHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 6,
     },
 
     error: {

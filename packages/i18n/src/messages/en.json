@@ -268,6 +268,7 @@
     "subjectClient": "Client",
     "subjectOther": "Other",
     "houseSystem": "House system",
+    "houseSystemToggle": "House system: {name}",
     "housePlacidus": "Placidus",
     "houseKoch": "Koch",
     "houseEqual": "Equal houses",
