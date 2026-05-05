@@ -1185,6 +1185,13 @@
     "productName_compatibility_report": "Совместимость",
     "productName_forecast_report": "Прогноз"
   },
+  "adminLlm": {
+    "title": "LLM-провайдер",
+    "primary": "Основной",
+    "switchSuccess": "Основной LLM переключён на {id}",
+    "switchFailed": "Не удалось переключить провайдер",
+    "fallbackInfo": "Резервный: {id} (активируется при сбое основного)"
+  },
   "splash": {
     "appName": "Clario",
     "tagline": "Астрология для вашей жизни"

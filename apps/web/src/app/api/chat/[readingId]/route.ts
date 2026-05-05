@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { streamChatResponse, type ChatMessage } from '@/lib/llm/structured-generation';
+import { getPrimaryProviderId, getProviderConfig } from '@/lib/llm/provider';
 import { env } from '@/lib/env';
 
 const db = supabaseAdmin;
@@ -291,8 +292,11 @@ export async function POST(req: Request, ctx: unknown) {
         thread_id: threadId,
         role: 'assistant',
         content: fullText,
-        model_provider: env.LLM_PROVIDER,
-        model_name: env.LLM_PROVIDER === 'qwen' ? env.QWEN_MODEL : 'mock',
+        model_provider: env.LLM_PROVIDER === 'mock' ? 'mock' : getPrimaryProviderId(),
+        model_name:
+          env.LLM_PROVIDER === 'mock'
+            ? 'mock'
+            : (getProviderConfig(getPrimaryProviderId())?.model ?? 'unknown'),
         usage_tokens: tokensUsed ?? null,
       });
     }

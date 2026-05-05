@@ -12,11 +12,15 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url('NEXT_PUBLIC_APP_URL must be a valid URL'),
   NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 characters'),
 
-  // LLM — Qwen is the only production provider; 'mock' is for tests/CI.
-  LLM_PROVIDER: z.enum(['qwen', 'mock']),
+  // LLM — primary provider used for generation; fallback used on errors.
+  LLM_PROVIDER: z.enum(['qwen', 'deepseek', 'mock']),
   QWEN_API_KEY: z.string().optional(),
   QWEN_MODEL: z.string().default('qwen-plus'),
   QWEN_BASE_URL: z.string().url().optional(),
+
+  DEEPSEEK_API_KEY: z.string().optional(),
+  DEEPSEEK_MODEL: z.string().default('deepseek-v4-flash'),
+  DEEPSEEK_BASE_URL: z.string().url().optional(),
 
   // Support
   SUPPORT_EMAIL: z.string().email().optional().default('support@example.com'),
@@ -56,6 +60,13 @@ function validateEnv() {
           code: 'custom',
           path: ['QWEN_API_KEY'],
           message: 'QWEN_API_KEY is required when LLM_PROVIDER=qwen',
+        });
+      }
+      if (data.LLM_PROVIDER === 'deepseek' && !data.DEEPSEEK_API_KEY) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['DEEPSEEK_API_KEY'],
+          message: 'DEEPSEEK_API_KEY is required when LLM_PROVIDER=deepseek',
         });
       }
     })

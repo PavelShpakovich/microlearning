@@ -1185,6 +1185,13 @@
     "productName_compatibility_report": "Compatibility",
     "productName_forecast_report": "Forecast"
   },
+  "adminLlm": {
+    "title": "LLM Provider",
+    "primary": "Primary",
+    "switchSuccess": "Switched primary LLM to {id}",
+    "switchFailed": "Failed to switch provider",
+    "fallbackInfo": "Fallback: {id} (auto-activates on primary failure)"
+  },
   "splash": {
     "appName": "Clario",
     "tagline": "Astrology for your life"

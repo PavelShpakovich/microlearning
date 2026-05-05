@@ -24,6 +24,7 @@ import {
   Coins,
   Plus,
   Minus,
+  Check,
 } from 'lucide-react';
 import { BackLink } from '@/components/common/back-link';
 import { useTranslations } from 'next-intl';
@@ -867,6 +868,112 @@ function AdminTableContent() {
 }
 
 // ---------------------------------------------------------------------------
+// LLM Provider Section
+// ---------------------------------------------------------------------------
+function LlmSection() {
+  const t = useTranslations('adminLlm');
+  const [primary, setPrimary] = useState<string | null>(null);
+  const [fallback, setFallback] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await fetch('/api/admin/llm');
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setPrimary(data.primary);
+      setFallback(data.fallback);
+    } catch (err) {
+      console.error('Failed to load LLM config:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchConfig();
+  }, [fetchConfig]);
+
+  const switchProvider = async (id: string) => {
+    setSwitching(true);
+    try {
+      const res = await fetch('/api/admin/llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ primary: id }),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setPrimary(data.primary);
+      setFallback(data.fallback);
+      toast.success(t('switchSuccess', { id }));
+    } catch (err) {
+      console.error('Failed to switch provider:', err);
+      toast.error(t('switchFailed'));
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <Skeleton className="h-6 w-48" />
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 flex flex-col gap-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Zap className="size-5" />
+          {t('title')}
+        </h2>
+        <p className="text-sm text-destructive">Error: {error}</p>
+        <Button size="sm" variant="outline" onClick={() => void fetchConfig()}>
+          Retry
+        </Button>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6 flex flex-col gap-4">
+      <h2 className="text-lg font-semibold flex items-center gap-2">
+        <Zap className="size-5" />
+        {t('title')}
+      </h2>
+      <div className="flex items-center gap-3 flex-wrap">
+        {['qwen', 'deepseek'].map((id) => (
+          <Button
+            key={id}
+            variant={primary === id ? 'default' : 'outline'}
+            size="sm"
+            disabled={switching}
+            onClick={() => void switchProvider(id)}
+          >
+            {primary === id && <Check className="size-4" />}
+            {id.charAt(0).toUpperCase() + id.slice(1)}
+          </Button>
+        ))}
+      </div>
+      {fallback && (
+        <p className="text-sm text-muted-foreground">{t('fallbackInfo', { id: fallback })}</p>
+      )}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Pricing Management Section
 // ---------------------------------------------------------------------------
 interface ProductRow {
@@ -1190,6 +1297,8 @@ export default function AdminPage() {
           <AdminTableContent />
         </Suspense>
       </Card>
+
+      <LlmSection />
 
       <PricingSection />
     </main>

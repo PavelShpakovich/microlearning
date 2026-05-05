@@ -384,15 +384,136 @@ function PricingSection() {
   );
 }
 
+// ─── LLM Section ─────────────────────────────────────────────────────────────
+
+function LlmSection() {
+  const t = useTranslations('adminLlm');
+  const colors = useColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [primary, setPrimary] = useState<string | null>(null);
+  const [fallback, setFallback] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadConfig = useCallback(async () => {
+    try {
+      setError(null);
+      const data = await adminFetch<{ primary: string; fallback: string | null }>('/api/admin/llm');
+      setPrimary(data.primary);
+      setFallback(data.fallback);
+    } catch (err) {
+      console.error('Failed to load LLM config:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadConfig();
+  }, [loadConfig]);
+
+  const switchProvider = async (id: string) => {
+    setSwitching(true);
+    try {
+      const data = await adminFetch<{ primary: string; fallback: string | null }>(
+        '/api/admin/llm',
+        {
+          method: 'POST',
+          body: JSON.stringify({ primary: id }),
+        },
+      );
+      setPrimary(data.primary);
+      setFallback(data.fallback);
+    } catch (err) {
+      console.error('Failed to switch provider:', err);
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, { marginTop: 12 }]}>
+      <View style={styles.cardHeader}>
+        <Ionicons name="flash-outline" size={15} color={colors.primary} />
+        <Text style={styles.cardTitle}>{t('title')}</Text>
+      </View>
+      {loading ? (
+        <Skeleton style={{ height: 40, borderRadius: 8 }} />
+      ) : error ? (
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontSize: 13, color: colors.destructive }}>Error: {error}</Text>
+          <TouchableOpacity
+            onPress={() => void loadConfig()}
+            style={[styles.llmProviderBtn, { justifyContent: 'center' }]}
+          >
+            <Text style={styles.llmProviderBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {(['qwen', 'deepseek'] as const).map((id) => {
+              const isActive = primary === id;
+              return (
+                <TouchableOpacity
+                  key={id}
+                  disabled={switching}
+                  onPress={() => void switchProvider(id)}
+                  style={[
+                    styles.llmProviderBtn,
+                    isActive && styles.llmProviderBtnActive,
+                    switching && styles.btnDisabled,
+                  ]}
+                >
+                  {isActive && (
+                    <Ionicons name="checkmark-circle" size={15} color={colors.primaryForeground} />
+                  )}
+                  <Text
+                    style={[styles.llmProviderBtnText, isActive && styles.llmProviderBtnTextActive]}
+                  >
+                    {id.charAt(0).toUpperCase() + id.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {fallback ? (
+            <Text style={styles.llmFallbackText}>{t('fallbackInfo', { id: fallback })}</Text>
+          ) : null}
+        </>
+      )}
+    </View>
+  );
+}
+
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const authHeaders = await getAuthHeaders();
   const res = await fetch(resolveUrl(path), {
     ...init,
     headers: { ...authHeaders, 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   });
-  const data = (await res.json()) as { error?: string } & T;
-  if (!res.ok) throw new Error(data.error ?? 'Error');
-  return data;
+
+  if (!res.ok) {
+    let errorMsg = `HTTP ${res.status}`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data.error) errorMsg = data.error;
+    } catch {
+      // If response is not JSON (e.g., HTML error page), use status message
+      console.error('[adminFetch] Failed to parse error response:', res.statusText);
+    }
+    throw new Error(errorMsg);
+  }
+
+  try {
+    const data = (await res.json()) as T;
+    return data;
+  } catch (err) {
+    console.error('[adminFetch] Failed to parse response:', err);
+    throw new Error('Invalid response format');
+  }
 }
 
 function initials(name: string): string {
@@ -897,6 +1018,7 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               </View>
             ) : null}
+            <LlmSection />
             <PricingSection />
           </>
         }
@@ -1083,6 +1205,38 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: 4,
+    },
+    llmProviderBtn: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    llmProviderBtnActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    llmProviderBtnText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.foreground,
+    },
+    llmProviderBtnTextActive: {
+      color: colors.primaryForeground,
+    },
+    llmProviderBadge: {
+      fontSize: 11,
+      color: colors.primaryForeground,
+      opacity: 0.75,
+    },
+    llmFallbackText: {
+      fontSize: 12,
+      color: colors.mutedForeground,
     },
     pricingRow: {
       borderWidth: 1,

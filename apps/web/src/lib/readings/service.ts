@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/lib/errors';
 import { env } from '@/lib/env';
 import { generateStructuredOutputWithUsage } from '@/lib/llm/structured-generation';
+import { getPrimaryProviderId, getProviderConfig } from '@/lib/llm/provider';
 import { logger } from '@/lib/logger';
 import { TONE_STYLES, normalizeHouseSystem } from '@/lib/astrology/constants';
 import type { ToneStyle, AstrologyLocale } from '@/lib/astrology/types';
@@ -53,14 +54,9 @@ interface GenerationLogDraft {
 }
 
 function activeModelName() {
-  switch (env.LLM_PROVIDER) {
-    case 'qwen':
-      return env.QWEN_MODEL;
-    case 'mock':
-      return 'deterministic-reading-mock-v1';
-    default:
-      return 'unknown';
-  }
+  if (env.LLM_PROVIDER === 'mock') return 'deterministic-reading-mock-v1';
+  const config = getProviderConfig(getPrimaryProviderId());
+  return config?.model ?? 'unknown';
 }
 
 function plainTextFromReading(content: StructuredReadingOutput) {
