@@ -389,7 +389,7 @@ export default function ChartDetailScreen() {
     setCreatingReading(readingType);
     try {
       await runToastMutation({
-        action: () => readingsApi.createReading({ chartId, readingType }),
+        action: () => readingsApi.createReading({ chartId, readingType, locale: getLocale() }),
         silentSuccess: true,
         errorMessage: tCreateReading('error'),
         mapErrorMessage: (error) => {
@@ -405,7 +405,7 @@ export default function ChartDetailScreen() {
         toastKey: `mobile-create-reading-${readingType}`,
         onSuccess: ({ reading }) => {
           setShowReadingModal(false);
-          openReadingDetail(reading.id, routes.charts.detail(chartId));
+          openReadingDetail(reading.id);
         },
         onError: (error) => {
           if (
@@ -1134,7 +1134,7 @@ export default function ChartDetailScreen() {
                 const readingTypeLabel =
                   (m.chartDetail.readingTypes as Record<string, string>)[r.reading_type] ??
                   r.reading_type.replace(/_/g, ' ');
-                const dateStr = new Date(r.created_at).toLocaleDateString('ru-RU');
+                const dateStr = new Date(r.created_at).toLocaleDateString(getLocale());
                 return (
                   <TouchableOpacity
                     key={r.id}

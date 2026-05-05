@@ -17,7 +17,7 @@ import type {
   CreditPack,
   CreditHistorySnapshot,
 } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -246,7 +246,7 @@ export default function StoreScreen() {
             <Text style={styles.forecastAccess}>
               {tCredits('forecastAccessActive').replace(
                 '{date}',
-                new Date(balance.forecastAccessUntil).toLocaleDateString('ru-RU'),
+                new Date(balance.forecastAccessUntil).toLocaleDateString(getLocale()),
               )}
             </Text>
           )}
@@ -402,7 +402,7 @@ export default function StoreScreen() {
                   <Text style={styles.txReason}>{reasonLabel}</Text>
                   {tx.note ? <Text style={styles.txNote}>{tx.note}</Text> : null}
                   <Text style={styles.txDate}>
-                    {new Date(tx.created_at).toLocaleString('ru-RU')}
+                    {new Date(tx.created_at).toLocaleString(getLocale())}
                   </Text>
                 </View>
                 <View style={styles.txRight}>

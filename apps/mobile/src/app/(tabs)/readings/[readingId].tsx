@@ -332,7 +332,7 @@ export default function ReadingDetailScreen() {
         <View style={styles.metaRow}>
           <Text style={styles.dateText}>
             {reading.created_at
-              ? new Date(reading.created_at).toLocaleDateString('ru', {
+              ? new Date(reading.created_at).toLocaleDateString(getLocale(), {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',

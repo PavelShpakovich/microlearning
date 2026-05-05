@@ -343,7 +343,7 @@ export default function ReadingsListScreen() {
                       </View>
                     ) : null}
                     <Text style={styles.cardDate}>
-                      {new Date(item.created_at).toLocaleDateString('ru')}
+                      {new Date(item.created_at).toLocaleDateString(getLocale())}
                     </Text>
                   </View>
                 </View>

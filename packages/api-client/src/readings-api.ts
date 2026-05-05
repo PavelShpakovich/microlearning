@@ -43,7 +43,9 @@ class ReadingsApi {
   }
 
   async getReading(readingId: string): Promise<{ reading: ReadingDetail }> {
-    const data = await fetchJson<{ reading?: ReadingDetail; status?: string }>(`/api/readings/${readingId}`);
+    const data = await fetchJson<{ reading?: ReadingDetail; status?: string }>(
+      `/api/readings/${readingId}`,
+    );
     if (data.reading) return { reading: data.reading };
     // Fallback: server returned minimal { status } shape — construct a partial object
     return {
@@ -65,6 +67,7 @@ class ReadingsApi {
   async createReading(payload: {
     chartId: string;
     readingType: ReadingType | string;
+    locale?: string;
     replaceReadingId?: string;
   }): Promise<{ reading: ReadingSummary }> {
     return fetchJson<{ reading: ReadingSummary }>('/api/readings', {

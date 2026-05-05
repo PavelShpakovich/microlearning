@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import * as SecureStore from 'expo-secure-store';
 import { type SupportedLocale, allMessages } from '@clario/i18n';
 import { setLocale, getLocale } from '@/lib/i18n';
+import { profileApi } from '@clario/api-client';
 
 interface LocaleContextValue {
   locale: SupportedLocale;
@@ -40,6 +41,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('Failed to save locale preference:', e);
     }
+    // Sync locale to server profile (fire-and-forget)
+    profileApi.updateProfile({ locale: newLocale }).catch(() => {});
   };
 
   return (

@@ -537,7 +537,7 @@ export default function CompatibilityDetailScreen() {
         <Text style={styles.reportTitle}>{reportTitle}</Text>
         <View style={styles.metaRow}>
           <Text style={styles.dateText}>
-            {new Date(report.created_at).toLocaleDateString('ru', {
+            {new Date(report.created_at).toLocaleDateString(getLocale(), {
               year: 'numeric',
               month: 'long',
               day: 'numeric',

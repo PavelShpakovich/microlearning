@@ -21,6 +21,7 @@ class ProfileApi {
   async updateProfile(updates: {
     displayName?: string;
     timezone?: string | null;
+    locale?: string;
     onboardingCompleted?: boolean;
   }): Promise<ProfileResponse> {
     return fetchJson<ProfileResponse>('/api/profile', {

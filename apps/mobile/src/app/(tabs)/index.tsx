@@ -26,7 +26,7 @@ import {
   skyApi,
 } from '@clario/api-client';
 import type { ChartRecord, ReadingRecord, TodaySkyResponse } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { getChartElement, getElementColors } from '@/lib/chart-utils';
@@ -469,7 +469,7 @@ export default function DashboardScreen() {
                   `readingTypes.${reading.reading_type}` as Parameters<typeof tDashboard>[0],
                 ) ?? reading.reading_type}
                 {' · '}
-                {new Date(reading.created_at).toLocaleDateString('ru-RU')}
+                {new Date(reading.created_at).toLocaleDateString(getLocale())}
               </Text>
             </View>
             {reading.status !== 'ready' && (

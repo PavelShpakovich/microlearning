@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { compatibilityApi } from '@clario/api-client';
 import type { CompatibilityReport } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useConfirm } from '@/components/ConfirmDialog';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useColors, cardShadow } from '@/lib/colors';
@@ -257,7 +257,7 @@ export default function CompatibilityListScreen() {
                       </View>
                     ) : null}
                     <Text style={styles.cardDate}>
-                      {new Date(item.created_at).toLocaleDateString('ru-RU')}
+                      {new Date(item.created_at).toLocaleDateString(getLocale())}
                     </Text>
                   </View>
                 </View>

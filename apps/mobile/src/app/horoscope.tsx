@@ -14,7 +14,7 @@ import { openCalendar, openNewChart, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { creditsApi, forecastsApi, ApiClientError } from '@clario/api-client';
 import type { DailyForecastRecord, DailyForecastResponse } from '@clario/api-client';
-import { useTranslations } from '@/lib/i18n';
+import { useTranslations, getLocale } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { runToastMutation } from '@/lib/mutation-toast';
@@ -371,7 +371,7 @@ export default function HoroscopeScreen() {
   const forecastDate = forecast.target_start_date
     ? new Date(`${forecast.target_start_date}T12:00:00`)
     : new Date(forecast.created_at);
-  const today = forecastDate.toLocaleDateString('ru-RU', {
+  const today = forecastDate.toLocaleDateString(getLocale(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
