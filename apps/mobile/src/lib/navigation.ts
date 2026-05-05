@@ -76,15 +76,6 @@ export function push(pathname: string): void {
   router.push(pathname as never);
 }
 
-function primeSectionStack(sectionRoot: string, destination: string): void {
-  router.replace(sectionRoot as never);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      push(destination);
-    });
-  });
-}
-
 export function openStore(returnTo: string = routes.tabs.home): void {
   push(withReturnTo(routes.store, returnTo));
 }
@@ -122,10 +113,7 @@ export function openChartDetail(chartId: string, returnTo: string = routes.tabs.
 }
 
 export function openChartShortcut(chartId: string): void {
-  primeSectionStack(
-    routes.tabs.charts,
-    withReturnTo(routes.charts.detail(chartId), routes.tabs.charts),
-  );
+  openChartDetail(chartId, routes.tabs.home);
 }
 
 export function openChartEdit(
@@ -151,10 +139,7 @@ export function replaceWithReadingDetail(
 }
 
 export function openReadingShortcut(readingId: string): void {
-  primeSectionStack(
-    routes.tabs.readings,
-    withReturnTo(routes.readings.detail(readingId), routes.tabs.readings),
-  );
+  openReadingDetail(readingId, routes.tabs.home);
 }
 
 export function openReadingChat(

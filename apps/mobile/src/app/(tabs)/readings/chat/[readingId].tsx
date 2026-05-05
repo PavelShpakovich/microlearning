@@ -161,7 +161,7 @@ export default function ChatScreen() {
           }
         },
       });
-    } catch (err) {
+    } catch {
       // Toast is handled by runToastMutation.
     } finally {
       setUnlocking(false);

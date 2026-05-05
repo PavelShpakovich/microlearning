@@ -19,7 +19,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { SwipeToDeleteRow } from '@/components/SwipeToDeleteRow';
 import { usePullToRefresh } from '@/lib/refresh';
-import { consumeCompatibilityListRefresh } from '@/lib/navigation-cache';
 
 function CompatibilityListSkeleton() {
   const colors = useColors();
@@ -112,10 +111,6 @@ export default function CompatibilityListScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (consumeCompatibilityListRefresh()) {
-        void loadReports();
-        return;
-      }
       if (hasLoadedRef.current) {
         void loadReports(true);
         return;

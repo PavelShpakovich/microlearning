@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import {
-  goBackTo,
   goToRoute,
   openChartDetail,
   openReadingChat,
@@ -29,11 +28,12 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
+import { DetailErrorBanner } from '@/components/DetailErrorBanner';
+import { DetailNotFoundState } from '@/components/DetailNotFoundState';
 import { Skeleton } from '@/components/Skeleton';
+import { useGenerationPolling } from '@/hooks/useGenerationPolling';
+import { useGenerationStepTicker } from '@/hooks/useGenerationStepTicker';
 import { usePullToRefresh } from '@/lib/refresh';
-import { consumeReading } from '@/lib/navigation-cache';
-
-const POLL_INTERVAL_MS = 3000;
 
 function ReadingDetailSkeleton() {
   const colors = useColors();
@@ -115,15 +115,10 @@ export default function ReadingDetailScreen() {
 
   const insets = useSafeAreaInsets();
   const { readingId, returnTo } = useLocalSearchParams<{ readingId: string; returnTo?: string }>();
-  const cachedReading = useRef(readingId ? consumeReading(readingId) : null).current;
-  const [reading, setReading] = useState<ReadingDetail | null>(cachedReading);
-  const [loading, setLoading] = useState(cachedReading === null);
+  const [reading, setReading] = useState<ReadingDetail | null>(null);
+  const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const prevStatusRef = useRef<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const tDetail = useTranslations('readingDetail');
   const tGenerating = useTranslations('readingGenerating');
@@ -135,71 +130,12 @@ export default function ReadingDetailScreen() {
     backTarget === routes.tabs.home ? tDashboard('pageTitle') : tDetail('backToReadings');
   const fallbackLabel =
     backTarget === routes.tabs.home ? tDashboard('pageTitle') : tDetail('allReadings');
-
-  // Advance step indicator while generating
-  useEffect(() => {
-    if (reading?.status !== 'pending' && reading?.status !== 'generating') {
-      stepTimers.current.forEach(clearTimeout);
-      stepTimers.current = [];
-      setStepIndex(0);
-      return;
-    }
-    setStepIndex(0);
-    const delays = [5000, 15000, 28000];
-    stepTimers.current = delays.map((delay, i) => setTimeout(() => setStepIndex(i + 1), delay));
-    return () => {
-      stepTimers.current.forEach(clearTimeout);
-    };
-  }, [reading?.status]);
-
-  useEffect(() => {
-    if (!readingId || !reading) return;
-    const { status } = reading;
-
-    if (status !== 'pending' && status !== 'generating') {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-
-    if (status === 'pending') {
-      void readingsApi.startGeneration(readingId).catch(() => {});
-    }
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(async () => {
-      try {
-        const { reading: updated } = await readingsApi.getReading(readingId);
-        const wasGenerating =
-          prevStatusRef.current === 'generating' || prevStatusRef.current === 'pending';
-        prevStatusRef.current = updated.status;
-        setReading(updated);
-        if (updated.status === 'ready') {
-          if (wasGenerating) {
-            void scheduleReadyNotification(updated.title ?? notifMessages.readingReady);
-          }
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        } else if (updated.status === 'error') {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-      } catch {
-        // network hiccup — retry next tick
-      }
-    }, POLL_INTERVAL_MS);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [reading?.status, readingId]);
+  const stepIndex = useGenerationStepTicker(reading?.status);
 
   const loadReading = useCallback(
     async (isRefresh = false) => {
       if (!readingId) return null;
-      if (!isRefresh && !cachedReading) setLoading(true);
+      if (!isRefresh) setLoading(true);
       try {
         const { reading: data } = await readingsApi.getReading(readingId);
         setReading(data);
@@ -208,17 +144,30 @@ export default function ReadingDetailScreen() {
         setLoading(false);
       }
     },
-    [readingId, cachedReading],
+    [readingId],
   );
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadReading(true));
 
+  useGenerationPolling({
+    entityId: readingId,
+    currentItem: reading,
+    fetchLatest: async () => {
+      const { reading: updated } = await readingsApi.getReading(readingId);
+      return updated;
+    },
+    onUpdate: setReading,
+    startGeneration: readingId ? () => readingsApi.startGeneration(readingId) : undefined,
+    onReady: (updated, wasGenerating) => {
+      if (wasGenerating) {
+        void scheduleReadyNotification(updated.title ?? notifMessages.readingReady);
+      }
+    },
+  });
+
   useEffect(() => {
     if (!readingId) return;
     void loadReading();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
   }, [loadReading, readingId]);
 
   async function handleDownloadPdf() {
@@ -275,25 +224,15 @@ export default function ReadingDetailScreen() {
 
   if (!reading) {
     return (
-      <View style={styles.center}>
-        <Ionicons name="sparkles-outline" size={44} color={colors.border} />
-        <Text style={styles.fallbackTitle}>{tDetail('notFoundTitle')}</Text>
-        <Text style={styles.fallbackDescription}>{tDetail('notFoundDesc')}</Text>
-        <View style={styles.fallbackActions}>
-          <TouchableOpacity
-            style={styles.fallbackPrimaryButton}
-            onPress={() => goToRoute(returnTo, routes.tabs.readings)}
-          >
-            <Text style={styles.fallbackPrimaryButtonText}>{fallbackLabel}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.fallbackSecondaryButton}
-            onPress={() => void loadReading(true)}
-          >
-            <Text style={styles.fallbackSecondaryButtonText}>{tDetail('retryLoad')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <DetailNotFoundState
+        iconName="sparkles-outline"
+        title={tDetail('notFoundTitle')}
+        description={tDetail('notFoundDesc')}
+        primaryLabel={fallbackLabel}
+        onPrimaryPress={() => goToRoute(returnTo, routes.tabs.readings)}
+        secondaryLabel={tDetail('retryLoad')}
+        onSecondaryPress={() => void loadReading(true)}
+      />
     );
   }
 
@@ -434,21 +373,13 @@ export default function ReadingDetailScreen() {
 
       {/* Error banner */}
       {isError ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerTitle}>{tDetail('errorBannerTitle')}</Text>
-          <Text style={styles.errorBannerDesc}>{tDetail('errorBannerDesc')}</Text>
-          <TouchableOpacity
-            style={[styles.retryButton, retrying && styles.buttonDisabled]}
-            onPress={handleRetry}
-            disabled={retrying}
-          >
-            {retrying ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
-            ) : (
-              <Text style={styles.retryButtonText}>{tGenerating('retryButton')}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <DetailErrorBanner
+          title={tDetail('errorBannerTitle')}
+          description={tDetail('errorBannerDesc')}
+          retryLabel={tGenerating('retryButton')}
+          onRetry={handleRetry}
+          retrying={retrying}
+        />
       ) : null}
 
       {/* Content — only when not error */}
@@ -687,42 +618,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     },
 
     // ── Error banner ──────────────────────────────────────────────────────────────
-    errorBanner: {
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: '#fca5a5',
-      backgroundColor: colors.destructiveSubtle,
-      padding: 16,
-      gap: 8,
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    errorBannerTitle: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.destructive,
-      textAlign: 'center',
-    },
-    errorBannerDesc: {
-      fontSize: 13,
-      color: colors.mutedForeground,
-      lineHeight: 19,
-      textAlign: 'center',
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      height: 36,
-      borderRadius: 8,
-      paddingHorizontal: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 4,
-    },
-    retryButtonText: {
-      color: colors.primaryForeground,
-      fontSize: 14,
-      fontWeight: '600',
-    },
 
     // ── Summary ───────────────────────────────────────────────────────────────────
     summaryCard: {
@@ -873,54 +768,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       fontSize: 11,
       color: colors.mutedForeground,
       lineHeight: 17,
-    },
-
-    // ── Fallback state ───────────────────────────────────────────────────────────
-    fallbackTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: colors.foreground,
-      textAlign: 'center',
-    },
-    fallbackDescription: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      lineHeight: 21,
-      textAlign: 'center',
-      maxWidth: 320,
-    },
-    fallbackActions: {
-      width: '100%',
-      maxWidth: 320,
-      gap: 10,
-      marginTop: 4,
-    },
-    fallbackPrimaryButton: {
-      height: 46,
-      borderRadius: 12,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...cardShadow,
-    },
-    fallbackPrimaryButtonText: {
-      color: colors.primaryForeground,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    fallbackSecondaryButton: {
-      height: 46,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    fallbackSecondaryButtonText: {
-      color: colors.foreground,
-      fontSize: 14,
-      fontWeight: '600',
     },
   });
 }

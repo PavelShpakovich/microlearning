@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,7 +13,9 @@ import { router } from 'expo-router';
 import { authApi } from '@clario/api-client';
 import { useTranslations } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
+import { AuthActionButton } from '@/components/AuthActionButton';
 import { AuthBackground } from '@/components/AuthBackground';
+import { InlineErrorBanner } from '@/components/InlineErrorBanner';
 import { toast } from '@/lib/toast';
 
 type Step = 'email' | 'otp' | 'password';
@@ -173,24 +174,15 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 {/* Error banner */}
-                {error ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorBannerText}>{error}</Text>
-                  </View>
-                ) : null}
+                {error ? <InlineErrorBanner message={error} /> : null}
 
                 {/* Submit */}
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('sendResetCode')}
+                  loading={loading}
+                  loadingMode="spinner"
                   onPress={handleSendReset}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color={colors.primaryForeground} />
-                  ) : (
-                    <Text style={styles.buttonText}>{tAuth('sendResetCode')}</Text>
-                  )}
-                </TouchableOpacity>
+                />
               </>
             )}
 
@@ -218,35 +210,24 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 {/* Error banner */}
-                {error ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorBannerText}>{error}</Text>
-                  </View>
-                ) : null}
+                {error ? <InlineErrorBanner message={error} /> : null}
 
                 {/* Verify button */}
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('verifyButton')}
+                  loading={loading}
+                  loadingMode="spinner"
                   onPress={handleVerifyOtp}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color={colors.primaryForeground} />
-                  ) : (
-                    <Text style={styles.buttonText}>{tAuth('verifyButton')}</Text>
-                  )}
-                </TouchableOpacity>
+                />
 
                 {/* Resend button */}
-                <TouchableOpacity
-                  style={[styles.secondaryButton, resending && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('resendCode')}
+                  variant="secondary"
+                  loading={resending}
+                  loadingLabel={tAuth('sending')}
                   onPress={handleResendOtp}
-                  disabled={resending}
-                >
-                  <Text style={styles.secondaryButtonText}>
-                    {resending ? tAuth('sending') : tAuth('resendCode')}
-                  </Text>
-                </TouchableOpacity>
+                />
               </>
             )}
 
@@ -284,24 +265,15 @@ export default function ForgotPasswordScreen() {
                 </View>
 
                 {/* Error banner */}
-                {error ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorBannerText}>{error}</Text>
-                  </View>
-                ) : null}
+                {error ? <InlineErrorBanner message={error} /> : null}
 
                 {/* Update button */}
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('updatePassword')}
+                  loading={loading}
+                  loadingMode="spinner"
                   onPress={handleUpdatePassword}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color={colors.primaryForeground} />
-                  ) : (
-                    <Text style={styles.buttonText}>{tAuth('updatePassword')}</Text>
-                  )}
-                </TouchableOpacity>
+                />
               </>
             )}
 
@@ -395,49 +367,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     },
     inputError: {
       borderColor: colors.destructive,
-    },
-    errorBanner: {
-      backgroundColor: colors.destructiveSubtle,
-      borderColor: colors.destructive,
-      borderWidth: 1,
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 12,
-    },
-    errorBannerText: {
-      fontSize: 13,
-      color: colors.destructive,
-    },
-    button: {
-      backgroundColor: colors.primary,
-      borderRadius: 8,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 4,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
-    buttonText: {
-      color: colors.primaryForeground,
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    secondaryButton: {
-      backgroundColor: 'transparent',
-      borderColor: colors.primary,
-      borderWidth: 1,
-      borderRadius: 8,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 8,
-    },
-    secondaryButtonText: {
-      color: colors.primary,
-      fontSize: 15,
-      fontWeight: '600',
     },
     footerLinkContainer: {
       marginTop: 14,

@@ -24,10 +24,6 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { Skeleton } from '@/components/Skeleton';
-import {
-  markCompatibilityListNeedsRefresh,
-  cacheCompatibilityReport,
-} from '@/lib/navigation-cache';
 
 const TYPE_ICONS: Record<CompatibilityType, keyof typeof Ionicons.glyphMap> = {
   romantic: 'heart-outline',
@@ -159,13 +155,6 @@ export default function NewCompatibilityScreen() {
         },
         toastKey: 'mobile-compatibility-create',
         onSuccess: async ({ report }) => {
-          markCompatibilityListNeedsRefresh();
-          try {
-            const { report: fullReport } = await compatibilityApi.getReport(report.id);
-            cacheCompatibilityReport(fullReport);
-          } catch {
-            /* navigate anyway */
-          }
           replaceWithCompatibilityDetail(report.id);
         },
         onError: (error) => {

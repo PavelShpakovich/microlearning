@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { openAdmin, openStore, routes, withReturnTo } from '@/lib/navigation';
+import { openAdmin, openStore, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { profileApi, preferencesApi, getAuthHeaders, resolveUrl } from '@clario/api-client';
 import type { UserPreferencesResponse } from '@clario/api-client';

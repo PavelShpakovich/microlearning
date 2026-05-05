@@ -10,7 +10,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { goBackTo, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import { getAuthHeaders, resolveUrl, adminApi } from '@clario/api-client';
@@ -22,6 +22,10 @@ import type {
 } from '@clario/api-client';
 import { useTranslations } from '@/lib/i18n';
 import { useConfirm } from '@/components/ConfirmDialog';
+import { AdminAnalyticsCard } from '@/components/admin/AdminAnalyticsCard';
+import { AdminLlmSection } from '@/components/admin/AdminLlmSection';
+import { AdminUsersHeaderCard } from '@/components/admin/AdminUsersHeaderCard';
+import { AdminUserRowCard } from '@/components/admin/AdminUserRowCard';
 
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useColors, cardShadow } from '@/lib/colors';
@@ -29,36 +33,6 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
-
-// ─── Skeletons ───────────────────────────────────────────────────────────────
-
-function AnalyticsSkeleton() {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Skeleton width={15} height={15} borderRadius={4} />
-        <Skeleton width={120} height={13} />
-      </View>
-      <View style={styles.statsGrid}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <View key={i} style={[styles.statCard, { gap: 6 }]}>
-            <Skeleton width={16} height={16} borderRadius={4} />
-            <Skeleton width={48} height={22} borderRadius={6} />
-            <Skeleton width={'80%'} height={10} borderRadius={4} />
-          </View>
-        ))}
-        <View style={[styles.statCard, styles.statCardWide, { gap: 6 }]}>
-          <Skeleton width={16} height={16} borderRadius={4} />
-          <Skeleton width={90} height={22} borderRadius={6} />
-          <Skeleton width={'50%'} height={10} borderRadius={4} />
-        </View>
-      </View>
-    </View>
-  );
-}
 
 function UserRowSkeleton() {
   const colors = useColors();
@@ -384,110 +358,6 @@ function PricingSection() {
   );
 }
 
-// ─── LLM Section ─────────────────────────────────────────────────────────────
-
-function LlmSection() {
-  const t = useTranslations('adminLlm');
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const [primary, setPrimary] = useState<string | null>(null);
-  const [fallback, setFallback] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [switching, setSwitching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadConfig = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await adminFetch<{ primary: string; fallback: string | null }>('/api/admin/llm');
-      setPrimary(data.primary);
-      setFallback(data.fallback);
-    } catch (err) {
-      console.error('Failed to load LLM config:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadConfig();
-  }, [loadConfig]);
-
-  const switchProvider = async (id: string) => {
-    setSwitching(true);
-    try {
-      const data = await adminFetch<{ primary: string; fallback: string | null }>(
-        '/api/admin/llm',
-        {
-          method: 'POST',
-          body: JSON.stringify({ primary: id }),
-        },
-      );
-      setPrimary(data.primary);
-      setFallback(data.fallback);
-    } catch (err) {
-      console.error('Failed to switch provider:', err);
-    } finally {
-      setSwitching(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, { marginTop: 12 }]}>
-      <View style={styles.cardHeader}>
-        <Ionicons name="flash-outline" size={15} color={colors.primary} />
-        <Text style={styles.cardTitle}>{t('title')}</Text>
-      </View>
-      {loading ? (
-        <Skeleton style={{ height: 40, borderRadius: 8 }} />
-      ) : error ? (
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontSize: 13, color: colors.destructive }}>Error: {error}</Text>
-          <TouchableOpacity
-            onPress={() => void loadConfig()}
-            style={[styles.llmProviderBtn, { justifyContent: 'center' }]}
-          >
-            <Text style={styles.llmProviderBtnText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {(['qwen', 'deepseek'] as const).map((id) => {
-              const isActive = primary === id;
-              return (
-                <TouchableOpacity
-                  key={id}
-                  disabled={switching}
-                  onPress={() => void switchProvider(id)}
-                  style={[
-                    styles.llmProviderBtn,
-                    isActive && styles.llmProviderBtnActive,
-                    switching && styles.btnDisabled,
-                  ]}
-                >
-                  {isActive && (
-                    <Ionicons name="checkmark-circle" size={15} color={colors.primaryForeground} />
-                  )}
-                  <Text
-                    style={[styles.llmProviderBtnText, isActive && styles.llmProviderBtnTextActive]}
-                  >
-                    {id.charAt(0).toUpperCase() + id.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          {fallback ? (
-            <Text style={styles.llmFallbackText}>{t('fallbackInfo', { id: fallback })}</Text>
-          ) : null}
-        </>
-      )}
-    </View>
-  );
-}
-
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const authHeaders = await getAuthHeaders();
   const res = await fetch(resolveUrl(path), {
@@ -514,15 +384,6 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
     console.error('[adminFetch] Failed to parse response:', err);
     throw new Error('Invalid response format');
   }
-}
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase();
 }
 
 interface CreditFormProps {
@@ -606,100 +467,6 @@ function CreditForm({ user, mode, onClose, onDone }: CreditFormProps) {
         </View>
       </View>
     </KeyboardAvoidingView>
-  );
-}
-
-interface UserRowProps {
-  user: AdminUser;
-  onGrant: () => void;
-  onRevoke: () => void;
-  onToggleAdmin: () => void;
-  onDelete: () => void;
-  creditTarget: { user: AdminUser; mode: 'grant' | 'revoke' } | null;
-  onCreditClose: () => void;
-  onCreditDone: () => void;
-}
-
-function UserRow({
-  user,
-  onGrant,
-  onRevoke,
-  onToggleAdmin,
-  onDelete,
-  creditTarget,
-  onCreditClose,
-  onCreditDone,
-}: UserRowProps) {
-  const colors = useColors();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  const isExpanded = creditTarget !== null && creditTarget.user.id === user.id;
-
-  return (
-    <View style={styles.userCard}>
-      <View style={styles.userRow}>
-        <View style={[styles.avatar, user.isAdmin && styles.avatarAdmin]}>
-          <Text style={[styles.avatarText, user.isAdmin && styles.avatarTextAdmin]}>
-            {initials(user.displayName)}
-          </Text>
-        </View>
-        <View style={styles.userInfo}>
-          <View style={styles.userNameRow}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {user.displayName || '\u2014'}
-            </Text>
-            {user.isAdmin && (
-              <View style={styles.adminPill}>
-                <Text style={styles.adminPillText}>admin</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.userEmail} numberOfLines={1}>
-            {user.email ?? '\u2014'}
-          </Text>
-          <View style={styles.userStats}>
-            <View style={styles.statChip}>
-              <Ionicons name="star-outline" size={11} color={colors.primary} />
-              <Text style={styles.statChipText}>{user.creditBalance}</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Ionicons name="book-outline" size={11} color={colors.mutedForeground} />
-              <Text style={styles.statChipText}>{user.totalReadings}</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Ionicons name="disc-outline" size={11} color={colors.mutedForeground} />
-              <Text style={styles.statChipText}>{user.totalCharts}</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.userActions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={onGrant} hitSlop={6}>
-            <Ionicons name="add-circle-outline" size={22} color={colors.success} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={onRevoke} hitSlop={6}>
-            <Ionicons name="remove-circle-outline" size={22} color={colors.warning} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={onToggleAdmin} hitSlop={6}>
-            <Ionicons
-              name={user.isAdmin ? 'shield' : 'shield-outline'}
-              size={22}
-              color={user.isAdmin ? colors.primary : colors.mutedForeground}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={onDelete} hitSlop={6}>
-            <Ionicons name="trash-outline" size={22} color={colors.destructive} />
-          </TouchableOpacity>
-        </View>
-      </View>
-      {isExpanded && (
-        <CreditForm
-          user={creditTarget!.user}
-          mode={creditTarget!.mode}
-          onClose={onCreditClose}
-          onDone={onCreditDone}
-        />
-      )}
-    </View>
   );
 }
 
@@ -906,57 +673,20 @@ export default function AdminScreen() {
             </View>
 
             <View style={styles.headerSection}>
-              {analyticsLoading ? (
-                <AnalyticsSkeleton />
-              ) : (
-                <View style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <Ionicons name="bar-chart-outline" size={15} color={colors.primary} />
-                    <Text style={styles.cardTitle}>{t('analyticsTitle')}</Text>
-                  </View>
-                  <View style={styles.statsGrid}>
-                    {analyticsStats.map((s) => (
-                      <View key={s.label} style={[styles.statCard, s.wide && styles.statCardWide]}>
-                        <Ionicons
-                          name={s.icon}
-                          size={16}
-                          color={colors.primary}
-                          style={styles.statIcon}
-                        />
-                        <Text style={styles.statValue}>{s.value}</Text>
-                        <Text style={styles.statLabel}>{s.label}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
+              <AdminAnalyticsCard
+                loading={analyticsLoading}
+                title={t('analyticsTitle')}
+                stats={analyticsStats}
+              />
 
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Ionicons name="people-outline" size={15} color={colors.primary} />
-                  <Text style={styles.cardTitle}>{t('usersTitle')}</Text>
-                  {total > 0 && (
-                    <View style={styles.countPill}>
-                      <Text style={styles.countPillText}>{total}</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.searchBox}>
-                  <Ionicons name="search-outline" size={16} color={colors.mutedForeground} />
-                  <TextInput
-                    style={styles.searchInput}
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Email или имя…"
-                    placeholderTextColor={colors.mutedForeground}
-                  />
-                  {search.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-                      <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
+              <AdminUsersHeaderCard
+                title={t('usersTitle')}
+                total={total}
+                search={search}
+                placeholder="Email или имя…"
+                onSearchChange={setSearch}
+                onClearSearch={() => setSearch('')}
+              />
             </View>
           </>
         }
@@ -971,15 +701,22 @@ export default function AdminScreen() {
           item.id.startsWith('sk-') ? (
             <UserRowSkeleton />
           ) : (
-            <UserRow
+            <AdminUserRowCard
               user={item}
               onGrant={() => setCreditTarget({ user: item, mode: 'grant' })}
               onRevoke={() => setCreditTarget({ user: item, mode: 'revoke' })}
               onToggleAdmin={() => void handleToggleAdmin(item)}
               onDelete={() => void handleDeleteUser(item)}
-              creditTarget={creditTarget}
-              onCreditClose={() => setCreditTarget(null)}
-              onCreditDone={() => void loadAll(page)}
+              creditForm={
+                creditTarget !== null && creditTarget.user.id === item.id ? (
+                  <CreditForm
+                    user={creditTarget.user}
+                    mode={creditTarget.mode}
+                    onClose={() => setCreditTarget(null)}
+                    onDone={() => void loadAll(page)}
+                  />
+                ) : undefined
+              }
             />
           )
         }
@@ -1018,7 +755,17 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               </View>
             ) : null}
-            <LlmSection />
+            <AdminLlmSection
+              loadConfigRequest={() =>
+                adminFetch<{ primary: string; fallback: string | null }>('/api/admin/llm')
+              }
+              switchProviderRequest={(providerId) =>
+                adminFetch<{ primary: string; fallback: string | null }>('/api/admin/llm', {
+                  method: 'POST',
+                  body: JSON.stringify({ primary: providerId }),
+                })
+              }
+            />
             <PricingSection />
           </>
         }

@@ -14,7 +14,9 @@ import { supabase } from '@/lib/supabase';
 import { authApi, profileApi } from '@clario/api-client';
 import { useTranslations } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
+import { AuthActionButton } from '@/components/AuthActionButton';
 import { AuthBackground } from '@/components/AuthBackground';
+import { InlineErrorBanner } from '@/components/InlineErrorBanner';
 import { useEffect } from 'react';
 import { toast } from '@/lib/toast';
 
@@ -206,30 +208,19 @@ export default function LoginScreen() {
 
             {/* Verification error banner */}
             {verified === 'error' ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>{tAuth('emailVerificationError')}</Text>
-              </View>
+              <InlineErrorBanner message={tAuth('emailVerificationError')} />
             ) : null}
 
             {/* Error banner */}
-            {error ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>{error}</Text>
-              </View>
-            ) : null}
+            {error ? <InlineErrorBanner message={error} /> : null}
 
             {/* Submit */}
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+            <AuthActionButton
+              label={tAuth('signIn')}
+              loading={loading}
+              loadingLabel={tAuth('signingIn')}
               onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <Text style={styles.buttonText}>{tAuth('signingIn')}</Text>
-              ) : (
-                <Text style={styles.buttonText}>{tAuth('signIn')}</Text>
-              )}
-            </TouchableOpacity>
+            />
 
             {showResend ? (
               <>
@@ -250,26 +241,21 @@ export default function LoginScreen() {
                 </View>
 
                 {/* Verify OTP button */}
-                <TouchableOpacity
-                  style={[styles.button, verifying && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('verifyButton')}
+                  loading={verifying}
+                  loadingLabel={tAuth('verifying')}
                   onPress={handleVerifyOtp}
-                  disabled={verifying}
-                >
-                  <Text style={styles.buttonText}>
-                    {verifying ? tAuth('verifying') : tAuth('verifyButton')}
-                  </Text>
-                </TouchableOpacity>
+                />
 
                 {/* Resend OTP button */}
-                <TouchableOpacity
-                  style={[styles.secondaryButton, resending && styles.buttonDisabled]}
+                <AuthActionButton
+                  label={tAuth('resendVerification')}
+                  variant="secondary"
+                  loading={resending}
+                  loadingLabel={tAuth('sending')}
                   onPress={handleResendVerification}
-                  disabled={resending}
-                >
-                  <Text style={styles.secondaryButtonText}>
-                    {resending ? tAuth('sending') : tAuth('resendVerification')}
-                  </Text>
-                </TouchableOpacity>
+                />
               </>
             ) : null}
 
@@ -383,49 +369,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     successBannerText: {
       fontSize: 13,
       color: colors.success,
-    },
-    errorBanner: {
-      backgroundColor: colors.destructiveSubtle,
-      borderColor: colors.destructive,
-      borderWidth: 1,
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 12,
-    },
-    errorBannerText: {
-      fontSize: 13,
-      color: colors.destructive,
-    },
-    button: {
-      backgroundColor: colors.primary,
-      borderRadius: 8,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 4,
-    },
-    secondaryButton: {
-      backgroundColor: 'transparent',
-      borderColor: colors.primary,
-      borderWidth: 1,
-      borderRadius: 8,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 8,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
-    buttonText: {
-      color: colors.primaryForeground,
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    secondaryButtonText: {
-      color: colors.primary,
-      fontSize: 15,
-      fontWeight: '600',
     },
     footerLinkContainer: {
       marginTop: 14,

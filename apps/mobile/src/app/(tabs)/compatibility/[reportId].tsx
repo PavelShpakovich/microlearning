@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,9 +29,12 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
+import { DetailErrorBanner } from '@/components/DetailErrorBanner';
+import { DetailNotFoundState } from '@/components/DetailNotFoundState';
 import { Skeleton } from '@/components/Skeleton';
+import { useGenerationPolling } from '@/hooks/useGenerationPolling';
+import { useGenerationStepTicker } from '@/hooks/useGenerationStepTicker';
 import { usePullToRefresh } from '@/lib/refresh';
-import { consumeCompatibilityReport } from '@/lib/navigation-cache';
 
 type CompatType = 'romantic' | 'friendship' | 'business' | 'family';
 
@@ -325,14 +328,10 @@ export default function CompatibilityDetailScreen() {
 
   const insets = useSafeAreaInsets();
   const { reportId, returnTo } = useLocalSearchParams<{ reportId: string; returnTo?: string }>();
-  const cachedReport = useRef(reportId ? consumeCompatibilityReport(reportId) : null).current;
-  const [report, setReport] = useState<CompatibilityReport | null>(cachedReport);
-  const [loading, setLoading] = useState(cachedReport === null);
+  const [report, setReport] = useState<CompatibilityReport | null>(null);
+  const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const prevStatusRef = useRef<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const stepIndex = useGenerationStepTicker(report?.status);
 
   const tCompat = useTranslations('compatibility');
   const notifMessages = allMessages[getLocale()].notifications;
@@ -340,89 +339,40 @@ export default function CompatibilityDetailScreen() {
   const loadReport = useCallback(
     async (isRefresh = false) => {
       if (!reportId) return null;
-      if (!isRefresh && !cachedReport) setLoading(true);
+      if (!isRefresh) setLoading(true);
       try {
         const { report: data } = await compatibilityApi.getReport(reportId);
-        prevStatusRef.current = data.status;
         setReport(data);
         return data;
       } finally {
         setLoading(false);
       }
     },
-    [reportId, cachedReport],
+    [reportId],
   );
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadReport(true));
 
+  useGenerationPolling({
+    entityId: reportId,
+    currentItem: report,
+    fetchLatest: async () => {
+      const { report: updated } = await compatibilityApi.getReport(reportId);
+      return updated;
+    },
+    onUpdate: setReport,
+    startGeneration: reportId ? () => compatibilityApi.startGeneration(reportId) : undefined,
+    onReady: (updated, wasGenerating) => {
+      if (wasGenerating) {
+        void scheduleReadyNotification(updated.title ?? notifMessages.compatibilityReady);
+      }
+    },
+  });
+
   useEffect(() => {
     if (!reportId) return;
-    async function load() {
-      const data = await loadReport();
-      if (data?.status === 'pending') {
-        void compatibilityApi.startGeneration(reportId).catch(() => {});
-      }
-    }
-    void load();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    void loadReport();
   }, [loadReport, reportId]);
-
-  useEffect(() => {
-    if (!report) return;
-    if (report.status !== 'pending' && report.status !== 'generating') {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-    intervalRef.current = setInterval(async () => {
-      try {
-        const { report: updated } = await compatibilityApi.getReport(reportId);
-        const wasGenerating =
-          prevStatusRef.current === 'generating' || prevStatusRef.current === 'pending';
-        prevStatusRef.current = updated.status;
-        setReport(updated);
-        if (updated.status === 'ready') {
-          if (wasGenerating)
-            void scheduleReadyNotification(updated.title ?? notifMessages.compatibilityReady);
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        } else if (updated.status === 'error') {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        }
-      } catch {
-        /* network hiccup */
-      }
-    }, 3000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [report?.status, reportId]);
-
-  // Advance step indicator while generating
-  useEffect(() => {
-    if (report?.status !== 'pending' && report?.status !== 'generating') {
-      stepTimers.current.forEach(clearTimeout);
-      stepTimers.current = [];
-      setStepIndex(0);
-      return;
-    }
-    setStepIndex(0);
-    const delays = [5000, 15000, 28000];
-    stepTimers.current = delays.map((delay, i) => setTimeout(() => setStepIndex(i + 1), delay));
-    return () => {
-      stepTimers.current.forEach(clearTimeout);
-    };
-  }, [report?.status]);
-
   async function handleRetry() {
     if (!reportId) return;
     setRetrying(true);
@@ -430,8 +380,6 @@ export default function CompatibilityDetailScreen() {
       await compatibilityApi.resetForRetry(reportId);
       const { report: updated } = await compatibilityApi.getReport(reportId);
       setReport(updated);
-      if (updated.status === 'pending')
-        void compatibilityApi.startGeneration(reportId).catch(() => {});
     } catch {
       toast.error(tCompat('generatingErrorTitle'));
     } finally {
@@ -445,27 +393,15 @@ export default function CompatibilityDetailScreen() {
 
   if (!report) {
     return (
-      <View style={styles.center}>
-        <Ionicons name="heart-dislike-outline" size={44} color={colors.border} />
-        <Text style={styles.fallbackTitle}>{tCompat('notFoundTitle')}</Text>
-        <Text style={styles.fallbackDescription}>{tCompat('notFoundDesc')}</Text>
-        <View style={styles.fallbackActions}>
-          <TouchableOpacity
-            style={styles.fallbackPrimaryButton}
-            onPress={() => goBackTo(returnTo, routes.tabs.compatibility)}
-          >
-            <Text style={styles.fallbackPrimaryButtonText}>
-              {tCompat('backToAll').replace(/^←\s*/, '')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.fallbackSecondaryButton}
-            onPress={() => void loadReport(true)}
-          >
-            <Text style={styles.fallbackSecondaryButtonText}>{tCompat('retryLoad')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <DetailNotFoundState
+        iconName="heart-dislike-outline"
+        title={tCompat('notFoundTitle')}
+        description={tCompat('notFoundDesc')}
+        primaryLabel={tCompat('backToAll').replace(/^←\s*/, '')}
+        onPrimaryPress={() => goBackTo(returnTo, routes.tabs.compatibility)}
+        secondaryLabel={tCompat('retryLoad')}
+        onSecondaryPress={() => void loadReport(true)}
+      />
     );
   }
 
@@ -614,21 +550,13 @@ export default function CompatibilityDetailScreen() {
 
       {/* Error banner + retry */}
       {isError ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerTitle}>{tCompat('errorBannerTitle')}</Text>
-          <Text style={styles.errorBannerDesc}>{tCompat('errorBannerDesc')}</Text>
-          <TouchableOpacity
-            style={[styles.retryButton, retrying && styles.buttonDisabled]}
-            onPress={handleRetry}
-            disabled={retrying}
-          >
-            {retrying ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
-            ) : (
-              <Text style={styles.retryButtonText}>{tCompat('generatingRetry')}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <DetailErrorBanner
+          title={tCompat('errorBannerTitle')}
+          description={tCompat('errorBannerDesc')}
+          retryLabel={tCompat('generatingRetry')}
+          onRetry={handleRetry}
+          retrying={retrying}
+        />
       ) : null}
 
       {/* ── Ready content ── */}
@@ -883,33 +811,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     progressDotActive: { backgroundColor: colors.primary },
 
     // ── Error ─────────────────────────────────────────────────────────────────────
-    errorBanner: {
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: '#fca5a5',
-      backgroundColor: colors.destructiveSubtle,
-      padding: 20,
-      gap: 8,
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    errorBannerTitle: { fontSize: 14, fontWeight: '600', color: colors.destructive },
-    errorBannerDesc: {
-      fontSize: 13,
-      color: colors.mutedForeground,
-      lineHeight: 19,
-      textAlign: 'center',
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      height: 36,
-      borderRadius: 8,
-      paddingHorizontal: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 4,
-    },
-    retryButtonText: { color: colors.primaryForeground, fontSize: 14, fontWeight: '600' },
     buttonDisabled: { opacity: 0.6 },
 
     // ── Harmony card ─────────────────────────────────────────────────────────────
@@ -1131,53 +1032,5 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       padding: 14,
     },
     disclaimersText: { fontSize: 11, color: colors.mutedForeground, lineHeight: 17 },
-
-    // ── Fallback state ───────────────────────────────────────────────────────────
-    fallbackTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: colors.foreground,
-      textAlign: 'center',
-    },
-    fallbackDescription: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      lineHeight: 21,
-      textAlign: 'center',
-      maxWidth: 320,
-    },
-    fallbackActions: {
-      width: '100%',
-      maxWidth: 320,
-      gap: 10,
-      marginTop: 4,
-    },
-    fallbackPrimaryButton: {
-      height: 46,
-      borderRadius: 12,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...cardShadow,
-    },
-    fallbackPrimaryButtonText: {
-      color: colors.primaryForeground,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    fallbackSecondaryButton: {
-      height: 46,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    fallbackSecondaryButtonText: {
-      color: colors.foreground,
-      fontSize: 14,
-      fontWeight: '600',
-    },
   });
 }

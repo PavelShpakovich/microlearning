@@ -4,7 +4,6 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } 
 import { useFocusEffect } from '@react-navigation/native';
 import {
   openCalendar,
-  openChartDetail,
   openChartsTab,
   openChartShortcut,
   openCompatibilityTab,

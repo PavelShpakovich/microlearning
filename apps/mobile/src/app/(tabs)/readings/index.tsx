@@ -11,7 +11,6 @@ import {
 
 import { openChartsTab, openNewChart, openReadingDetail, routes } from '@/lib/navigation';
 import { useFocusEffect } from 'expo-router';
-import { consumeReadingsListRefresh } from '@/lib/navigation-cache';
 import { Ionicons } from '@expo/vector-icons';
 import { readingsApi } from '@clario/api-client';
 import type { ReadingRecord } from '@clario/api-client';
@@ -98,6 +97,7 @@ export default function ReadingsListScreen() {
   const insets = useSafeAreaInsets();
   const [readings, setReadings] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -120,15 +120,15 @@ export default function ReadingsListScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (consumeReadingsListRefresh()) {
-        void loadReadings();
+      if (hasLoadedRef.current) {
+        void loadReadings(true);
+        return;
       }
+
+      hasLoadedRef.current = true;
+      void loadReadings();
     }, [loadReadings]),
   );
-
-  useEffect(() => {
-    void loadReadings();
-  }, [loadReadings]);
 
   // Poll every 4s while any reading is still generating/pending
   useEffect(() => {
