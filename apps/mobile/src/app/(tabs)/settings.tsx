@@ -105,7 +105,6 @@ export default function SettingsScreen() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [timezone, setTimezone] = useState('');
-  const [birthDataConsentAt, setBirthDataConsentAt] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<UserPreferencesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingName, setSavingName] = useState(false);
@@ -141,7 +140,6 @@ export default function SettingsScreen() {
       ]);
       setDisplayName(profileData.display_name ?? '');
       setTimezone(profileData.timezone ?? '');
-      setBirthDataConsentAt(profileData.birth_data_consent_at ?? null);
       setEmail(session?.user?.email ?? '');
       setPrefs(prefsData);
       getAuthHeaders().then((headers) =>
@@ -298,6 +296,8 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-down" size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
 
+        <Text style={styles.fieldHint}>{tSettings('timezoneHint')}</Text>
+
         <TimezonePickerModal
           visible={tzPickerOpen}
           value={timezone}
@@ -321,35 +321,6 @@ export default function SettingsScreen() {
             </Text>
           )}
         </TouchableOpacity>
-      </View>
-
-      {/* Privacy card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="shield-checkmark-outline" size={16} color={colors.primary} />
-          <Text style={styles.cardSectionTitle}>{tSettings('privacyTitle')}</Text>
-        </View>
-        <Text style={styles.cardDesc}>{tSettings('privacyDescription')}</Text>
-        <View style={styles.fieldRow}>
-          <Text style={styles.fieldLabel}>{tSettings('birthConsent')}</Text>
-          <View
-            style={[
-              styles.consentBadge,
-              birthDataConsentAt ? styles.consentBadgeActive : styles.consentBadgeMuted,
-            ]}
-          >
-            <Text
-              style={[
-                styles.consentBadgeText,
-                birthDataConsentAt ? styles.consentBadgeTextActive : styles.consentBadgeTextMuted,
-              ]}
-            >
-              {birthDataConsentAt
-                ? `✓ ${tSettings('consentGranted')}`
-                : `— ${tSettings('consentNotGranted')}`}
-            </Text>
-          </View>
-        </View>
       </View>
 
       {/* Preferences card */}
@@ -384,7 +355,10 @@ export default function SettingsScreen() {
           <View style={styles.divider} />
 
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>{tSettings('spiritualTone')}</Text>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.toggleLabel}>{tSettings('spiritualTone')}</Text>
+              <Text style={styles.toggleHint}>{tSettings('spiritualToneHint')}</Text>
+            </View>
             <Switch
               value={prefs.allow_spiritual_tone}
               onValueChange={(v) => updatePref({ allow_spiritual_tone: v })}
@@ -399,7 +373,10 @@ export default function SettingsScreen() {
 
           <Text style={styles.label}>{tSettings('focusAreas')}</Text>
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>{tSettings('focusLove')}</Text>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.toggleLabel}>{tSettings('focusLove')}</Text>
+              <Text style={styles.toggleHint}>{tSettings('focusLoveHint')}</Text>
+            </View>
             <Switch
               value={prefs.content_focus_love}
               onValueChange={(v) => updatePref({ content_focus_love: v })}
@@ -410,7 +387,10 @@ export default function SettingsScreen() {
             />
           </View>
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>{tSettings('focusCareer')}</Text>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.toggleLabel}>{tSettings('focusCareer')}</Text>
+              <Text style={styles.toggleHint}>{tSettings('focusCareerHint')}</Text>
+            </View>
             <Switch
               value={prefs.content_focus_career}
               onValueChange={(v) => updatePref({ content_focus_career: v })}
@@ -421,7 +401,10 @@ export default function SettingsScreen() {
             />
           </View>
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>{tSettings('focusGrowth')}</Text>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={styles.toggleLabel}>{tSettings('focusGrowth')}</Text>
+              <Text style={styles.toggleHint}>{tSettings('focusGrowthHint')}</Text>
+            </View>
             <Switch
               value={prefs.content_focus_growth}
               onValueChange={(v) => updatePref({ content_focus_growth: v })}
@@ -644,32 +627,18 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       fontSize: 13,
       color: colors.mutedForeground,
     },
-    consentBadge: {
-      borderRadius: 99,
-      paddingHorizontal: 10,
-      paddingVertical: 3,
-    },
-    consentBadgeActive: {
-      backgroundColor: colors.primarySubtle,
-    },
-    consentBadgeMuted: {
-      backgroundColor: colors.muted,
-    },
-    consentBadgeText: {
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    consentBadgeTextActive: {
-      color: colors.primary,
-    },
-    consentBadgeTextMuted: {
-      color: colors.mutedForeground,
-    },
     prefsHint: {
       fontSize: 12,
       color: colors.mutedForeground,
       lineHeight: 17,
       marginTop: 4,
+    },
+    fieldHint: {
+      fontSize: 12,
+      color: colors.mutedForeground,
+      lineHeight: 17,
+      marginTop: 4,
+      marginBottom: 4,
     },
     label: {
       fontSize: 13,
@@ -764,11 +733,17 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 4,
+      paddingVertical: 6,
     },
     toggleLabel: {
-      fontSize: 13,
+      fontSize: 14,
+      color: colors.foreground,
+    },
+    toggleHint: {
+      fontSize: 11,
       color: colors.mutedForeground,
+      lineHeight: 15,
+      marginTop: 2,
     },
     outlineButton: {
       flexDirection: 'row',

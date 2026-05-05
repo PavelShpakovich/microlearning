@@ -28,14 +28,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { DisplayNameForm } from '@/components/settings/display-name-form';
 import { TimezoneSelect } from '@/components/ui/timezone-select';
-import { ShieldCheck, User, Sparkles, Trash2 } from 'lucide-react';
+import { User, Sparkles, Trash2 } from 'lucide-react';
 import { profileApi, preferencesApi } from '@clario/api-client';
 
 export interface SettingsFormData {
   email: string;
   displayName: string;
   timezone: string | null;
-  birthDataConsentAt: string | null;
   preferences: {
     tone_style: string;
     content_focus_love: boolean;
@@ -51,18 +50,6 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
       <span className="text-sm text-muted-foreground shrink-0">{label}</span>
       <div className="text-sm font-medium text-right">{children}</div>
     </div>
-  );
-}
-
-function ConsentBadge({ active, label }: { active: boolean; label: string }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
-      }`}
-    >
-      {active ? '✓' : '—'} {label}
-    </span>
   );
 }
 
@@ -180,25 +167,6 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
             </FieldRow>
           </CardContent>
         </Card>
-
-        {/* Privacy card */}
-        <Card className="border-border/60">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="size-4 text-primary" />
-              <CardTitle className="text-base">{t('privacyTitle')}</CardTitle>
-            </div>
-            <CardDescription className="text-xs">{t('privacyDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FieldRow label={t('birthConsent')}>
-              <ConsentBadge
-                active={!!data.birthDataConsentAt}
-                label={data.birthDataConsentAt ? t('consentGranted') : t('consentNotGranted')}
-              />
-            </FieldRow>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Reading preferences card */}
@@ -232,6 +200,7 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
             {/* Spiritual tone toggle */}
             <div className="grid gap-2">
               <Label className="text-sm">{t('spiritualTone')}</Label>
+              <p className="text-xs text-muted-foreground">{t('spiritualToneHint')}</p>
               <div className="flex items-center gap-3 h-9">
                 <Switch
                   checked={spiritualTone}
@@ -248,26 +217,42 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
           {/* Focus areas */}
           <div className="mt-5">
             <Label className="text-sm">{t('focusAreas')}</Label>
-            <div className="mt-2.5 flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Switch checked={focusLove} onCheckedChange={setFocusLove} disabled={isPending} />
-                <span className="text-sm">{t('focusLove')}</span>
+            <div className="mt-2.5 grid gap-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Switch
+                  checked={focusLove}
+                  onCheckedChange={setFocusLove}
+                  disabled={isPending}
+                  className="mt-0.5"
+                />
+                <div>
+                  <span className="text-sm">{t('focusLove')}</span>
+                  <p className="text-xs text-muted-foreground">{t('focusLoveHint')}</p>
+                </div>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <Switch
                   checked={focusCareer}
                   onCheckedChange={setFocusCareer}
                   disabled={isPending}
+                  className="mt-0.5"
                 />
-                <span className="text-sm">{t('focusCareer')}</span>
+                <div>
+                  <span className="text-sm">{t('focusCareer')}</span>
+                  <p className="text-xs text-muted-foreground">{t('focusCareerHint')}</p>
+                </div>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <Switch
                   checked={focusGrowth}
                   onCheckedChange={setFocusGrowth}
                   disabled={isPending}
+                  className="mt-0.5"
                 />
-                <span className="text-sm">{t('focusGrowth')}</span>
+                <div>
+                  <span className="text-sm">{t('focusGrowth')}</span>
+                  <p className="text-xs text-muted-foreground">{t('focusGrowthHint')}</p>
+                </div>
               </label>
             </div>
           </div>

@@ -21,11 +21,7 @@ export default async function SettingsPage() {
   const t = await getTranslations('settingsPage');
 
   const [{ data: profile }, { data: preferences }, { data: authUserData }] = await Promise.all([
-    db
-      .from('profiles')
-      .select('display_name, timezone, birth_data_consent_at')
-      .eq('id', session.user.id)
-      .maybeSingle(),
+    db.from('profiles').select('display_name, timezone').eq('id', session.user.id).maybeSingle(),
     db
       .from('user_preferences')
       .select(
@@ -40,7 +36,6 @@ export default async function SettingsPage() {
     email: authUserData.user?.email ?? '',
     displayName: profile?.display_name ?? session.user.name ?? '',
     timezone: profile?.timezone ?? null,
-    birthDataConsentAt: profile?.birth_data_consent_at ?? null,
     preferences: {
       tone_style: preferences?.tone_style ?? 'balanced',
       content_focus_love: preferences?.content_focus_love ?? true,
