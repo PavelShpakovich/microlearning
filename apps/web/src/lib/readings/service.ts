@@ -352,7 +352,7 @@ export async function generateReadingContent(readingId: string, userId: string):
       locale,
       readingType,
       toneStyle: normalizeToneStyle(preferences?.tone_style),
-      allowSpiritualTone: preferences?.allow_spiritual_tone ?? true,
+      allowSpiritualTone: preferences?.allow_spiritual_tone ?? false,
       contentFocusLove: preferences?.content_focus_love ?? true,
       contentFocusCareer: preferences?.content_focus_career ?? true,
       contentFocusGrowth: preferences?.content_focus_growth ?? true,

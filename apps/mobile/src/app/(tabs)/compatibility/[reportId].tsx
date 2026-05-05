@@ -327,7 +327,10 @@ export default function CompatibilityDetailScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const insets = useSafeAreaInsets();
-  const { reportId, returnTo } = useLocalSearchParams<{ reportId: string; returnTo?: string }>();
+  const { reportId, returnTo } = useLocalSearchParams<{
+    reportId: string;
+    returnTo?: string;
+  }>();
   const [report, setReport] = useState<CompatibilityReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [generationIssue, setGenerationIssue] = useState(false);

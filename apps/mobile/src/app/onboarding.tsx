@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { router } from 'expo-router';
 import { profileApi, preferencesApi } from '@clario/api-client';
@@ -25,6 +26,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<1 | 2>(1);
   const [focus, setFocus] = useState<FocusOption | null>(null);
   const [toneStyle, setToneStyle] = useState<string | null>(null);
+  const [allowSpiritualTone, setAllowSpiritualTone] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const t = useTranslations('onboarding');
@@ -39,6 +41,7 @@ export default function OnboardingScreen() {
         contentFocusLove: focus === 'love' || focus === 'all' || focus === null,
         contentFocusCareer: focus === 'career' || focus === 'all' || focus === null,
         contentFocusGrowth: focus === 'growth' || focus === 'all' || focus === null,
+        allowSpiritualTone,
       });
       await profileApi.updateProfile({ onboardingCompleted: true });
       router.replace('/(tabs)');
@@ -156,6 +159,24 @@ export default function OnboardingScreen() {
                 ) : null}
               </TouchableOpacity>
             ))}
+          </View>
+
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>{tSettings('spiritualTone')}</Text>
+              <Text style={styles.toggleHint}>{tSettings('spiritualToneHint')}</Text>
+            </View>
+            <View style={styles.toggleControl}>
+              <Switch
+                value={allowSpiritualTone}
+                onValueChange={setAllowSpiritualTone}
+                trackColor={{ false: colors.muted, true: colors.primary }}
+                thumbColor={allowSpiritualTone ? colors.primaryForeground : colors.mutedForeground}
+              />
+              <Text style={styles.toggleState}>
+                {allowSpiritualTone ? tSettings('on') : tSettings('off')}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.step2Buttons}>
@@ -284,6 +305,40 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     },
     optionDescActive: {
       color: colors.primary,
+    },
+    toggleCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 28,
+      backgroundColor: colors.card,
+      gap: 12,
+      ...cardShadow,
+    },
+    toggleCopy: {
+      gap: 4,
+    },
+    toggleTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.foreground,
+    },
+    toggleHint: {
+      fontSize: 13,
+      color: colors.mutedForeground,
+      lineHeight: 18,
+    },
+    toggleControl: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    toggleState: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.mutedForeground,
     },
     // Primary button
     primaryButton: {

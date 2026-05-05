@@ -30,7 +30,7 @@ export const GET = withApiHandler(async () => {
       content_focus_love: true,
       content_focus_career: true,
       content_focus_growth: true,
-      allow_spiritual_tone: true,
+      allow_spiritual_tone: false,
     },
   );
 });

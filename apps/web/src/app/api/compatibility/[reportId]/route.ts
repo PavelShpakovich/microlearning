@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
+import { refundReferenceDebitIfEligible } from '@/lib/credits/service';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { computeHarmonyScore, type HarmonyPositionRow } from '@/lib/compatibility/service';
@@ -36,6 +37,20 @@ export const GET = withApiHandler(async (_req, ctx) => {
     const elapsed = Date.now() - new Date(report.created_at).getTime();
     if (elapsed > STUCK_GENERATING_THRESHOLD_MS) {
       logger.warn({ reportId, elapsed }, 'compatibility: auto-recovering stuck generating report');
+      try {
+        await refundReferenceDebitIfEligible(
+          user.id,
+          'compatibility_report',
+          reportId,
+          'compatibility_debit',
+          'refund_llm_failure',
+        );
+      } catch (refundErr) {
+        logger.error(
+          { err: refundErr, reportId },
+          'compatibility: failed to refund credits during stuck recovery',
+        );
+      }
       await db.from('compatibility_reports').update({ status: 'error' }).eq('id', reportId);
       report.status = 'error';
     }

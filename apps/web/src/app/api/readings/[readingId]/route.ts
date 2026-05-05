@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
+import { refundReferenceDebitIfEligible } from '@/lib/credits/service';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
@@ -39,6 +40,20 @@ export const GET = withApiHandler(async (_req, ctx) => {
     const elapsed = Date.now() - new Date(reading.created_at).getTime();
     if (elapsed > STUCK_GENERATING_THRESHOLD_MS) {
       logger.warn({ readingId, elapsed }, 'readings: auto-recovering stuck generating reading');
+      try {
+        await refundReferenceDebitIfEligible(
+          user.id,
+          'reading',
+          readingId,
+          'reading_debit',
+          'refund_llm_failure',
+        );
+      } catch (refundErr) {
+        logger.error(
+          { err: refundErr, readingId },
+          'readings: failed to refund credits during stuck recovery',
+        );
+      }
       await db
         .from('readings')
         .update({

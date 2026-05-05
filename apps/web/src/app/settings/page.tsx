@@ -41,7 +41,7 @@ export default async function SettingsPage() {
       content_focus_love: preferences?.content_focus_love ?? true,
       content_focus_career: preferences?.content_focus_career ?? true,
       content_focus_growth: preferences?.content_focus_growth ?? true,
-      allow_spiritual_tone: preferences?.allow_spiritual_tone ?? true,
+      allow_spiritual_tone: preferences?.allow_spiritual_tone ?? false,
     },
   };
 

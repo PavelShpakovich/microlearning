@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Sparkles, Heart, Briefcase, TrendingUp, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { preferencesApi, profileApi } from '@clario/api-client';
 
 type FocusOption = 'love' | 'career' | 'growth' | 'all';
@@ -19,6 +20,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [focus, setFocus] = useState<FocusOption | null>(null);
   const [tone, setTone] = useState<ToneOption | null>(null);
+  const [allowSpiritualTone, setAllowSpiritualTone] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function handleFinish() {
@@ -30,6 +32,7 @@ export default function OnboardingPage() {
         contentFocusLove: focus === 'love' || focus === 'all',
         contentFocusCareer: focus === 'career' || focus === 'all',
         contentFocusGrowth: focus === 'growth' || focus === 'all',
+        allowSpiritualTone: allowSpiritualTone,
       };
       await Promise.all([
         preferencesApi.updatePreferences(prefsPayload),
@@ -156,6 +159,21 @@ export default function OnboardingPage() {
               <p className="text-xs text-muted-foreground">{desc}</p>
             </button>
           ))}
+
+          <div className="rounded-2xl border p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">{tSettings('spiritualTone')}</p>
+                <p className="text-xs text-muted-foreground">{tSettings('spiritualToneHint')}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={allowSpiritualTone} onCheckedChange={setAllowSpiritualTone} />
+                <span className="text-xs text-muted-foreground">
+                  {allowSpiritualTone ? tSettings('on') : tSettings('off')}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

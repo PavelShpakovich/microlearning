@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -94,8 +94,6 @@ export default function NewCompatibilityScreen() {
   const [secondaryId, setSecondaryId] = useState<string | null>(null);
   const [compatType, setCompatType] = useState<CompatibilityType>('romantic');
   const [submitting, setSubmitting] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [pickerFor, setPickerFor] = useState<'primary' | 'secondary' | null>(null);
 
   const tCompat = useTranslations('compatibility');
@@ -103,22 +101,6 @@ export default function NewCompatibilityScreen() {
   const tCommon = useTranslations('common');
   const { showInsufficientCredits } = useInsufficientCredits();
   const { confirmSpend: confirmCompatibilitySpend } = useCreditSpendConfirm('compatibility_report');
-
-  // Advance step indicator while submitting
-  useEffect(() => {
-    if (!submitting) {
-      stepTimers.current.forEach(clearTimeout);
-      stepTimers.current = [];
-      setStepIndex(0);
-      return;
-    }
-    setStepIndex(0);
-    const delays = [4000, 9000, 16000];
-    stepTimers.current = delays.map((delay, i) => setTimeout(() => setStepIndex(i + 1), delay));
-    return () => {
-      stepTimers.current.forEach(clearTimeout);
-    };
-  }, [submitting]);
 
   useEffect(() => {
     async function load() {
@@ -198,40 +180,8 @@ export default function NewCompatibilityScreen() {
     return <NewCompatibilitySkeleton />;
   }
 
-  const STEP_LABELS = [
-    tCompat('generatingStep1'),
-    tCompat('generatingStep2'),
-    tCompat('generatingStep3'),
-    tCompat('generatingStep4'),
-  ];
-
   if (submitting) {
-    return (
-      <View
-        style={[styles.generatingContainer, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}
-      >
-        <TouchableOpacity
-          onPress={() => goBackTo(returnTo, routes.tabs.compatibility)}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={18} color={colors.mutedForeground} />
-          <Text style={styles.backText}>{tNav('back')}</Text>
-        </TouchableOpacity>
-        <View style={styles.generatingContent}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.generatingTitle}>{tCompat('generatingTitle')}</Text>
-          <Text style={styles.generatingStep}>{STEP_LABELS[stepIndex]}</Text>
-          <View style={styles.progressDots}>
-            {STEP_LABELS.map((_, i) => (
-              <View
-                key={i}
-                style={[styles.progressDot, i <= stepIndex && styles.progressDotActive]}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
-    );
+    return <NewCompatibilitySkeleton />;
   }
 
   if (charts.length < 2) {

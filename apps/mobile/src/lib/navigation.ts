@@ -69,7 +69,8 @@ export function goToRoute(returnTo: string | string[] | undefined, fallback: str
 }
 
 export function withReturnTo(pathname: string, returnTo: string): string {
-  return `${pathname}?returnTo=${encodeURIComponent(returnTo)}`;
+  const separator = pathname.includes('?') ? '&' : '?';
+  return `${pathname}${separator}returnTo=${encodeURIComponent(returnTo)}`;
 }
 
 export function push(pathname: string): void {
