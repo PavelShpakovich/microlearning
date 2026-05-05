@@ -24,6 +24,7 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { Skeleton } from '@/components/Skeleton';
+import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 const TYPE_ICONS: Record<CompatibilityType, keyof typeof Ionicons.glyphMap> = {
   romantic: 'heart-outline',
@@ -101,6 +102,7 @@ export default function NewCompatibilityScreen() {
   const tNav = useTranslations('navigation');
   const tCommon = useTranslations('common');
   const { showInsufficientCredits } = useInsufficientCredits();
+  const { confirmSpend: confirmCompatibilitySpend } = useCreditSpendConfirm('compatibility_report');
 
   // Advance step indicator while submitting
   useEffect(() => {
@@ -132,6 +134,9 @@ export default function NewCompatibilityScreen() {
 
   async function handleCreate() {
     if (!primaryId || !secondaryId) return;
+    const ok = await confirmCompatibilitySpend();
+    if (!ok) return;
+
     setSubmitting(true);
     try {
       await runToastMutation({

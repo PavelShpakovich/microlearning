@@ -25,6 +25,7 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
+import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 interface Message {
   id: string;
@@ -55,6 +56,7 @@ export default function ChatScreen() {
 
   const tChat = useTranslations('chat');
   const { showInsufficientCredits } = useInsufficientCredits();
+  const { confirmSpend: confirmFollowUpSpend } = useCreditSpendConfirm('follow_up_pack');
 
   const limitReached = messagesUsed >= messagesLimit;
 
@@ -166,6 +168,16 @@ export default function ChatScreen() {
     } finally {
       setUnlocking(false);
     }
+  }
+
+  function handleUnlockPress() {
+    if (unlocking) return;
+
+    void (async () => {
+      const ok = await confirmFollowUpSpend();
+      if (!ok) return;
+      await handleUnlock();
+    })();
   }
 
   function handleStarterQuestion(q: string) {
@@ -283,7 +295,11 @@ export default function ChatScreen() {
       {limitReached && (
         <View style={styles.limitBanner}>
           <Text style={styles.limitBannerText}>{tChat('limitReached')}</Text>
-          <TouchableOpacity style={styles.unlockButton} onPress={handleUnlock} disabled={unlocking}>
+          <TouchableOpacity
+            style={styles.unlockButton}
+            onPress={handleUnlockPress}
+            disabled={unlocking}
+          >
             {unlocking ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (

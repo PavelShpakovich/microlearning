@@ -11,7 +11,7 @@ import {
 
 import { openCalendar, openNewChart, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
-import { creditsApi, forecastsApi, ApiClientError } from '@clario/api-client';
+import { forecastsApi, ApiClientError } from '@clario/api-client';
 import type { DailyForecastRecord, DailyForecastResponse } from '@clario/api-client';
 import { useTranslations, getLocale } from '@/lib/i18n';
 import { useColors, cardShadow } from '@/lib/colors';
@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { usePullToRefresh } from '@/lib/refresh';
-import { useConfirm } from '@/components/ConfirmDialog';
+import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 function HoroscopeSkeleton() {
   const colors = useColors();
@@ -82,18 +82,15 @@ export default function HoroscopeScreen() {
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [forecastCost, setForecastCost] = useState<number | null>(null);
-  const [forecastIsFree, setForecastIsFree] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const tHoro = useTranslations('horoscope');
-  const tCommon = useTranslations('common');
-  const tCredits = useTranslations('credits');
   const tWorkspace = useTranslations('workspace');
   const { showInsufficientCredits } = useInsufficientCredits();
-  const confirm = useConfirm();
+  const { isFree: forecastIsFree, confirmSpend: confirmForecastSpend } =
+    useCreditSpendConfirm('forecast_report');
 
   const loadForecast = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -117,19 +114,6 @@ export default function HoroscopeScreen() {
   useEffect(() => {
     void loadForecast();
   }, [loadForecast]);
-
-  useEffect(() => {
-    void creditsApi
-      .getPricing(true)
-      .then((pricing) => {
-        setForecastCost(pricing.costs.forecast_report ?? 0);
-        setForecastIsFree(pricing.freeProducts.includes('forecast_report'));
-      })
-      .catch(() => {
-        setForecastCost(null);
-        setForecastIsFree(false);
-      });
-  }, []);
 
   useEffect(() => {
     if (!forecast) return;
@@ -212,21 +196,6 @@ export default function HoroscopeScreen() {
     }
   }
 
-  async function confirmForecastSpend(onConfirm: () => void) {
-    if (forecastIsFree || !forecastCost || forecastCost <= 0) {
-      onConfirm();
-      return;
-    }
-
-    const ok = await confirm({
-      title: tCredits('confirmSpendTitle'),
-      description: tCredits('confirmSpendDescription', { cost: forecastCost }),
-      confirmText: tCredits('confirm'),
-      cancelText: tCommon('cancel'),
-    });
-    if (ok) onConfirm();
-  }
-
   async function handleRegenerate() {
     if (!forecast) return;
     setRegenerating(true);
@@ -274,17 +243,21 @@ export default function HoroscopeScreen() {
   function handleUnlockPress() {
     if (unlocking) return;
 
-    confirmForecastSpend(() => {
-      void handleUnlock();
-    });
+    void (async () => {
+      const ok = await confirmForecastSpend();
+      if (!ok) return;
+      await handleUnlock();
+    })();
   }
 
   function handleRegeneratePress() {
     if (regenerating) return;
 
-    confirmForecastSpend(() => {
-      void handleRegenerate();
-    });
+    void (async () => {
+      const ok = await confirmForecastSpend();
+      if (!ok) return;
+      await handleRegenerate();
+    })();
   }
 
   if (loading) {

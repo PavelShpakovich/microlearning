@@ -36,6 +36,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { ApiClientError } from '@clario/api-client';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { usePullToRefresh } from '@/lib/refresh';
+import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 function ChartDetailSkeleton() {
   const colors = useColors();
@@ -332,6 +333,7 @@ export default function ChartDetailScreen() {
   const backTarget = resolveParentRoute(returnTo, routes.tabs.charts);
   const backLabel = backTarget === routes.tabs.home ? tDashboard('pageTitle') : tChart('allCharts');
   const { showInsufficientCredits } = useInsufficientCredits();
+  const { confirmSpend: confirmReadingSpend } = useCreditSpendConfirm('natal_report');
 
   const loadChartDetail = useCallback(
     async (isRefresh = false) => {
@@ -385,6 +387,13 @@ export default function ChartDetailScreen() {
 
   async function handleCreateReading(readingType: string) {
     if (!chartId) return;
+    setShowReadingModal(false);
+    const ok = await confirmReadingSpend();
+    if (!ok) {
+      setShowReadingModal(true);
+      return;
+    }
+
     setCreatingReading(readingType);
     try {
       await runToastMutation({
