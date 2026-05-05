@@ -1,25 +1,4 @@
 PODS:
-  - AsyncStorage (3.0.2):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Codegen
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - boost (1.83.0)
   - DoubleConversion (1.1.6)
   - EXApplication (5.9.1):
@@ -39,6 +18,8 @@ PODS:
   - ExpoHead (3.5.24):
     - ExpoModulesCore
   - ExpoKeepAwake (13.0.2):
+    - ExpoModulesCore
+  - ExpoLocalization (15.0.3):
     - ExpoModulesCore
   - ExpoModulesCore (1.12.26):
     - DoubleConversion
@@ -1256,6 +1237,8 @@ PODS:
     - React-logger (= 0.74.5)
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
+  - RNCAsyncStorage (1.23.1):
+    - React-Core
   - RNDateTimePicker (8.0.1):
     - React-Core
   - RNGestureHandler (2.16.2):
@@ -1328,7 +1311,6 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "AsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - "EXApplication (from `../../../node_modules/.pnpm/expo-application@5.9.1_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+_eaecac3366e5fdb971625e55458c590c/node_modules/expo-application/ios`)"
@@ -1340,6 +1322,7 @@ DEPENDENCIES:
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@12.0.10_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+core@_fc5ad4c3f02edab071ba4a82c315ee67/node_modules/expo-font/ios`)"
   - "ExpoHead (from `../../../node_modules/.pnpm/expo-router@3.5.24_7e9c78a356a2cc7044ab01920b075952/node_modules/expo-router/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+_4ac0db163e3d3c49525cc49aec50f25c/node_modules/expo-keep-awake/ios`)"
+  - "ExpoLocalization (from `../../../node_modules/.pnpm/expo-localization@15.0.3_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_14c3b3566057bd408d6755ba50bf4d94/node_modules/expo-localization/ios`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../../../node_modules/.pnpm/expo-network@6.0.1_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+core_8f1ca3f0051e8ad2fee52dc71fc681c5/node_modules/expo-network/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_53430c548854e268ca47e31491166649/node_modules/expo-secure-store/ios`)"
@@ -1399,6 +1382,7 @@ DEPENDENCIES:
   - React-runtimescheduler (from `../node_modules/react-native/ReactCommon/react/renderer/runtimescheduler`)
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -1411,8 +1395,6 @@ SPEC REPOS:
     - SocketRocket
 
 EXTERNAL SOURCES:
-  AsyncStorage:
-    :path: "../node_modules/@react-native-async-storage/async-storage"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
@@ -1435,6 +1417,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-router@3.5.24_7e9c78a356a2cc7044ab01920b075952/node_modules/expo-router/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+_4ac0db163e3d3c49525cc49aec50f25c/node_modules/expo-keep-awake/ios"
+  ExpoLocalization:
+    :path: "../../../node_modules/.pnpm/expo-localization@15.0.3_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_14c3b3566057bd408d6755ba50bf4d94/node_modules/expo-localization/ios"
   ExpoModulesCore:
     :path: "../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core"
   ExpoNetwork:
@@ -1550,6 +1534,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/utils"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-async-storage/async-storage"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
@@ -1564,7 +1550,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  AsyncStorage: 0a097b24797a0d923db191f9141f8cceb692f39f
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   EXApplication: ec862905fdab3a15bf6bd8ca1a99df7fc02d7762
@@ -1576,6 +1561,7 @@ SPEC CHECKSUMS:
   ExpoFont: 38dddf823e32740c2a9f37c926a33aeca736b5c4
   ExpoHead: 1a1b30c6c1d125e9b8a199ca305c16a1dc041624
   ExpoKeepAwake: dd02e65d49f1cfd9194640028ae2857e536eb1c9
+  ExpoLocalization: 1b4195ed48148c7f52ce790d3965cc19483fcbf2
   ExpoModulesCore: 9ac73e2f60e0ea1d30137ca96cfc8c2aa34ef2b2
   ExpoNetwork: 3406d873b73ca189fd41c51dff9a1c8625771260
   ExpoSecureStore: 6506992a9f53c94ea716c54d4a63144965945c2c
@@ -1633,6 +1619,7 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 2cbd0f3625b30bba08e8768776107f6f0203159b
   React-utils: 9fa4e5d0b5e6c6c85c958f19d6ef854337886417
   ReactCommon: 9f285823dbe955099978d9bff65a7653ca029256
+  RNCAsyncStorage: aa75595c1aefa18f868452091fa0c411a516ce11
   RNDateTimePicker: dde7ca9005d716f3efa9a63004b441679bca9a41
   RNGestureHandler: 326e35460fb6c8c64a435d5d739bea90d7ed4e49
   RNReanimated: b37187062e7e9b88fc80451e6d711c09e16ce7cf

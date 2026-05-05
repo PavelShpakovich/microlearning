@@ -1,3 +1,5 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+patchedDependencies:
+  expo-localization@15.0.3: patches/expo-localization@15.0.3.patch

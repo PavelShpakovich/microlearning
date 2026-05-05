@@ -28,7 +28,6 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>clario</string>
-          <string>com.clario.app</string>
         </array>
       </dict>
     </array>
