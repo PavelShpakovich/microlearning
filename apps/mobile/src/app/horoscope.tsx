@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native';
 
@@ -22,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { usePullToRefresh } from '@/lib/refresh';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 function HoroscopeSkeleton() {
   const colors = useColors();
@@ -93,6 +93,7 @@ export default function HoroscopeScreen() {
   const tCredits = useTranslations('credits');
   const tWorkspace = useTranslations('workspace');
   const { showInsufficientCredits } = useInsufficientCredits();
+  const confirm = useConfirm();
 
   const loadForecast = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -211,21 +212,19 @@ export default function HoroscopeScreen() {
     }
   }
 
-  function confirmForecastSpend(onConfirm: () => void) {
+  async function confirmForecastSpend(onConfirm: () => void) {
     if (forecastIsFree || !forecastCost || forecastCost <= 0) {
       onConfirm();
       return;
     }
 
-    Alert.alert(
-      tCredits('confirmSpendTitle'),
-      tCredits('confirmSpendDescription', { cost: forecastCost }),
-      [
-        { text: tCommon('cancel'), style: 'cancel' },
-        { text: tCredits('confirm'), onPress: onConfirm },
-      ],
-      { cancelable: true },
-    );
+    const ok = await confirm({
+      title: tCredits('confirmSpendTitle'),
+      description: tCredits('confirmSpendDescription', { cost: forecastCost }),
+      confirmText: tCredits('confirm'),
+      cancelText: tCommon('cancel'),
+    });
+    if (ok) onConfirm();
   }
 
   async function handleRegenerate() {
