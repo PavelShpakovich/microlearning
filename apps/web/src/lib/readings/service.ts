@@ -157,6 +157,8 @@ async function runStructuredStage<T>({
 
     return result.content;
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Structured generation failed';
+
     traces.push({
       operationKey,
       requestPayload: {
@@ -169,10 +171,10 @@ async function runStructuredStage<T>({
       } as Json,
       latencyMs: Date.now() - startedAt,
       usageTokens: null,
-      errorMessage: error instanceof Error ? error.message : 'Structured generation failed',
+      errorMessage: message,
     });
 
-    throw error;
+    throw new Error(`${operationKey}: ${message}`);
   }
 }
 
@@ -417,22 +419,34 @@ export async function generateReadingContent(readingId: string, userId: string):
       traces: generationTraces,
     });
 
-    const reviewPrompts = buildReadingReviewPrompts(promptInput, draft);
-    content = await runStructuredStage({
-      operationKey: 'reading.pipeline.reviewer',
-      systemPrompt: reviewPrompts.systemPrompt,
-      userPrompt: reviewPrompts.userPrompt,
-      schema: structuredReadingSchema,
-      mockResponse: reviewPrompts.mockResponse,
-      maxTokens: 8192,
-      requestPayload: {
-        ...stageContext,
-        stage: 'reviewer',
-        promptVersion: reviewPrompts.mockResponse.metadata.promptVersion,
-        draft,
-      },
-      traces: generationTraces,
-    });
+    // Reviewer is best-effort: if it fails, use the writer draft directly.
+    // This prevents transient LLM issues from killing the entire reading.
+    let reviewed: StructuredReadingOutput;
+    try {
+      const reviewPrompts = buildReadingReviewPrompts(promptInput, draft);
+      reviewed = await runStructuredStage({
+        operationKey: 'reading.pipeline.reviewer',
+        systemPrompt: reviewPrompts.systemPrompt,
+        userPrompt: reviewPrompts.userPrompt,
+        schema: structuredReadingSchema,
+        mockResponse: reviewPrompts.mockResponse,
+        maxTokens: 8192,
+        requestPayload: {
+          ...stageContext,
+          stage: 'reviewer',
+          promptVersion: reviewPrompts.mockResponse.metadata.promptVersion,
+          draft,
+        },
+        traces: generationTraces,
+      });
+    } catch (reviewErr) {
+      logger.warn(
+        { err: reviewErr, readingId },
+        'readings: reviewer stage failed, using writer draft',
+      );
+      reviewed = draft;
+    }
+    content = reviewed;
   } catch (error) {
     status = 'error';
     errorMessage = error instanceof Error ? error.message : 'Reading generation failed';

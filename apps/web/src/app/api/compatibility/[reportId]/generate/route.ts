@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { generateCompatibilityContent } from '@/lib/compatibility/service';
+import { logger } from '@/lib/logger';
 
-export const maxDuration = 90;
+export const maxDuration = 300;
 
 const uuidSchema = z.string().uuid();
 
@@ -18,7 +19,14 @@ export const POST = withApiHandler(async (_req, ctx) => {
   if (!uuidSchema.safeParse(reportId).success)
     throw new ValidationError({ message: 'Invalid report ID' });
 
-  await generateCompatibilityContent(reportId, user.id);
+  const userId = user.id;
+  after(async () => {
+    try {
+      await generateCompatibilityContent(reportId, userId);
+    } catch (err) {
+      logger.error({ err, reportId }, 'compatibility: background generation failed');
+    }
+  });
 
   return NextResponse.json({ ok: true });
 });

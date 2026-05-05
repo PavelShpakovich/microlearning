@@ -330,6 +330,7 @@ export default function CompatibilityDetailScreen() {
   const { reportId, returnTo } = useLocalSearchParams<{ reportId: string; returnTo?: string }>();
   const [report, setReport] = useState<CompatibilityReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generationIssue, setGenerationIssue] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const stepIndex = useGenerationStepTicker(report?.status);
 
@@ -342,6 +343,9 @@ export default function CompatibilityDetailScreen() {
       if (!isRefresh) setLoading(true);
       try {
         const { report: data } = await compatibilityApi.getReport(reportId);
+        if (data.status !== 'pending' && data.status !== 'generating') {
+          setGenerationIssue(false);
+        }
         setReport(data);
         return data;
       } finally {
@@ -351,7 +355,10 @@ export default function CompatibilityDetailScreen() {
     [reportId],
   );
 
-  const { refreshing, handleRefresh } = usePullToRefresh(() => loadReport(true));
+  const { refreshing, handleRefresh } = usePullToRefresh(async () => {
+    setGenerationIssue(false);
+    await loadReport(true);
+  });
 
   useGenerationPolling({
     entityId: reportId,
@@ -367,6 +374,9 @@ export default function CompatibilityDetailScreen() {
         void scheduleReadyNotification(updated.title ?? notifMessages.compatibilityReady);
       }
     },
+    onGenerationIssue: () => {
+      setGenerationIssue(true);
+    },
   });
 
   useEffect(() => {
@@ -376,6 +386,7 @@ export default function CompatibilityDetailScreen() {
   async function handleRetry() {
     if (!reportId) return;
     setRetrying(true);
+    setGenerationIssue(false);
     try {
       await compatibilityApi.resetForRetry(reportId);
       const { report: updated } = await compatibilityApi.getReport(reportId);
@@ -410,7 +421,19 @@ export default function CompatibilityDetailScreen() {
   const compatType = (report.compatibility_type ?? 'romantic') as CompatType;
   const isReady = status === 'ready';
   const isError = status === 'error';
-  const isGenerating = status === 'pending' || status === 'generating';
+  const isStalled = generationIssue && !isError;
+  const hasGenerationError = isError || generationIssue;
+  const isGenerating = (status === 'pending' || status === 'generating') && !isStalled;
+  const generationErrorTitle = isStalled
+    ? tCompat('stalledBannerTitle')
+    : tCompat('errorBannerTitle');
+  const generationErrorDescription = isStalled
+    ? tCompat('stalledBannerDesc')
+    : report.error_message?.trim() || tCompat('errorBannerDesc');
+  const generationErrorActionLabel = isStalled
+    ? tCompat('refreshStatus')
+    : tCompat('generatingRetry');
+  const handleGenerationAction = isStalled ? handleRefresh : handleRetry;
 
   const harmonyScore = report.harmony_score ?? content?.harmonyScore ?? 0;
   const harmonyColors = getHarmonyColors(harmonyScore);
@@ -503,20 +526,22 @@ export default function CompatibilityDetailScreen() {
             <View
               style={[
                 styles.statusBadge,
-                isError ? styles.statusBadgeError : styles.statusBadgePending,
+                hasGenerationError ? styles.statusBadgeError : styles.statusBadgePending,
               ]}
             >
               <Text
                 style={[
                   styles.statusBadgeText,
-                  isError ? styles.statusBadgeTextError : styles.statusBadgeTextPending,
+                  hasGenerationError ? styles.statusBadgeTextError : styles.statusBadgeTextPending,
                 ]}
               >
                 {isError
                   ? tCompat('statusError')
-                  : status === 'generating'
-                    ? tCompat('statusGenerating')
-                    : tCompat('statusPending')}
+                  : isStalled
+                    ? tCompat('statusDelayed')
+                    : status === 'generating'
+                      ? tCompat('statusGenerating')
+                      : tCompat('statusPending')}
               </Text>
             </View>
           ) : null}
@@ -549,18 +574,18 @@ export default function CompatibilityDetailScreen() {
       ) : null}
 
       {/* Error banner + retry */}
-      {isError ? (
+      {hasGenerationError ? (
         <DetailErrorBanner
-          title={tCompat('errorBannerTitle')}
-          description={tCompat('errorBannerDesc')}
-          retryLabel={tCompat('generatingRetry')}
-          onRetry={handleRetry}
+          title={generationErrorTitle}
+          description={generationErrorDescription}
+          retryLabel={generationErrorActionLabel}
+          onRetry={handleGenerationAction}
           retrying={retrying}
         />
       ) : null}
 
       {/* ── Ready content ── */}
-      {isReady ? (
+      {isReady && !hasGenerationError ? (
         <>
           {/* Harmony score card */}
           <View style={styles.harmonyCard}>

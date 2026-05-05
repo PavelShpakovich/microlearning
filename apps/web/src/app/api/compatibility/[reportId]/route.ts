@@ -5,9 +5,13 @@ import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { computeHarmonyScore, type HarmonyPositionRow } from '@/lib/compatibility/service';
+import { logger } from '@/lib/logger';
 
 const db = supabaseAdmin;
 const uuidSchema = z.string().uuid();
+
+/** If a report stays in "generating" longer than this, mark it as error. */
+const STUCK_GENERATING_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 export const GET = withApiHandler(async (_req, ctx) => {
   const { user } = await requireAuth();
@@ -26,6 +30,16 @@ export const GET = withApiHandler(async (_req, ctx) => {
     .maybeSingle();
 
   if (!report) throw new NotFoundError({ message: 'Report not found' });
+
+  // Auto-recover stuck reports: if "generating" for too long, mark as error.
+  if (report.status === 'generating') {
+    const elapsed = Date.now() - new Date(report.created_at).getTime();
+    if (elapsed > STUCK_GENERATING_THRESHOLD_MS) {
+      logger.warn({ reportId, elapsed }, 'compatibility: auto-recovering stuck generating report');
+      await db.from('compatibility_reports').update({ status: 'error' }).eq('id', reportId);
+      report.status = 'error';
+    }
+  }
 
   // Attach person names and compute harmony score
   const [{ data: primaryChart }, { data: secondaryChart }] = await Promise.all([

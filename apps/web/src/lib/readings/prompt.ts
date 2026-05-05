@@ -81,12 +81,15 @@ export function stableReadingTitle(
 
 function buildStyleInstructions(input: ReadingPromptInput): string {
   const lines: string[] = [];
+  const spiritualToneAllowed = input.allowSpiritualTone;
 
   // Tone style — tell the LLM exactly what writing style to adopt
   switch (input.toneStyle) {
     case 'mystical':
       lines.push(
-        'Writing tone: Use symbolic, archetypal, and mythic language. Draw on cosmic patterns, spiritual metaphor, and a sense of meaning and mystery. Invite the reader into a feeling of connection with larger forces.',
+        spiritualToneAllowed
+          ? 'Writing tone: Use symbolic, archetypal, and mythic language. Draw on cosmic patterns, spiritual metaphor, and a sense of meaning and mystery. Invite the reader into a feeling of connection with larger forces.'
+          : 'Writing tone: Use symbolic, archetypal, and mythic language while remaining fully secular. Emphasize pattern recognition, metaphor, and depth of meaning through psychology, narrative, and lived experience rather than spirituality, religion, fate, or cosmic guidance.',
       );
       break;
     case 'therapeutic':
@@ -106,7 +109,7 @@ function buildStyleInstructions(input: ReadingPromptInput): string {
   }
 
   // Spiritual language gate
-  if (!input.allowSpiritualTone) {
+  if (!spiritualToneAllowed) {
     lines.push(
       'Language constraint: Keep all language secular and psychological. Do NOT use spiritual, religious, or new-age terms (e.g. "soul", "karma", "higher self", "cosmic", "universe guides you", "spiritual path", "destiny"). Frame everything in terms of psychology, personality, and lived experience.',
     );
@@ -323,7 +326,7 @@ Return only valid JSON matching this shape exactly:
 Requirements:
 - Write in ${language}. Every field must be in ${language} — no exceptions.
 - Produce exactly the same number of sections as in the plan.
-- Each section content MUST be at least 350–500 words of rich, focused prose. This is a paid professional service — thin content is unacceptable.
+- Each section content MUST be at least 200–350 words of rich, focused prose.
 - Every section must reference specific planetary placements, signs, houses, and aspects from the chart data. Never write generically.
 - Name the person (${input.personName}) naturally in the reading to make it personal.
 - Use the actual Sun, Moon, Ascendant, and house positions as the backbone of interpretation.
@@ -340,7 +343,7 @@ Requirements:
       ? ' Use the current sky positions provided to identify active transit-to-natal aspects and ground each section in what is happening NOW.'
       : '';
 
-  const userPrompt = `Write a full ${input.readingType} astrology reading for ${input.personName}.${transitNote} This reading will be delivered to the client — make it rich, personal, and substantive. Each section must be 350–500 words minimum.
+  const userPrompt = `Write a full ${input.readingType} astrology reading for ${input.personName}.${transitNote} This reading will be delivered to the client — make it rich, personal, and substantive. Each section must be 200–350 words.
 
 ${serializeChartFacts(input)}
 
@@ -395,17 +398,16 @@ Return only valid JSON in exactly the same schema as the draft.
 Review goals:
 - Remove overclaiming and fatalistic wording ("you will", "you must")
 - Remove vague platitudes not tied to the chart — replace them with chart-specific insight
-- Ensure every section has at least 350 words of meaningful content; if too short, expand with relevant chart analysis
-- Check that each section names at least 3 specific planets, signs, and houses from the provided chart data; add specific references if missing
-- Keep the reading tied to the actual chart placements and aspects provided
+- Ensure every section has at least 200 words of meaningful content
+- Check that each section names at least 3 specific planets, signs, and houses; add specific references if missing
+- Keep the reading tied to the actual chart placements and aspects already referenced in the draft
 - Keep tone warm, authoritative, direct, and non-manipulative
 - Preserve all section structure (keys, titles)
+- Do NOT expand sections beyond their current length — focus on quality, not quantity
 - Ensure disclaimers are present and useful
 - Make the content feel personal — the person's name and their actual sign placements should appear naturally`;
 
-  const userPrompt = `Review and refine this astrology reading draft.
-
-${serializeChartFacts(input)}
+  const userPrompt = `Review and refine this astrology reading draft. The chart data is already embedded in the draft sections — use it as reference, do not request additional data.
 
 Draft reading:
 ${JSON.stringify(draft, null, 2)}`;

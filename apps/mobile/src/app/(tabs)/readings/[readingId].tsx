@@ -117,6 +117,7 @@ export default function ReadingDetailScreen() {
   const { readingId, returnTo } = useLocalSearchParams<{ readingId: string; returnTo?: string }>();
   const [reading, setReading] = useState<ReadingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generationIssue, setGenerationIssue] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
@@ -138,6 +139,9 @@ export default function ReadingDetailScreen() {
       if (!isRefresh) setLoading(true);
       try {
         const { reading: data } = await readingsApi.getReading(readingId);
+        if (data.status !== 'pending' && data.status !== 'generating') {
+          setGenerationIssue(false);
+        }
         setReading(data);
         return data;
       } finally {
@@ -147,7 +151,10 @@ export default function ReadingDetailScreen() {
     [readingId],
   );
 
-  const { refreshing, handleRefresh } = usePullToRefresh(() => loadReading(true));
+  const { refreshing, handleRefresh } = usePullToRefresh(async () => {
+    setGenerationIssue(false);
+    await loadReading(true);
+  });
 
   useGenerationPolling({
     entityId: readingId,
@@ -162,6 +169,9 @@ export default function ReadingDetailScreen() {
       if (wasGenerating) {
         void scheduleReadyNotification(updated.title ?? notifMessages.readingReady);
       }
+    },
+    onGenerationIssue: () => {
+      setGenerationIssue(true);
     },
   });
 
@@ -204,6 +214,7 @@ export default function ReadingDetailScreen() {
   async function handleRetry() {
     if (!readingId) return;
     setRetrying(true);
+    setGenerationIssue(false);
     try {
       await readingsApi.resetForRetry(readingId);
       const { reading: refreshed } = await readingsApi.getReading(readingId);
@@ -245,7 +256,19 @@ export default function ReadingDetailScreen() {
   const disclaimers = content?.disclaimers ?? [];
   const isReady = status === 'ready';
   const isError = status === 'error';
-  const isGenerating = status === 'pending' || status === 'generating';
+  const isStalled = generationIssue && !isError;
+  const hasGenerationError = isError || generationIssue;
+  const isGenerating = (status === 'pending' || status === 'generating') && !isStalled;
+  const generationErrorTitle = isStalled
+    ? tDetail('stalledBannerTitle')
+    : tDetail('errorBannerTitle');
+  const generationErrorDescription = isStalled
+    ? tDetail('stalledBannerDesc')
+    : reading.error_message?.trim() || tDetail('errorBannerDesc');
+  const generationErrorActionLabel = isStalled
+    ? tGenerating('refreshButton')
+    : tGenerating('retryButton');
+  const handleGenerationAction = isStalled ? handleRefresh : handleRetry;
 
   return (
     <ScrollView
@@ -286,20 +309,22 @@ export default function ReadingDetailScreen() {
             <View
               style={[
                 styles.statusBadge,
-                isError ? styles.statusBadgeError : styles.statusBadgePending,
+                hasGenerationError ? styles.statusBadgeError : styles.statusBadgePending,
               ]}
             >
               <Text
                 style={[
                   styles.statusBadgeText,
-                  isError ? styles.statusBadgeTextError : styles.statusBadgeTextPending,
+                  hasGenerationError ? styles.statusBadgeTextError : styles.statusBadgeTextPending,
                 ]}
               >
                 {isError
                   ? tDetail('statusError')
-                  : status === 'generating'
-                    ? tDetail('statusGenerating')
-                    : tDetail('statusPending')}
+                  : isStalled
+                    ? tDetail('statusDelayed')
+                    : status === 'generating'
+                      ? tDetail('statusGenerating')
+                      : tDetail('statusPending')}
               </Text>
             </View>
           ) : null}
@@ -372,18 +397,18 @@ export default function ReadingDetailScreen() {
       ) : null}
 
       {/* Error banner */}
-      {isError ? (
+      {hasGenerationError ? (
         <DetailErrorBanner
-          title={tDetail('errorBannerTitle')}
-          description={tDetail('errorBannerDesc')}
-          retryLabel={tGenerating('retryButton')}
-          onRetry={handleRetry}
+          title={generationErrorTitle}
+          description={generationErrorDescription}
+          retryLabel={generationErrorActionLabel}
+          onRetry={handleGenerationAction}
           retrying={retrying}
         />
       ) : null}
 
-      {/* Content — only when not error */}
-      {!isError ? (
+      {/* Content — only when ready */}
+      {isReady && !hasGenerationError ? (
         <>
           {/* Summary */}
           {reading.summary ? (

@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { withApiHandler } from '@/lib/api/handler';
 import { requireAuth } from '@/lib/api/auth';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { generateDailyForecast } from '@/lib/forecasts/service';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 
-export const maxDuration = 90;
+export const maxDuration = 300;
 
 const uuidSchema = z.string().uuid();
 
@@ -25,7 +26,15 @@ export const POST = withApiHandler(async (_req, ctx) => {
     .eq('id', user.id)
     .maybeSingle();
 
-  await generateDailyForecast(forecastId, user.id, profile?.timezone);
+  const userId = user.id;
+  const timezone = profile?.timezone;
+  after(async () => {
+    try {
+      await generateDailyForecast(forecastId, userId, timezone);
+    } catch (err) {
+      logger.error({ err, forecastId }, 'forecasts: background generation failed');
+    }
+  });
 
   return NextResponse.json({ ok: true });
 });

@@ -121,6 +121,25 @@ describe('ReadingPromptInput interface', () => {
   });
 });
 
+describe('Reading prompts: tone constraints', () => {
+  it('keeps mystical tone secular when spiritual language is disabled', () => {
+    const input: ReadingPromptInput = {
+      ...SAMPLE_INPUT,
+      toneStyle: 'mystical',
+      allowSpiritualTone: false,
+    };
+
+    const { systemPrompt } = buildReadingPlanPrompts(input);
+
+    expect(systemPrompt).toContain(
+      'Use symbolic, archetypal, and mythic language while remaining fully secular.',
+    );
+    expect(systemPrompt).toContain('Keep all language secular and psychological.');
+    expect(systemPrompt).not.toContain('spiritual metaphor');
+    expect(systemPrompt).not.toContain('connection with larger forces');
+  });
+});
+
 describe('Reading prompts: data completeness', () => {
   it('includes all positions without cap', () => {
     const manyPositions = Array.from({ length: 20 }, (_, i) => ({
