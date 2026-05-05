@@ -142,6 +142,14 @@ export function openReadingDetail(
   push(withReturnTo(routes.readings.detail(readingId), returnTo));
 }
 
+/** Replace current screen with reading detail (use after creation to keep clean back stack). */
+export function replaceWithReadingDetail(
+  readingId: string,
+  returnTo: string = routes.tabs.readings,
+): void {
+  router.replace(withReturnTo(routes.readings.detail(readingId), returnTo) as never);
+}
+
 export function openReadingShortcut(readingId: string): void {
   primeSectionStack(
     routes.tabs.readings,
@@ -171,4 +179,12 @@ export function openCompatibilityDetail(
   returnTo: string = routes.tabs.compatibility,
 ): void {
   push(withReturnTo(routes.compatibility.detail(reportId), returnTo));
+}
+
+/** Replace current screen with compatibility detail (use after creation to keep clean back stack). */
+export function replaceWithCompatibilityDetail(
+  reportId: string,
+  returnTo: string = routes.tabs.compatibility,
+): void {
+  router.replace(withReturnTo(routes.compatibility.detail(reportId), returnTo) as never);
 }

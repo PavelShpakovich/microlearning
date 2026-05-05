@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { useColors } from '@/lib/colors';
+import { useTranslations } from '@/lib/i18n';
 
 let openSwipeable: Swipeable | null = null;
 
@@ -24,6 +25,7 @@ export function SwipeToDeleteRow({
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors, borderRadius), [colors, borderRadius]);
   const swipeableRef = useRef<Swipeable | null>(null);
+  const tCommon = useTranslations('common');
 
   useEffect(() => {
     return () => {
@@ -77,7 +79,7 @@ export function SwipeToDeleteRow({
             onPress={() => void handleDelete(methods)}
           >
             <Ionicons name="trash-outline" size={18} color={colors.destructiveForeground} />
-            <Text style={styles.deleteText}>Удалить</Text>
+            <Text style={styles.deleteText}>{tCommon('delete')}</Text>
           </TouchableOpacity>
         </View>
       )}

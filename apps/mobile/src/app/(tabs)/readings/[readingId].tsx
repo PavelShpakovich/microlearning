@@ -31,6 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
+import { consumeReading } from '@/lib/navigation-cache';
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -114,8 +115,9 @@ export default function ReadingDetailScreen() {
 
   const insets = useSafeAreaInsets();
   const { readingId, returnTo } = useLocalSearchParams<{ readingId: string; returnTo?: string }>();
-  const [reading, setReading] = useState<ReadingDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedReading = useRef(readingId ? consumeReading(readingId) : null).current;
+  const [reading, setReading] = useState<ReadingDetail | null>(cachedReading);
+  const [loading, setLoading] = useState(cachedReading === null);
   const [retrying, setRetrying] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -197,7 +199,7 @@ export default function ReadingDetailScreen() {
   const loadReading = useCallback(
     async (isRefresh = false) => {
       if (!readingId) return null;
-      if (!isRefresh) setLoading(true);
+      if (!isRefresh && !cachedReading) setLoading(true);
       try {
         const { reading: data } = await readingsApi.getReading(readingId);
         setReading(data);
@@ -206,7 +208,7 @@ export default function ReadingDetailScreen() {
         setLoading(false);
       }
     },
-    [readingId],
+    [readingId, cachedReading],
   );
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadReading(true));
@@ -294,6 +296,8 @@ export default function ReadingDetailScreen() {
       </View>
     );
   }
+
+  if (!reading) return null;
 
   const { status } = reading;
   const content = reading.rendered_content_json;

@@ -17,19 +17,17 @@ import type { ChartRecord } from '@clario/api-client';
 import { COMPATIBILITY_TYPES } from '@clario/types';
 import type { CompatibilityType } from '@clario/types';
 import { useTranslations } from '@/lib/i18n';
-import {
-  goBackTo,
-  openCompatibilityDetail,
-  openNewChart,
-  resolveParentRoute,
-  routes,
-} from '@/lib/navigation';
+import { goBackTo, replaceWithCompatibilityDetail, openNewChart, routes } from '@/lib/navigation';
 import { runToastMutation } from '@/lib/mutation-toast';
 import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { Skeleton } from '@/components/Skeleton';
+import {
+  markCompatibilityListNeedsRefresh,
+  cacheCompatibilityReport,
+} from '@/lib/navigation-cache';
 
 const TYPE_ICONS: Record<CompatibilityType, keyof typeof Ionicons.glyphMap> = {
   romantic: 'heart-outline',
@@ -160,11 +158,15 @@ export default function NewCompatibilityScreen() {
           return tCompat('createFailed');
         },
         toastKey: 'mobile-compatibility-create',
-        onSuccess: ({ report }) => {
-          openCompatibilityDetail(
-            report.id,
-            resolveParentRoute(returnTo, routes.tabs.compatibility),
-          );
+        onSuccess: async ({ report }) => {
+          markCompatibilityListNeedsRefresh();
+          try {
+            const { report: fullReport } = await compatibilityApi.getReport(report.id);
+            cacheCompatibilityReport(fullReport);
+          } catch {
+            /* navigate anyway */
+          }
+          replaceWithCompatibilityDetail(report.id);
         },
         onError: (error) => {
           if (

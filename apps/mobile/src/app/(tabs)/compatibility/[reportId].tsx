@@ -31,6 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
+import { consumeCompatibilityReport } from '@/lib/navigation-cache';
 
 type CompatType = 'romantic' | 'friendship' | 'business' | 'family';
 
@@ -324,11 +325,14 @@ export default function CompatibilityDetailScreen() {
 
   const insets = useSafeAreaInsets();
   const { reportId, returnTo } = useLocalSearchParams<{ reportId: string; returnTo?: string }>();
-  const [report, setReport] = useState<CompatibilityReport | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedReport = useRef(reportId ? consumeCompatibilityReport(reportId) : null).current;
+  const [report, setReport] = useState<CompatibilityReport | null>(cachedReport);
+  const [loading, setLoading] = useState(cachedReport === null);
   const [retrying, setRetrying] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
   const prevStatusRef = useRef<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stepTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const tCompat = useTranslations('compatibility');
   const notifMessages = allMessages[getLocale()].notifications;
@@ -336,7 +340,7 @@ export default function CompatibilityDetailScreen() {
   const loadReport = useCallback(
     async (isRefresh = false) => {
       if (!reportId) return null;
-      if (!isRefresh) setLoading(true);
+      if (!isRefresh && !cachedReport) setLoading(true);
       try {
         const { report: data } = await compatibilityApi.getReport(reportId);
         prevStatusRef.current = data.status;
@@ -346,7 +350,7 @@ export default function CompatibilityDetailScreen() {
         setLoading(false);
       }
     },
-    [reportId],
+    [reportId, cachedReport],
   );
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadReport(true));
@@ -402,6 +406,22 @@ export default function CompatibilityDetailScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [report?.status, reportId]);
+
+  // Advance step indicator while generating
+  useEffect(() => {
+    if (report?.status !== 'pending' && report?.status !== 'generating') {
+      stepTimers.current.forEach(clearTimeout);
+      stepTimers.current = [];
+      setStepIndex(0);
+      return;
+    }
+    setStepIndex(0);
+    const delays = [5000, 15000, 28000];
+    stepTimers.current = delays.map((delay, i) => setTimeout(() => setStepIndex(i + 1), delay));
+    return () => {
+      stepTimers.current.forEach(clearTimeout);
+    };
+  }, [report?.status]);
 
   async function handleRetry() {
     if (!reportId) return;
@@ -571,13 +591,24 @@ export default function CompatibilityDetailScreen() {
         <View style={styles.generatingBlock}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.generatingTitle}>{tCompat('generatingTitle')}</Text>
-          {(
-            ['generatingStep1', 'generatingStep2', 'generatingStep3', 'generatingStep4'] as const
-          ).map((k) => (
-            <Text key={k} style={styles.generatingStep}>
-              {tCompat(k)}
-            </Text>
-          ))}
+          <Text style={styles.generatingStep}>
+            {
+              [
+                tCompat('generatingStep1'),
+                tCompat('generatingStep2'),
+                tCompat('generatingStep3'),
+                tCompat('generatingStep4'),
+              ][stepIndex]
+            }
+          </Text>
+          <View style={styles.progressDots}>
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={[styles.progressDot, i <= stepIndex && styles.progressDotActive]}
+              />
+            ))}
+          </View>
         </View>
       ) : null}
 
@@ -834,20 +865,22 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     statusBadgeTextPending: { color: '#92400E' },
 
     // ── Generating ────────────────────────────────────────────────────────────────
-    generatingBlock: { alignItems: 'center', gap: 10, paddingVertical: 40 },
+    generatingBlock: { alignItems: 'center', gap: 16, paddingVertical: 48 },
     generatingTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: '700',
       color: colors.foreground,
       textAlign: 'center',
-      marginTop: 8,
     },
     generatingStep: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.mutedForeground,
-      lineHeight: 20,
       textAlign: 'center',
+      minHeight: 20,
     },
+    progressDots: { flexDirection: 'row', gap: 6, marginTop: 8 },
+    progressDot: { width: 24, height: 4, borderRadius: 2, backgroundColor: colors.primaryTint },
+    progressDotActive: { backgroundColor: colors.primary },
 
     // ── Error ─────────────────────────────────────────────────────────────────────
     errorBanner: {

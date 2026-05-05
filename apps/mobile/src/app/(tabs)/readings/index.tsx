@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 
 import { openChartsTab, openNewChart, openReadingDetail, routes } from '@/lib/navigation';
+import { useFocusEffect } from 'expo-router';
+import { consumeReadingsListRefresh } from '@/lib/navigation-cache';
 import { Ionicons } from '@expo/vector-icons';
 import { readingsApi } from '@clario/api-client';
 import type { ReadingRecord } from '@clario/api-client';
@@ -115,6 +117,14 @@ export default function ReadingsListScreen() {
   }, []);
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadReadings(true));
+
+  useFocusEffect(
+    useCallback(() => {
+      if (consumeReadingsListRefresh()) {
+        void loadReadings();
+      }
+    }, [loadReadings]),
+  );
 
   useEffect(() => {
     void loadReadings();

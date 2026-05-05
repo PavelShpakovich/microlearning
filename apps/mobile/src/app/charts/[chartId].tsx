@@ -16,6 +16,7 @@ import {
   openChartEdit,
   openCompatibilityNew,
   openReadingDetail,
+  replaceWithReadingDetail,
   resolveParentRoute,
   routes,
 } from '@/lib/navigation';
@@ -37,6 +38,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { ApiClientError } from '@clario/api-client';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
 import { usePullToRefresh } from '@/lib/refresh';
+import { markReadingsListNeedsRefresh, cacheReading } from '@/lib/navigation-cache';
 
 function ChartDetailSkeleton() {
   const colors = useColors();
@@ -403,9 +405,16 @@ export default function ChartDetailScreen() {
           return tCreateReading('error');
         },
         toastKey: `mobile-create-reading-${readingType}`,
-        onSuccess: ({ reading }) => {
+        onSuccess: async ({ reading }) => {
           setShowReadingModal(false);
-          openReadingDetail(reading.id);
+          markReadingsListNeedsRefresh();
+          try {
+            const { reading: fullReading } = await readingsApi.getReading(reading.id);
+            cacheReading(fullReading);
+          } catch {
+            /* navigate anyway */
+          }
+          replaceWithReadingDetail(reading.id);
         },
         onError: (error) => {
           if (
