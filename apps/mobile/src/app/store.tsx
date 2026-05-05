@@ -119,6 +119,12 @@ const COST_KEYS: Record<string, string> = {
   follow_up_pack: 'chatPack',
 };
 
+const PACK_NAME_KEYS: Record<string, string> = {
+  starter: 'packNameStarter',
+  standard: 'packNameStandard',
+  premium: 'packNamePremium',
+};
+
 export default function StoreScreen() {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -255,7 +261,13 @@ export default function StoreScreen() {
       {packs.map((pack) => (
         <View key={pack.id} style={styles.packCard}>
           <View style={styles.packInfo}>
-            <Text style={styles.packName}>{pack.name}</Text>
+            <Text style={styles.packName}>
+              {tCredits(
+                (PACK_NAME_KEYS[pack.name.toLowerCase()] ?? pack.name) as Parameters<
+                  typeof tCredits
+                >[0],
+              ) || pack.name}
+            </Text>
             <Text style={styles.packCredits}>
               {tCredits('packCredits').replace('{count}', String(pack.credits))}
             </Text>
