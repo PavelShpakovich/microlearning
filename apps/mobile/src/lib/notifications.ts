@@ -25,7 +25,7 @@ export async function scheduleReadyNotification(title: string): Promise<void> {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Clario',
+      title: 'Clario Astrology',
       body: title,
     },
     trigger: null, // fire immediately

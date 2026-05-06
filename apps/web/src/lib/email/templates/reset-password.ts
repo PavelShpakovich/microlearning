@@ -1,27 +1,27 @@
 const linkContent = {
-  title: 'Сброс пароля — Clario',
+  title: 'Сброс пароля — Clario Astrology',
   heading: 'Сброс пароля',
-  body: 'Мы получили запрос на сброс пароля для вашего аккаунта Clario. Нажмите на кнопку ниже, чтобы установить новый пароль.',
+  body: 'Мы получили запрос на сброс пароля для вашего аккаунта Clario Astrology. Нажмите на кнопку ниже, чтобы установить новый пароль.',
   button: 'Установить новый пароль',
   fallbackLabel: 'Если кнопка не работает, скопируйте и вставьте ссылку в браузер:',
   expiry: 'Ссылка действительна в течение 1 часа.',
   ignore:
     'Если вы не запрашивали сброс пароля — просто проигнорируйте это письмо. Ваш пароль останется прежним.',
-  copyright: `© ${new Date().getFullYear()} Clario. Все права защищены.`,
+  copyright: `© ${new Date().getFullYear()} Clario Astrology. Все права защищены.`,
 };
 
 const otpContent = {
-  title: 'Код сброса пароля — Clario',
+  title: 'Код сброса пароля — Clario Astrology',
   heading: 'Сброс пароля',
-  body: 'Мы получили запрос на сброс пароля для вашего аккаунта Clario. Введите код подтверждения ниже в приложении Clario.',
+  body: 'Мы получили запрос на сброс пароля для вашего аккаунта Clario Astrology. Введите код подтверждения ниже в приложении Clario Astrology.',
   codeLabel: 'Код сброса пароля:',
   expiry: 'Код действителен в течение 15 минут.',
   ignore:
     'Если вы не запрашивали сброс пароля — просто проигнорируйте это письмо. Ваш пароль останется прежним.',
-  copyright: `© ${new Date().getFullYear()} Clario. Все права защищены.`,
+  copyright: `© ${new Date().getFullYear()} Clario Astrology. Все права защищены.`,
 };
 
-export const RESET_PASSWORD_SUBJECT = 'Сброс пароля — Clario';
+export const RESET_PASSWORD_SUBJECT = 'Сброс пароля — Clario Astrology';
 
 export function renderResetPasswordHtml({ resetUrl }: { resetUrl: string }): string {
   const escapedUrl = resetUrl.replace(/"/g, '&quot;');
@@ -42,7 +42,7 @@ export function renderResetPasswordHtml({ resetUrl }: { resetUrl: string }): str
           <!-- Header -->
           <tr>
             <td style="background:#1e293b;border-radius:8px 8px 0 0;padding:28px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario Astrology</h1>
             </td>
           </tr>
           <!-- Body -->
@@ -108,7 +108,7 @@ export function renderPasswordResetOtpHtml({ otp }: { otp: string }): string {
           <!-- Header -->
           <tr>
             <td style="background:#1e293b;border-radius:8px 8px 0 0;padding:28px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario Astrology</h1>
             </td>
           </tr>
           <!-- Body -->

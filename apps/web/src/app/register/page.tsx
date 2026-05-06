@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: isRu ? 'Регистрация' : 'Create Account',
     description: isRu
-      ? 'Создайте аккаунт в Clario — бесплатный доступ к натальным картам и персональным AI-разборам.'
-      : 'Create a free Clario account to get natal charts and personalised AI astrology readings.',
+      ? 'Создайте аккаунт в Clario Astrology — бесплатный доступ к натальным картам и персональным AI-разборам.'
+      : 'Create a free Clario Astrology account to get natal charts and personalised AI astrology readings.',
     robots: { index: false, follow: false },
   };
 }

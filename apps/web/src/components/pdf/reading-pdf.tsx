@@ -196,11 +196,11 @@ export function ReadingPdfDocument({
   disclaimers,
 }: ReadingPdfProps) {
   return (
-    <Document title={title} author="Clario">
+    <Document title={title} author="Clario Astrology">
       <Page size="A4" style={styles.page}>
         {/* Brand header */}
         <View style={styles.brandRow}>
-          <Text style={styles.brandName}>CLARIO</Text>
+          <Text style={styles.brandName}>CLARIO ASTROLOGY</Text>
         </View>
 
         {/* Reading header */}

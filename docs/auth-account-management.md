@@ -2,7 +2,7 @@
 
 ## Overview
 
-Clario uses a shared Supabase identity backend for both clients, but the session layer differs by platform:
+Clario Astrology uses a shared Supabase identity backend for both clients, but the session layer differs by platform:
 
 - Web uses NextAuth with a custom Credentials provider that signs into Supabase and then stores a NextAuth JWT session.
 - Mobile uses Supabase Auth directly and persists the Supabase session in Expo Secure Store.
@@ -123,16 +123,16 @@ Flow:
 3. The route rate-limits by IP to 3 registrations per hour.
 4. It checks whether a Supabase auth user already exists for the email.
 5. If a confirmed account already exists, the route returns the same public success shape used for new registrations so callers cannot enumerate existing accounts.
-6. If an unconfirmed account exists, Clario resends verification and still returns that same success shape.
+6. If an unconfirmed account exists, Clario Astrology resends verification and still returns that same success shape.
 7. Otherwise the route creates a Supabase Auth user with `email_confirm: false`.
 8. It creates or updates the matching `profiles` row with a derived display name.
 9. It ensures a `account_identities` link exists.
 10. It grants welcome credits as best-effort.
-11. It sends a Clario-managed verification email.
+11. It sends a Clario Astrology-managed verification email.
 
 Important detail:
 
-- Verification is not delegated to Supabase's default email templates. Clario issues and tracks its own verification token via `email_verification_tokens` and sends mail itself.
+- Verification is not delegated to Supabase's default email templates. Clario Astrology issues and tracks its own verification token via `email_verification_tokens` and sends mail itself.
 
 ### Email verification
 
@@ -176,7 +176,7 @@ Flow:
 3. The route asks Supabase Admin to generate a recovery link.
 4. If link generation fails, the error is logged internally and the route still returns `success: true` so it does not reveal whether the email is registered.
 5. The real one-time Supabase verify URL is wrapped inside `/auth/reset-confirm?u=<base64url(...)>`.
-6. The email contains the Clario bounce URL, not the raw Supabase URL.
+6. The email contains the Clario Astrology bounce URL, not the raw Supabase URL.
 7. The bounce page uses JavaScript to redirect to Supabase only in the browser.
 8. Supabase redirects the user back to `/set-password`.
 9. `SetPasswordForm` waits for a recovery session or signed-in state from the browser Supabase client.
@@ -425,4 +425,4 @@ Deletion behavior is shared because both clients call the same endpoint:
 
 ## Summary
 
-In this branch, Clario authentication is centered on Supabase Auth, with web layering NextAuth on top for browser session management and mobile using the Supabase session directly. Account management is mostly unified through shared `/api/profile` and preferences endpoints, while the biggest platform-specific logic lives in session transport, route guarding, and password-reset deep-link handling.
+In this branch, Clario Astrology authentication is centered on Supabase Auth, with web layering NextAuth on top for browser session management and mobile using the Supabase session directly. Account management is mostly unified through shared `/api/profile` and preferences endpoints, while the biggest platform-specific logic lives in session transport, route guarding, and password-reset deep-link handling.

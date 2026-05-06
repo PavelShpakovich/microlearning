@@ -16,12 +16,12 @@ export function LandingFooter() {
         <div className="flex items-center gap-2">
           <Image
             src={resolvedTheme === 'dark' ? '/logo.png' : '/logo-dark.png'}
-            alt="Clario"
+            alt="Clario Astrology"
             width={32}
             height={32}
           />
           <span className="text-sm text-muted-foreground">
-            © {year} Clario. {t('footerRights')}
+            © {year} Clario Astrology. {t('footerRights')}
           </span>
         </div>
         <div className="flex items-center gap-6 text-sm">

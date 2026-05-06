@@ -138,7 +138,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src={logoSrc}
-              alt="Clario"
+              alt="Clario Astrology"
               width={40}
               height={40}
               priority
@@ -160,7 +160,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src={logoSrc}
-              alt="Clario"
+              alt="Clario Astrology"
               width={40}
               height={40}
               priority
@@ -193,7 +193,7 @@ export function Header() {
         <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
           <Image
             src={logoSrc}
-            alt="Clario"
+            alt="Clario Astrology"
             width={40}
             height={40}
             priority

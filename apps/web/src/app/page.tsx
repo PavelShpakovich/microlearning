@@ -27,8 +27,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const isRu = locale === 'ru';
 
   const title = isRu
-    ? 'Clario — Персональный разбор по дате рождения'
-    : 'Clario — Personal AI Reading by Birth Date';
+    ? 'Clario Astrology — Персональный разбор по дате рождения'
+    : 'Clario Astrology — Personal AI Reading by Birth Date';
   const description = isRu
     ? 'Получите развёрнутый персональный разбор по дате рождения: характер, отношения, карьера, сильные стороны. Точные расчёты + AI-интерпретация. Бесплатно.'
     : 'Get a detailed personal reading by birth date: personality, relationships, career, strengths. Precise calculations + AI interpretation. Free to try.';
@@ -47,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: APP_URL,
-      siteName: 'Clario',
+      siteName: 'Clario Astrology',
       locale: isRu ? 'ru_RU' : 'en_US',
       images: [
         {
@@ -77,8 +77,8 @@ export default async function LandingPage() {
   const isRu = locale === 'ru';
 
   const appName = isRu
-    ? 'Clario — Персональный разбор по дате рождения'
-    : 'Clario — Personal AI Reading by Birth Date';
+    ? 'Clario Astrology — Персональный разбор по дате рождения'
+    : 'Clario Astrology — Personal AI Reading by Birth Date';
   const appDesc = isRu
     ? 'Получите развёрнутый персональный разбор по дате рождения: характер, отношения, карьера, сильные стороны. Точные расчёты + AI-интерпретация. Бесплатно.'
     : 'Get a detailed personal reading by birth date: personality, relationships, career, strengths. Precise calculations + AI interpretation. Free to try.';
@@ -89,7 +89,7 @@ export default async function LandingPage() {
       {
         '@type': 'Organization',
         '@id': `${APP_URL}/#organization`,
-        name: 'Clario',
+        name: 'Clario Astrology',
         url: APP_URL,
         logo: { '@type': 'ImageObject', url: `${APP_URL}/apple-touch-icon.png` },
       },
@@ -97,7 +97,7 @@ export default async function LandingPage() {
         '@type': 'WebSite',
         '@id': `${APP_URL}/#website`,
         url: APP_URL,
-        name: 'Clario',
+        name: 'Clario Astrology',
         publisher: { '@id': `${APP_URL}/#organization` },
       },
       {

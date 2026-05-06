@@ -24,7 +24,7 @@ export default function AuthResetConfirmPage() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
-        <title>Сброс пароля — Clario</title>
+        <title>Сброс пароля — Clario Astrology</title>
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -99,7 +99,7 @@ export default function AuthResetConfirmPage() {
       </head>
       <body>
         <div className="card">
-          <span className="logo">Clario</span>
+          <span className="logo">Clario Astrology</span>
           <div id="status">
             <div className="spinner" />
             <p style={{ marginTop: 12 }}>Переходим к сбросу пароля…</p>

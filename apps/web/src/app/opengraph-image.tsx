@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'Clario — AI-астрологические разборы';
+export const alt = 'Clario Astrology — AI-астрологические разборы';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -44,7 +44,7 @@ export default function Image() {
           marginBottom: 18,
         }}
       >
-        Clario
+        Clario Astrology
       </div>
 
       <div

@@ -23,7 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const isRu = locale === 'ru';
 
-  const title = isRu ? 'Clario — AI-астрологические разборы' : 'Clario — AI Astrology Readings';
+  const title = isRu
+    ? 'Clario Astrology — AI-астрологические разборы'
+    : 'Clario Astrology — AI Astrology Readings';
   const description = isRu
     ? 'Создавайте натальные карты, получайте структурированные AI-разборы и возвращайтесь к сохранённым инсайтам в одном астрологическом пространстве.'
     : 'Create natal charts, generate structured AI readings, and return to saved insights inside one astrology workspace.';
@@ -32,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(APP_URL),
     title: {
       default: title,
-      template: '%s | Clario',
+      template: '%s | Clario Astrology',
     },
     description,
     keywords: isRu
@@ -52,16 +54,16 @@ export async function generateMetadata(): Promise<Metadata> {
           'online astrologer',
           'personal horoscope',
         ],
-    authors: [{ name: 'Clario' }],
-    creator: 'Clario',
+    authors: [{ name: 'Clario Astrology' }],
+    creator: 'Clario Astrology',
     openGraph: {
       type: 'website',
       locale: isRu ? 'ru_RU' : 'en_US',
       url: APP_URL,
-      siteName: 'Clario',
+      siteName: 'Clario Astrology',
       title,
       description,
-      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario' }],
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Clario Astrology' }],
     },
     twitter: {
       card: 'summary_large_image',

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Clario — AI-астрологические разборы',
-    short_name: 'Clario',
+    name: 'Clario Astrology — AI-астрологические разборы',
+    short_name: 'Clario Astrology',
     description:
       'Создавайте натальные карты, получайте AI-разборы и сохраняйте астрологические инсайты в одном пространстве.',
     start_url: '/',

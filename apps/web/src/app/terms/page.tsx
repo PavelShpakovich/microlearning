@@ -9,8 +9,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const isRu = locale === 'ru';
   const title = isRu ? 'Условия использования' : 'Terms of Service';
   const description = isRu
-    ? 'Прочитайте Условия использования Clario — правила и условия пользования платформой.'
-    : 'Read the Clario Terms of Service — the rules and conditions for using the platform.';
+    ? 'Прочитайте Условия использования Clario Astrology — правила и условия пользования платформой.'
+    : 'Read the Clario Astrology Terms of Service — the rules and conditions for using the platform.';
   return {
     title,
     description,

@@ -1,6 +1,8 @@
-# Clario — AI Astrology Workspace
+# Clario Astrology — Monorepo
 
-Clario is a web-first astrology application built with **Next.js**, **Supabase**, and a structured **Qwen** generation pipeline. Users can create natal charts, generate readings, compare chart compatibility, get daily forecasts, and ask follow-up questions in a reading-specific chat.
+Clario Astrology is a `pnpm` monorepo for the Clario Astrology product. It contains a **Next.js web app**, an **Expo/React Native mobile app for iOS and Android**, shared TypeScript packages, and the Supabase schema used by both clients.
+
+Users can create natal charts, generate readings, compare chart compatibility, get daily forecasts, buy credits, and ask follow-up questions in a reading-specific chat.
 
 The most accurate engineering overview currently lives in [docs/system-context.md](docs/system-context.md). Product-direction notes remain in [docs/pivots/ai-astrology-pivot.md](docs/pivots/ai-astrology-pivot.md).
 
@@ -8,18 +10,30 @@ The most accurate engineering overview currently lives in [docs/system-context.m
 
 ## Tech Stack
 
-| Layer           | Tech                                                   |
-| --------------- | ------------------------------------------------------ |
-| Framework       | Next.js 16, App Router, TypeScript strict              |
-| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                       |
-| Session         | NextAuth.js (JWT cookie)                               |
-| LLM             | Qwen API, mock mode                                    |
-| Validation      | Zod                                                    |
-| Ingestion       | Birth data intake, chart snapshots, structured prompts |
-| i18n            | next-intl (Russian-first)                              |
-| Logging         | pino                                                   |
-| Tests           | Jest + Testing Library                                 |
-| Deploy          | Vercel                                                 |
+| Layer           | Tech                                                                        |
+| --------------- | --------------------------------------------------------------------------- |
+| Web app         | Next.js 16, App Router, React 19, TypeScript strict                         |
+| Mobile app      | Expo SDK 51, React Native 0.74, Expo Router                                 |
+| Database + Auth | Supabase (PostgreSQL, RLS, Auth)                                            |
+| Web session     | NextAuth.js (JWT cookie)                                                    |
+| LLM             | Qwen API, mock mode                                                         |
+| Validation      | Zod                                                                         |
+| Shared packages | `@clario/api-client`, `@clario/i18n`, `@clario/types`, `@clario/validation` |
+| i18n            | Shared messages for web and mobile                                          |
+| Logging         | pino                                                                        |
+| Tests           | Jest + Testing Library                                                      |
+| Deploy          | Vercel (web), native iOS/Android builds via Expo/native projects            |
+
+---
+
+## Workspace Apps
+
+| Path          | Purpose                                                                            |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `apps/web`    | Public landing, auth, dashboard, charts, readings, compatibility, forecasts, admin |
+| `apps/mobile` | Native mobile client for iOS and Android                                           |
+| `packages/*`  | Shared API client, i18n messages, validation, and types                            |
+| `supabase`    | SQL migrations and backend database schema                                         |
 
 ---
 
@@ -28,13 +42,14 @@ The most accurate engineering overview currently lives in [docs/system-context.m
 ### 1. Prerequisites
 
 - Node.js 20+
+- `pnpm` 10+
 - A [Supabase](https://supabase.com) project
 - A Qwen API key
 
 ### 2. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3. Configure environment variables
@@ -92,10 +107,24 @@ The repository now keeps a single destructive baseline migration for the astrolo
 ### 5. Run the development server
 
 ```bash
-npm run dev
+pnpm dev:web
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+To run the mobile app:
+
+```bash
+pnpm dev:mobile
+```
+
+Useful app-specific commands:
+
+```bash
+pnpm --filter @clario/mobile ios
+pnpm --filter @clario/mobile android
+pnpm --filter @clario/web dev
+```
 
 ---
 
@@ -103,6 +132,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - [docs/system-context.md](docs/system-context.md) — current engineering reference for implementation details and feature behavior
 - [docs/pivots/ai-astrology-pivot.md](docs/pivots/ai-astrology-pivot.md) — product-direction and rewrite-planning document
+- [docs/auth-account-management.md](docs/auth-account-management.md) — current auth, verification, and reset-flow behavior across web and mobile
+- [docs/mobile-in-app-purchases-plan.md](docs/mobile-in-app-purchases-plan.md) — implementation plan for App Store / Google Play credit purchases
+- [docs/future-improvements.md](docs/future-improvements.md) — tracked technical debt and follow-up improvements
 
 ---
 
@@ -110,9 +142,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Authentication
 
-- Users sign in on the web with email + password
-- Sessions are handled through NextAuth JWT cookies
-- Email verification and password-reset flows are supported
+- Users sign in on web and mobile with email + password
+- Web sessions are handled through NextAuth JWT cookies
+- Mobile uses the Supabase session directly
+- Email verification and password-reset flows are supported on both platforms
 - Protected routes are enforced in middleware and server/API guards
 
 ### Core Flow
@@ -129,19 +162,21 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Available Scripts
 
 ```bash
-npm run dev           # Start development server
-npm run build         # Production build
-npm run start         # Start production server
+pnpm dev                    # Run repo dev tasks through Turbo
+pnpm dev:web                # Start the web app
+pnpm dev:mobile             # Start Expo for the mobile app
+pnpm build                  # Build all buildable workspace targets
+pnpm type-check             # Type-check the workspace
+pnpm lint                   # Lint the workspace
+pnpm format                 # Prettier write
+pnpm format:check           # Prettier check
+pnpm test                   # Run workspace tests
 
-npm run type-check    # TypeScript type check
-npm run lint          # ESLint (zero warnings enforced)
-npm run lint:fix      # ESLint with auto-fix
-npm run format        # Prettier write
-npm run format:check  # Prettier check
-
-npm test              # Run Jest test suite
-npm run test:watch    # Jest in watch mode
-npm run test:coverage # Jest with coverage report
+pnpm --filter @clario/web test
+pnpm --filter @clario/web test:watch
+pnpm --filter @clario/web test:coverage
+pnpm --filter @clario/mobile type-check
+pnpm --filter @clario/mobile lint
 ```
 
 ---
@@ -164,6 +199,7 @@ Set `LLM_PROVIDER` in `.env.local`.
 - compatibility reports (synastry)
 - daily personal forecasts
 - follow-up chat tied to a reading
+- credits, packs, and purchase history
 - calendar and dashboard views
 - admin user and analytics surfaces
 
@@ -185,47 +221,31 @@ Set all environment variables in the Vercel dashboard under **Settings > Environ
 ## Project Structure
 
 ```
-src/
-├── app/
-│   ├── api/
-│   │   ├── admin/            # Admin user management
-│   │   ├── auth/             # NextAuth and account flows
-│   │   ├── compatibility/    # Compatibility creation and generation
-│   │   ├── cron/             # Scheduled jobs
-│   │   ├── charts/           # Chart creation and retrieval
-│   │   ├── chat/             # Follow-up chat
-│   │   ├── forecasts/        # Daily forecasts
-│   │   ├── profile/          # Profile updates
-│   │   ├── readings/         # Structured reading generation
-│   │   └── timezone/         # Timezone-related helpers
-│   ├── admin/                # Admin panel
-│   ├── calendar/             # Planetary calendar
-│   ├── chat/                 # Reading follow-up chat
-│   ├── charts/               # Chart library and detail views
-│   ├── compatibility/        # Compatibility report views
-│   ├── dashboard/            # Main astrology workspace
-│   ├── horoscope/            # Daily forecast view
-│   ├── onboarding/           # Preference setup
-│   ├── readings/             # Reading library
-│   ├── settings/             # User settings
-│   └── page.tsx              # Landing page
-├── components/
-├── hooks/
-├── i18n/                     # next-intl config and messages
-├── lib/
-│   ├── supabase/             # Supabase clients + generated types
-│   ├── astrology/            # Chart domain logic
-│   ├── compatibility/        # Compatibility generation
-│   ├── forecasts/            # Forecast generation
-│   ├── llm/                  # Structured generation and parsing
-│   ├── readings/             # Reading prompts and schemas
-│   └── env.ts                # Zod environment validation
-└── services/                 # Client-side API wrappers
-
-supabase/migrations/          # SQL baseline for the astrology product
+apps/
+├── web/                      # Next.js web application
+│   └── src/
+│       ├── app/              # Routes, pages, API routes, metadata
+│       ├── components/       # Web UI components
+│       ├── lib/              # Domain logic, auth, generation, credits
+│       └── i18n/             # next-intl wiring
+├── mobile/                   # Expo / React Native application
+│   └── src/
+│       ├── app/              # Expo Router screens
+│       ├── components/       # Native UI components
+│       └── lib/              # Mobile auth, i18n, notifications, forms
+packages/
+├── api-client/               # Shared HTTP client for web/mobile
+├── i18n/                     # Shared translation messages
+├── types/                    # Shared domain types/constants
+└── validation/               # Shared Zod validation and helpers
+supabase/
+└── migrations/               # Database schema and product migrations
+patches/
+└── expo-localization@15.0.3.patch
 ```
 
 ## Notes
 
 - The source of truth is the current codebase, not older product notes.
 - If README and implementation ever disagree, prefer the code and update the README.
+- `pnpm-workspace.yaml` currently applies a patch for `expo-localization@15.0.3`; see [docs/future-improvements.md](docs/future-improvements.md) for the planned Expo SDK upgrade that should remove it.

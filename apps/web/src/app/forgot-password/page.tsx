@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: isRu ? 'Сброс пароля' : 'Reset Password',
     description: isRu
-      ? 'Восстановите доступ к своему аккаунту Clario.'
-      : 'Recover access to your Clario account.',
+      ? 'Восстановите доступ к своему аккаунту Clario Astrology.'
+      : 'Recover access to your Clario Astrology account.',
     robots: { index: false, follow: false },
   };
 }

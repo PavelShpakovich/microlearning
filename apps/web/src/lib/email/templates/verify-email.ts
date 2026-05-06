@@ -1,14 +1,14 @@
 const content = {
-  title: 'Код подтверждения — Clario',
+  title: 'Код подтверждения — Clario Astrology',
   heading: 'Подтвердите ваш email',
-  body: 'Спасибо за регистрацию в Clario! Используйте код ниже, чтобы подтвердить ваш адрес электронной почты и активировать аккаунт.',
+  body: 'Спасибо за регистрацию в Clario Astrology! Используйте код ниже, чтобы подтвердить ваш адрес электронной почты и активировать аккаунт.',
   codeLabel: 'Ваш код подтверждения:',
   expiry:
-    'Код действителен в течение 15 минут. Если вы не регистрировались в Clario — просто проигнорируйте это письмо.',
-  copyright: `© ${new Date().getFullYear()} Clario. Все права защищены.`,
+    'Код действителен в течение 15 минут. Если вы не регистрировались в Clario Astrology — просто проигнорируйте это письмо.',
+  copyright: `© ${new Date().getFullYear()} Clario Astrology. Все права защищены.`,
 };
 
-export const VERIFY_EMAIL_SUBJECT = 'Код подтверждения — Clario';
+export const VERIFY_EMAIL_SUBJECT = 'Код подтверждения — Clario Astrology';
 
 export function renderVerifyEmailHtml({ otp }: { otp: string }): string {
   const c = content;
@@ -28,7 +28,7 @@ export function renderVerifyEmailHtml({ otp }: { otp: string }): string {
           <!-- Header -->
           <tr>
             <td style="background:#1e293b;border-radius:8px 8px 0 0;padding:28px 40px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">Clario Astrology</h1>
             </td>
           </tr>
           <!-- Body -->

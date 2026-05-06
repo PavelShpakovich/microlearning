@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: isRu ? 'Войти' : 'Sign In',
     description: isRu
-      ? 'Войдите в Clario, чтобы получить доступ к своим натальным картам и AI-разборам.'
-      : 'Sign in to Clario to access your natal charts and AI astrology readings.',
+      ? 'Войдите в Clario Astrology, чтобы получить доступ к своим натальным картам и AI-разборам.'
+      : 'Sign in to Clario Astrology to access your natal charts and AI astrology readings.',
     robots: { index: false, follow: false },
   };
 }

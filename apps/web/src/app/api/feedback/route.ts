@@ -39,10 +39,10 @@ export const POST = withApiHandler(async (req: Request) => {
   try {
     await sendEmail({
       to: FEEDBACK_TO,
-      subject: `Clario: отзыв от ${userName}`,
+      subject: `Clario Astrology: отзыв от ${userName}`,
       html: `
       <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;color:#1a1a2e;">
-        <h2 style="margin:0 0 16px;font-size:18px;">Новый отзыв из Clario</h2>
+        <h2 style="margin:0 0 16px;font-size:18px;">Новый отзыв из Clario Astrology</h2>
         <table style="font-size:13px;color:#555;border-collapse:collapse;width:100%;margin-bottom:20px;">
           <tr><td style="padding:4px 12px 4px 0;white-space:nowrap;font-weight:600;">От</td><td>${userName} &lt;${userEmail}&gt;</td></tr>
           <tr><td style="padding:4px 12px 4px 0;white-space:nowrap;font-weight:600;">Дата</td><td>${new Date().toLocaleString('ru')}</td></tr>

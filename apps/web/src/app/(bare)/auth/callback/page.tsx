@@ -22,7 +22,7 @@ export default function AuthCallbackPage() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
-        <title>Открываем Clario…</title>
+        <title>Открываем Clario Astrology…</title>
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -82,7 +82,7 @@ export default function AuthCallbackPage() {
       </head>
       <body>
         <div className="card">
-          <span className="logo">Clario</span>
+          <span className="logo">Clario Astrology</span>
           <div className="spinner" />
           <p>Открываем приложение…</p>
           <a id="open-btn" href="clario://auth/callback" className="btn">

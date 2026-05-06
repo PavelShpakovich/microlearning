@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-06
 >
-> Scope: sell credit packs in the iOS App Store and Google Play, while keeping Clario credits as a server-side ledger.
+> Scope: sell credit packs in the iOS App Store and Google Play, while keeping Clario Astrology credits as a server-side ledger.
 
 ## Goal
 
@@ -49,7 +49,7 @@ The repository already has the main pieces needed for this integration:
 Recommended approach:
 
 - Use RevenueCat as the billing abstraction layer for iOS and Android
-- Keep Clario credits on the backend as the source of truth
+- Keep Clario Astrology credits on the backend as the source of truth
 - Grant credits only after server-side purchase validation / webhook processing
 
 ### Why this approach
