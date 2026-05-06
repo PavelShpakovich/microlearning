@@ -86,7 +86,7 @@ function CompatibilityDetailSkeleton() {
 
         <View style={styles.gaugeSection}>
           <Skeleton width={92} height={10} />
-          <Skeleton width={'100%'} height={150} borderRadius={18} />
+          <Skeleton width={'96%'} height={150} borderRadius={18} />
           <View style={styles.scoreRow}>
             <Skeleton width={72} height={48} />
             <Skeleton width={56} height={12} />
@@ -136,7 +136,7 @@ function CompatibilityDetailSkeleton() {
             </View>
             <View style={styles.sectionBody}>
               <Skeleton width={'96%'} height={13} />
-              <Skeleton width={'100%'} height={13} style={{ marginTop: 10 }} />
+              <Skeleton width={'94%'} height={13} style={{ marginTop: 10 }} />
               <Skeleton width={'84%'} height={13} style={{ marginTop: 10 }} />
             </View>
           </View>

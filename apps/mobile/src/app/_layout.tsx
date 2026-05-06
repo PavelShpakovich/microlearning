@@ -8,7 +8,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { configureApiClient } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermissions } from '@/lib/notifications';
-import { initializeLocale } from '@/lib/i18n';
 import { LocaleProvider } from '@/lib/locale-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
@@ -27,9 +26,6 @@ export default function RootLayout() {
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
   useEffect(() => {
-    // Initialize i18n: detect device language; stored preference is hydrated by LocaleProvider
-    initializeLocale();
-
     configureApiClient();
     void requestNotificationPermissions();
 

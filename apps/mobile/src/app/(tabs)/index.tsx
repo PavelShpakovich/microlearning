@@ -30,7 +30,7 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { getChartElement, getElementColors } from '@/lib/chart-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonInput } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
 
 const SIGN_ELEMENT: Record<string, string> = {
@@ -85,14 +85,14 @@ function DashboardSkeleton() {
 
       {/* Sky widget */}
       <View style={styles.skyWidget}>
-        <Skeleton width={80} height={10} />
+        <Skeleton width={80} height={10} style={{ marginBottom: 12 }} />
         <View style={styles.skyPlanets}>
           {[0, 1, 2].map((i) => (
             <View key={i} style={styles.skyPlanetItem}>
-              <Skeleton width={26} height={26} borderRadius={13} />
-              <View style={{ gap: 4 }}>
-                <Skeleton width={46} height={10} />
-                <Skeleton width={60} height={12} />
+              <Skeleton width={20} height={20} borderRadius={10} />
+              <View>
+                <Skeleton width={40} height={10} />
+                <Skeleton width={56} height={14} style={{ marginTop: 4 }} />
               </View>
             </View>
           ))}
@@ -106,7 +106,12 @@ function DashboardSkeleton() {
           <Skeleton width={'80%'} height={14} style={{ marginTop: 4 }} />
           <Skeleton width={'60%'} height={11} style={{ marginTop: 3 }} />
         </View>
-        <Skeleton width={72} height={32} borderRadius={7} />
+        <SkeletonInput
+          height={32}
+          borderRadius={7}
+          lineWidth={36}
+          style={{ width: 72, flexShrink: 0 }}
+        />
       </View>
 
       {/* Stats row */}
@@ -123,9 +128,9 @@ function DashboardSkeleton() {
       <View style={styles.quickActionsCard}>
         <Skeleton width={100} height={12} />
         <View style={styles.quickActionsButtons}>
-          <Skeleton width={'32%'} height={36} borderRadius={8} />
-          <Skeleton width={'32%'} height={36} borderRadius={8} />
-          <Skeleton width={'32%'} height={36} borderRadius={8} />
+          <SkeletonInput height={36} borderRadius={8} lineWidth={'56%'} style={{ width: '32%' }} />
+          <SkeletonInput height={36} borderRadius={8} lineWidth={'52%'} style={{ width: '32%' }} />
+          <SkeletonInput height={36} borderRadius={8} lineWidth={'60%'} style={{ width: '32%' }} />
         </View>
       </View>
 

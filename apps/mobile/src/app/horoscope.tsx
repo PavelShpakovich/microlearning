@@ -52,7 +52,7 @@ function HoroscopeSkeleton() {
 
       <View style={styles.interpretationBlock}>
         <Skeleton width={'94%'} height={15} />
-        <Skeleton width={'100%'} height={15} style={{ marginTop: 12 }} />
+        <Skeleton width={'96%'} height={15} style={{ marginTop: 12 }} />
         <Skeleton width={'88%'} height={15} style={{ marginTop: 12 }} />
         <Skeleton width={'96%'} height={15} style={{ marginTop: 24 }} />
         <Skeleton width={'91%'} height={15} style={{ marginTop: 12 }} />
@@ -65,7 +65,7 @@ function HoroscopeSkeleton() {
         <Skeleton width={'85%'} height={14} style={{ marginTop: 10 }} />
       </View>
 
-      <Skeleton width={'100%'} height={40} borderRadius={8} style={{ marginTop: 8 }} />
+      <Skeleton width={'96%'} height={40} borderRadius={8} style={{ marginTop: 8 }} />
     </ScrollView>
   );
 }

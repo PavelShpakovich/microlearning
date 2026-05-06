@@ -1,8 +1,18 @@
 import { allMessages, type Messages, type Namespace, type SupportedLocale } from '@clario/i18n';
 import { getLocales } from 'expo-localization';
 
-// Global locale state (hydrate from AsyncStorage in app initialization)
-let currentLocale: SupportedLocale = 'en';
+function getDeviceLocale(): SupportedLocale {
+  try {
+    const deviceLang = getLocales()[0]?.languageCode ?? 'ru';
+    return deviceLang === 'ru' ? 'ru' : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+// Global locale state must be resolved before the first render so React state
+// and direct getLocale() consumers don't diverge on cold start.
+let currentLocale: SupportedLocale = getDeviceLocale();
 
 export function setLocale(locale: SupportedLocale) {
   currentLocale = locale;
@@ -13,13 +23,7 @@ export function getLocale(): SupportedLocale {
 }
 
 export function initializeLocale() {
-  try {
-    const deviceLang = getLocales()[0]?.languageCode ?? 'ru';
-    const normalized = deviceLang === 'ru' ? 'ru' : 'en';
-    currentLocale = normalized as SupportedLocale;
-  } catch {
-    currentLocale = 'en';
-  }
+  currentLocale = getDeviceLocale();
 }
 
 export function useTranslations<N extends Namespace>(namespace: N) {

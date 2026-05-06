@@ -23,7 +23,7 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonSelect } from '@/components/Skeleton';
 import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 const TYPE_ICONS: Record<CompatibilityType, keyof typeof Ionicons.glyphMap> = {
@@ -69,11 +69,11 @@ function NewCompatibilitySkeleton() {
 
         {/* Primary chart label + select */}
         <Skeleton width={100} height={13} borderRadius={6} style={{ marginBottom: 6 }} />
-        <Skeleton width={'100%'} height={46} borderRadius={10} style={{ marginBottom: 12 }} />
+        <SkeletonSelect height={46} borderRadius={10} style={{ marginBottom: 12 }} />
 
         {/* Secondary chart label + select */}
         <Skeleton width={110} height={13} borderRadius={6} style={{ marginBottom: 6 }} />
-        <Skeleton width={'100%'} height={46} borderRadius={10} style={{ marginBottom: 20 }} />
+        <SkeletonSelect height={46} borderRadius={10} style={{ marginBottom: 20 }} />
 
         {/* CTA button */}
         <Skeleton width={'100%'} height={50} borderRadius={10} />

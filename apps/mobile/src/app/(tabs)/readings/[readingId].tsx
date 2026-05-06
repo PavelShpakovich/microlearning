@@ -74,7 +74,7 @@ function ReadingDetailSkeleton() {
 
       {/* Summary card */}
       <View style={[styles.summaryCard, { gap: 8 }]}>
-        <Skeleton width={'100%'} height={14} borderRadius={6} />
+        <Skeleton width={'96%'} height={14} borderRadius={6} />
         <Skeleton width={'95%'} height={14} borderRadius={6} />
         <Skeleton width={'80%'} height={14} borderRadius={6} />
       </View>
@@ -100,7 +100,7 @@ function ReadingDetailSkeleton() {
             <Skeleton width={28} height={28} borderRadius={14} />
             <Skeleton width={'60%'} height={16} borderRadius={6} />
           </View>
-          <Skeleton width={'100%'} height={13} borderRadius={6} />
+          <Skeleton width={'96%'} height={13} borderRadius={6} />
           <Skeleton width={'90%'} height={13} borderRadius={6} />
           <Skeleton width={'75%'} height={13} borderRadius={6} />
         </View>

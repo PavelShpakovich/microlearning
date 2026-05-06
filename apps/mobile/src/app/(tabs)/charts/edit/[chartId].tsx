@@ -17,7 +17,7 @@ import {
   type ChartFormData,
   validateChartFormStep,
 } from '@/lib/chart-form';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonInput } from '@/components/Skeleton';
 import { ChartFormScreen } from '@/components/charts/ChartFormScreen';
 
 function EditChartSkeleton() {
@@ -41,10 +41,10 @@ function EditChartSkeleton() {
           <Skeleton width={'80%'} height={14} borderRadius={6} style={{ marginTop: 4 }} />
           {/* Label field */}
           <Skeleton width={80} height={13} borderRadius={6} style={{ marginTop: 10 }} />
-          <Skeleton width={'100%'} height={44} borderRadius={8} style={{ marginTop: 4 }} />
+          <SkeletonInput height={44} style={{ marginTop: 4 }} />
           {/* Name field */}
           <Skeleton width={100} height={13} borderRadius={6} style={{ marginTop: 10 }} />
-          <Skeleton width={'100%'} height={44} borderRadius={8} style={{ marginTop: 4 }} />
+          <SkeletonInput height={44} lineWidth={'46%'} style={{ marginTop: 4 }} />
           {/* Subject type label */}
           <Skeleton width={110} height={13} borderRadius={6} style={{ marginTop: 10 }} />
           {/* Chips row */}

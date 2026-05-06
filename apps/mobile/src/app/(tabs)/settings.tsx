@@ -28,7 +28,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TONE_STYLES } from '@clario/types';
 import { TimezonePickerModal, timezoneLabel } from '@/components/TimezonePickerModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
-import { Skeleton } from '@/components/Skeleton';
+import { Skeleton, SkeletonInput, SkeletonSelect } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
 
 function SettingsSkeleton() {
@@ -57,12 +57,14 @@ function SettingsSkeleton() {
         </View>
         <Skeleton width={'85%'} height={12} style={{ marginTop: 4 }} />
         <Skeleton width={60} height={11} style={{ marginTop: 16 }} />
-        <Skeleton width={'100%'} height={18} style={{ marginTop: 4 }} />
+        <View style={{ marginTop: 4, justifyContent: 'center', minHeight: 18 }}>
+          <Skeleton width={'72%'} height={18} />
+        </View>
         <Skeleton width={60} height={11} style={{ marginTop: 12 }} />
-        <Skeleton width={'100%'} height={40} borderRadius={8} style={{ marginTop: 4 }} />
+        <SkeletonInput style={{ marginTop: 4 }} />
         <Skeleton width={80} height={11} style={{ marginTop: 12 }} />
-        <Skeleton width={'100%'} height={40} borderRadius={8} style={{ marginTop: 4 }} />
-        <Skeleton width={'100%'} height={40} borderRadius={8} style={{ marginTop: 12 }} />
+        <SkeletonSelect style={{ marginTop: 4 }} />
+        <SkeletonInput lineWidth={'34%'} style={{ marginTop: 12 }} />
       </View>
 
       {/* Privacy card */}
@@ -92,7 +94,7 @@ function SettingsSkeleton() {
           ))}
         </View>
         <Skeleton width={60} height={11} style={{ marginTop: 12 }} />
-        <Skeleton width={'100%'} height={40} borderRadius={8} style={{ marginTop: 6 }} />
+        <SkeletonInput lineWidth={'48%'} style={{ marginTop: 6 }} />
       </View>
     </ScrollView>
   );
