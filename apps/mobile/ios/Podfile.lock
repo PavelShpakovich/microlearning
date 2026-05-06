@@ -78,6 +78,8 @@ PODS:
   - hermes-engine (0.74.5):
     - hermes-engine/Pre-built (= 0.74.5)
   - hermes-engine/Pre-built (0.74.5)
+  - PurchasesHybridCommon (18.3.0):
+    - RevenueCat (= 5.70.0)
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -1237,6 +1239,7 @@ PODS:
     - React-logger (= 0.74.5)
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
+  - RevenueCat (5.70.0)
   - RNCAsyncStorage (1.23.1):
     - React-Core
   - RNDateTimePicker (8.0.1):
@@ -1262,6 +1265,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNPurchases (10.0.2):
+    - PurchasesHybridCommon (= 18.3.0)
+    - React-Core
   - RNReanimated (3.10.1):
     - DoubleConversion
     - glog
@@ -1322,7 +1328,7 @@ DEPENDENCIES:
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@12.0.10_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+core@_fc5ad4c3f02edab071ba4a82c315ee67/node_modules/expo-font/ios`)"
   - "ExpoHead (from `../../../node_modules/.pnpm/expo-router@3.5.24_7e9c78a356a2cc7044ab01920b075952/node_modules/expo-router/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+_4ac0db163e3d3c49525cc49aec50f25c/node_modules/expo-keep-awake/ios`)"
-  - "ExpoLocalization (from `../../../node_modules/.pnpm/expo-localization@15.0.3_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_14c3b3566057bd408d6755ba50bf4d94/node_modules/expo-localization/ios`)"
+  - "ExpoLocalization (from `../../../node_modules/.pnpm/expo-localization@15.0.3_patch_hash=ea3f7d962ad562fab6aa82842aec9f2707b1bb6baa64c2d6aef_ec620d0b3d2a888283adc6c2ed58d16e/node_modules/expo-localization/ios`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core`)"
   - "ExpoNetwork (from `../../../node_modules/.pnpm/expo-network@6.0.1_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+core_8f1ca3f0051e8ad2fee52dc71fc681c5/node_modules/expo-network/ios`)"
   - "ExpoSecureStore (from `../../../node_modules/.pnpm/expo-secure-store@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_53430c548854e268ca47e31491166649/node_modules/expo-secure-store/ios`)"
@@ -1385,6 +1391,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -1392,6 +1399,8 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - PurchasesHybridCommon
+    - RevenueCat
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -1418,7 +1427,7 @@ EXTERNAL SOURCES:
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babel+_4ac0db163e3d3c49525cc49aec50f25c/node_modules/expo-keep-awake/ios"
   ExpoLocalization:
-    :path: "../../../node_modules/.pnpm/expo-localization@15.0.3_expo@51.0.39_@babel+core@7.29.0_@babel+preset-env@7.29.2_@babe_14c3b3566057bd408d6755ba50bf4d94/node_modules/expo-localization/ios"
+    :path: "../../../node_modules/.pnpm/expo-localization@15.0.3_patch_hash=ea3f7d962ad562fab6aa82842aec9f2707b1bb6baa64c2d6aef_ec620d0b3d2a888283adc6c2ed58d16e/node_modules/expo-localization/ios"
   ExpoModulesCore:
     :path: "../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core"
   ExpoNetwork:
@@ -1540,6 +1549,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNPurchases:
+    :path: "../node_modules/react-native-purchases"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -1571,6 +1582,7 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
+  PurchasesHybridCommon: 5887176727a97a7fc514d87478cf4b794d8d737e
   RCT-Folly: 5dc73daec3476616d19e8a53f0156176f7b55461
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
@@ -1619,9 +1631,11 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 2cbd0f3625b30bba08e8768776107f6f0203159b
   React-utils: 9fa4e5d0b5e6c6c85c958f19d6ef854337886417
   ReactCommon: 9f285823dbe955099978d9bff65a7653ca029256
+  RevenueCat: f30d8ee4fd36ce56afa40923d314239761eb58a2
   RNCAsyncStorage: aa75595c1aefa18f868452091fa0c411a516ce11
   RNDateTimePicker: dde7ca9005d716f3efa9a63004b441679bca9a41
   RNGestureHandler: 326e35460fb6c8c64a435d5d739bea90d7ed4e49
+  RNPurchases: 61c3361bbbe87a0c6a1b8a5ad92c413943757a90
   RNReanimated: b37187062e7e9b88fc80451e6d711c09e16ce7cf
   RNScreens: a2d8a2555b4653d7a19706eb172f855657ac30d7
   RNSVG: 0e7deccab0678200815104223aadd5ca734dd41d

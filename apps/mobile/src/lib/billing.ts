@@ -195,7 +195,13 @@ function getBillingEnvironment(): BillingEnvironment {
 }
 
 function getRevenueCatApiKey(): string | undefined {
-  if (Platform.OS === 'ios') return process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY;
-  if (Platform.OS === 'android') return process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY;
-  return undefined;
+  let key: string | undefined;
+  if (Platform.OS === 'ios') key = process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY;
+  else if (Platform.OS === 'android') key = process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY;
+
+  // RevenueCat SDK crashes natively with invalid API keys.
+  // Skip configuration when using placeholder/test keys.
+  if (!key || key.startsWith('test_')) return undefined;
+
+  return key;
 }
