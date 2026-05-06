@@ -20,6 +20,7 @@ export type CreditReason =
   | 'chat_pack_debit'
   | 'refund_llm_failure'
   | 'refund_admin'
+  | 'refund_store_revoke'
   | 'welcome_bonus';
 
 export type ReferenceType =

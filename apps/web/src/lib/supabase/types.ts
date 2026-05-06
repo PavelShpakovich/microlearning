@@ -314,9 +314,11 @@ export type Database = {
       credit_packs: {
         Row: {
           active: boolean;
+          apple_product_id: string;
           created_at: string;
           credits: number;
           currency: string;
+          google_product_id: string;
           id: string;
           name: string;
           price_minor: number | null;
@@ -325,9 +327,11 @@ export type Database = {
         };
         Insert: {
           active?: boolean;
+          apple_product_id: string;
           created_at?: string;
           credits: number;
           currency?: string;
+          google_product_id: string;
           id: string;
           name: string;
           price_minor?: number | null;
@@ -336,9 +340,11 @@ export type Database = {
         };
         Update: {
           active?: boolean;
+          apple_product_id?: string;
           created_at?: string;
           credits?: number;
           currency?: string;
+          google_product_id?: string;
           id?: string;
           name?: string;
           price_minor?: number | null;
@@ -676,6 +682,123 @@ export type Database = {
             columns: ['reading_id'];
             isOneToOne: false;
             referencedRelation: 'readings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      store_purchase_events: {
+        Row: {
+          created_at: string;
+          event_type: string;
+          external_transaction_id: string | null;
+          id: string;
+          provider: string;
+          purchase_id: string | null;
+          raw_payload: Json;
+        };
+        Insert: {
+          created_at?: string;
+          event_type: string;
+          external_transaction_id?: string | null;
+          id?: string;
+          provider: string;
+          purchase_id?: string | null;
+          raw_payload?: Json;
+        };
+        Update: {
+          created_at?: string;
+          event_type?: string;
+          external_transaction_id?: string | null;
+          id?: string;
+          provider?: string;
+          purchase_id?: string | null;
+          raw_payload?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'store_purchase_events_purchase_id_fkey';
+            columns: ['purchase_id'];
+            isOneToOne: false;
+            referencedRelation: 'store_purchases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      store_purchases: {
+        Row: {
+          created_at: string;
+          credit_transaction_id: string | null;
+          credited_at: string | null;
+          credits_granted: number;
+          environment: string;
+          external_product_id: string;
+          external_transaction_id: string;
+          id: string;
+          pack_id: string;
+          provider: string;
+          purchased_at: string;
+          raw_payload: Json;
+          revenuecat_app_user_id: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          credit_transaction_id?: string | null;
+          credited_at?: string | null;
+          credits_granted: number;
+          environment: string;
+          external_product_id: string;
+          external_transaction_id: string;
+          id?: string;
+          pack_id: string;
+          provider: string;
+          purchased_at: string;
+          raw_payload?: Json;
+          revenuecat_app_user_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          credit_transaction_id?: string | null;
+          credited_at?: string | null;
+          credits_granted?: number;
+          environment?: string;
+          external_product_id?: string;
+          external_transaction_id?: string;
+          id?: string;
+          pack_id?: string;
+          provider?: string;
+          purchased_at?: string;
+          raw_payload?: Json;
+          revenuecat_app_user_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'store_purchases_credit_transaction_id_fkey';
+            columns: ['credit_transaction_id'];
+            isOneToOne: false;
+            referencedRelation: 'credit_transactions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'store_purchases_pack_id_fkey';
+            columns: ['pack_id'];
+            isOneToOne: false;
+            referencedRelation: 'credit_packs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'store_purchases_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -1066,7 +1189,42 @@ export type Database = {
           transaction_id: string;
         }[];
       };
+      grant_store_purchase_atomic: {
+        Args: {
+          p_credits_granted: number;
+          p_environment: string;
+          p_external_product_id: string;
+          p_external_transaction_id: string;
+          p_pack_id: string;
+          p_provider: string;
+          p_purchased_at: string;
+          p_raw_payload?: Json;
+          p_revenuecat_app_user_id?: string;
+          p_user_id: string;
+        };
+        Returns: {
+          already_credited: boolean;
+          new_balance: number;
+          purchase_id: string;
+          transaction_id: string | null;
+        }[];
+      };
       get_free_product_kinds: { Args: never; Returns: string[] };
+      revoke_store_purchase_atomic: {
+        Args: {
+          p_external_transaction_id: string;
+          p_provider: string;
+          p_raw_payload?: Json;
+        };
+        Returns: {
+          already_reversed: boolean;
+          insufficient_balance: boolean;
+          new_balance: number;
+          purchase_id: string;
+          status: string;
+          transaction_id: string | null;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;

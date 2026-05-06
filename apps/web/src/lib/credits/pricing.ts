@@ -28,6 +28,8 @@ export interface CreditPack {
   credits: number;
   priceminor: number | null;
   currency: string;
+  appleProductId: string;
+  googleProductId: string;
   active: boolean;
   sortOrder: number;
 }
@@ -180,7 +182,9 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
   try {
     const { data, error } = await db
       .from('credit_packs')
-      .select('id, name, credits, price_minor, currency, active, sort_order')
+      .select(
+        'id, name, credits, price_minor, currency, apple_product_id, google_product_id, active, sort_order',
+      )
       .eq('active', true)
       .order('sort_order', { ascending: true });
 
@@ -192,6 +196,8 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
       credits: row.credits,
       priceminor: row.price_minor,
       currency: row.currency,
+      appleProductId: row.apple_product_id,
+      googleProductId: row.google_product_id,
       active: row.active,
       sortOrder: row.sort_order,
     }));
@@ -210,7 +216,9 @@ export async function getAllCreditPacks(): Promise<CreditPack[]> {
   try {
     const { data, error } = await db
       .from('credit_packs')
-      .select('id, name, credits, price_minor, currency, active, sort_order')
+      .select(
+        'id, name, credits, price_minor, currency, apple_product_id, google_product_id, active, sort_order',
+      )
       .order('sort_order', { ascending: true });
 
     if (error) throw error;
@@ -221,6 +229,8 @@ export async function getAllCreditPacks(): Promise<CreditPack[]> {
       credits: row.credits,
       priceminor: row.price_minor,
       currency: row.currency,
+      appleProductId: row.apple_product_id,
+      googleProductId: row.google_product_id,
       active: row.active,
       sortOrder: row.sort_order,
     }));

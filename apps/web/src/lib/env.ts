@@ -36,6 +36,10 @@ const envSchema = z.object({
   // Cron security
   CRON_SECRET: z.string().min(1, 'CRON_SECRET is required'),
 
+  // RevenueCat / billing
+  REVENUECAT_PROJECT_API_KEY: z.string().optional(),
+  REVENUECAT_WEBHOOK_AUTH: z.string().optional(),
+
   // Feature flags
   // When true, only /, /privacy, /terms, /auth/callback and /api/* are served.
   // All other pages return 404. Used when the web UI is disabled for mobile-only mode.

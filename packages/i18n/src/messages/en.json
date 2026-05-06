@@ -1129,6 +1129,14 @@
     "nextPage": "Forward",
     "pageLabel": "Page {current} of {total}",
     "comingSoon": "Coming soon",
+    "billingUnavailable": "Purchases are not available on this device yet",
+    "purchaseSuccess": "Credits were added to your balance",
+    "purchaseCancelled": "Purchase cancelled",
+    "purchaseFailed": "Could not complete the purchase right now",
+    "restorePurchases": "Restore purchases",
+    "restoreSuccess": "Restored {count} purchases",
+    "restoreEmpty": "No previous purchases were found",
+    "restoreFailed": "Could not restore purchases right now",
     "insufficientTitle": "Insufficient credits",
     "insufficientDescription": "This action requires {required} cr., you have {balance} cr.",
     "insufficientDescriptionShort": "Top up your balance to continue.",
@@ -1159,7 +1167,8 @@
     "reasonChatPackDebit": "Chat",
     "reasonWelcomeBonus": "Welcome bonus",
     "reasonRefundLlmFailure": "Refund (generation error)",
-    "reasonRefundAdmin": "Admin refund"
+    "reasonRefundAdmin": "Admin refund",
+    "reasonRefundStoreRevoke": "Store refund"
   },
   "adminCredits": {
     "grantCredits": "Grant credits",

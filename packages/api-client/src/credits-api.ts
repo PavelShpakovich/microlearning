@@ -23,6 +23,8 @@ export interface CreditPack {
   credits: number;
   priceminor: number | null;
   currency: string;
+  appleProductId: string;
+  googleProductId: string;
   active?: boolean;
 }
 
@@ -49,6 +51,29 @@ export interface CreditsStoreSnapshot {
   pricing: CreditsPricingSnapshot;
   packs: CreditPack[];
   history: CreditHistorySnapshot;
+}
+
+export type StorePurchaseProvider = 'apple' | 'google';
+export type StorePurchaseEnvironment = 'sandbox' | 'production';
+
+export interface ReconcileStorePurchaseInput {
+  provider: StorePurchaseProvider;
+  externalTransactionId: string;
+  externalProductId: string;
+  environment: StorePurchaseEnvironment;
+  purchasedAt?: string;
+  revenuecatAppUserId?: string;
+  rawPayload?: unknown;
+}
+
+export interface ReconcileStorePurchaseResponse {
+  status: 'credited';
+  purchaseId: string;
+  transactionId: string | null;
+  newBalance: number;
+  alreadyCredited: boolean;
+  packId: string;
+  creditsGranted: number;
 }
 
 class CreditsApi {
@@ -130,6 +155,16 @@ class CreditsApi {
       packs: packs.packs,
       history,
     };
+  }
+
+  async reconcileStorePurchase(
+    input: ReconcileStorePurchaseInput,
+  ): Promise<ReconcileStorePurchaseResponse> {
+    return fetchJson<ReconcileStorePurchaseResponse>('/api/billing/reconcile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
   }
 }
 

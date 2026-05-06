@@ -23,6 +23,16 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { usePullToRefresh } from '@/lib/refresh';
+import {
+  getPlatformProductId,
+  isBillingAvailable,
+  isPurchaseCancelled,
+  loadStoreProductsForPacks,
+  purchaseCreditPack,
+  restoreAndReconcilePurchases,
+} from '@/lib/billing';
+import { toast } from '@/lib/toast';
+import type { PurchasesStoreProduct } from 'react-native-purchases';
 
 function StoreSkeleton() {
   const colors = useColors();
@@ -110,6 +120,7 @@ const REASON_KEYS: Record<string, string> = {
   welcome_bonus: 'reasonWelcomeBonus',
   refund_llm_failure: 'reasonRefundLlmFailure',
   refund_admin: 'reasonRefundAdmin',
+  refund_store_revoke: 'reasonRefundStoreRevoke',
 };
 
 const COST_KEYS: Record<string, string> = {
@@ -140,6 +151,9 @@ export default function StoreScreen() {
 
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [storeProducts, setStoreProducts] = useState<Record<string, PurchasesStoreProduct>>({});
+  const [purchasePackId, setPurchasePackId] = useState<string | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
   const hasLoadedRef = useRef(false);
   const PAGE_SIZE = 5;
 
@@ -154,14 +168,69 @@ export default function StoreScreen() {
         creditsApi.getPricing(true),
         creditsApi.getPacks({ noCache: true }),
       ]);
+      const storeProductsData = isBillingAvailable()
+        ? await loadStoreProductsForPacks(packsData.packs).catch(() => ({}))
+        : {};
+
       setBalance(balanceData);
       setPricing(pricingData);
       setPacks(packsData.packs);
+      setStoreProducts(storeProductsData);
       setPage(1); // always reset to page 1 on (re)focus
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const handlePurchase = useCallback(
+    async (pack: CreditPack) => {
+      if (!isBillingAvailable()) {
+        toast.error(tCredits('billingUnavailable'));
+        return;
+      }
+
+      setPurchasePackId(pack.id);
+      try {
+        await purchaseCreditPack(pack);
+        await loadStatic(true);
+        toast.success(tCredits('purchaseSuccess'));
+      } catch (error) {
+        if (isPurchaseCancelled(error)) {
+          toast.info(tCredits('purchaseCancelled'));
+          return;
+        }
+
+        toast.error(tCredits('purchaseFailed'));
+      } finally {
+        setPurchasePackId(null);
+      }
+    },
+    [loadStatic, tCredits],
+  );
+
+  const handleRestore = useCallback(async () => {
+    if (!isBillingAvailable()) {
+      toast.error(tCredits('billingUnavailable'));
+      return;
+    }
+
+    setRestoreLoading(true);
+    try {
+      const results = await restoreAndReconcilePurchases(packs);
+      await loadStatic(true);
+
+      if (results.length === 0) {
+        toast.info(tCredits('restoreEmpty'));
+        return;
+      }
+
+      toast.success(tCredits('restoreSuccess').replace('{count}', String(results.length)));
+    } catch {
+      toast.error(tCredits('restoreFailed'));
+    } finally {
+      setRestoreLoading(false);
+    }
+  }, [loadStatic, packs, tCredits]);
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadStatic(true));
 
@@ -230,6 +299,20 @@ export default function StoreScreen() {
           </View>
         </View>
         <Text style={styles.storeDesc}>{tCredits('storeDescription')}</Text>
+        <TouchableOpacity
+          style={[styles.restoreButton, restoreLoading && styles.restoreButtonDisabled]}
+          onPress={() => void handleRestore()}
+          disabled={restoreLoading}
+        >
+          {restoreLoading ? (
+            <ActivityIndicator size="small" color={colors.foreground} />
+          ) : (
+            <>
+              <Ionicons name="refresh-outline" size={16} color={colors.foreground} />
+              <Text style={styles.restoreButtonText}>{tCredits('restorePurchases')}</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Balance card */}
@@ -274,9 +357,21 @@ export default function StoreScreen() {
           </View>
           <View style={styles.packAction}>
             {pack.priceminor !== null ? (
-              <Text style={styles.packPrice}>
-                {(pack.priceminor / 100).toFixed(2)} {pack.currency}
-              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.buyButton,
+                  (!getPlatformProductId(pack) || purchasePackId === pack.id) &&
+                    styles.buyButtonDisabled,
+                ]}
+                onPress={() => void handlePurchase(pack)}
+                disabled={!getPlatformProductId(pack) || purchasePackId === pack.id}
+              >
+                {purchasePackId === pack.id ? (
+                  <ActivityIndicator size="small" color={colors.primaryForeground} />
+                ) : (
+                  <Text style={styles.buyButtonText}>{formatPackPrice(pack, storeProducts)}</Text>
+                )}
+              </TouchableOpacity>
             ) : (
               <Text style={styles.comingSoonText}>{tCredits('comingSoon')}</Text>
             )}
@@ -421,6 +516,19 @@ export default function StoreScreen() {
   );
 }
 
+function formatPackPrice(
+  pack: CreditPack,
+  storeProducts: Record<string, PurchasesStoreProduct>,
+): string {
+  const productId = getPlatformProductId(pack);
+  if (productId && storeProducts[productId]) {
+    return storeProducts[productId].priceString;
+  }
+
+  if (pack.priceminor === null) return '';
+  return `${(pack.priceminor / 100).toFixed(2)} ${pack.currency}`;
+}
+
 function createStyles(colors: ReturnType<typeof useColors>) {
   return StyleSheet.create({
     container: {
@@ -483,6 +591,27 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       color: colors.mutedForeground,
       lineHeight: 19,
       marginTop: 4,
+    },
+    restoreButton: {
+      marginTop: 12,
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    restoreButtonDisabled: {
+      opacity: 0.6,
+    },
+    restoreButtonText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.foreground,
     },
     // Balance card
     balanceCard: {
@@ -610,6 +739,23 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     packAction: {
       alignItems: 'flex-end',
       gap: 4,
+    },
+    buyButton: {
+      minWidth: 96,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+    },
+    buyButtonDisabled: {
+      opacity: 0.6,
+    },
+    buyButtonText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primaryForeground,
     },
     packPrice: {
       fontSize: 14,

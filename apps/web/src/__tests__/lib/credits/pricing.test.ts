@@ -201,6 +201,8 @@ describe('getCreditPacks', () => {
           id: 'starter',
           name: 'Starter',
           credits: 3,
+          apple_product_id: 'by.tryclario.credits.starter.ios',
+          google_product_id: 'by.tryclario.credits.starter.android',
           price_minor: null,
           currency: 'BYN',
           active: true,
@@ -210,6 +212,8 @@ describe('getCreditPacks', () => {
           id: 'standard',
           name: 'Standard',
           credits: 7,
+          apple_product_id: 'by.tryclario.credits.standard.ios',
+          google_product_id: 'by.tryclario.credits.standard.android',
           price_minor: 1990,
           currency: 'BYN',
           active: true,
@@ -223,6 +227,8 @@ describe('getCreditPacks', () => {
     expect(packs).toHaveLength(2);
     expect(packs[0].id).toBe('starter');
     expect(packs[0].credits).toBe(3);
+    expect(packs[0].appleProductId).toBe('by.tryclario.credits.starter.ios');
+    expect(packs[0].googleProductId).toBe('by.tryclario.credits.starter.android');
     expect(packs[0].priceminor).toBeNull();
     expect(packs[1].priceminor).toBe(1990);
   });
@@ -240,6 +246,8 @@ describe('getCreditPacks', () => {
             id: 'starter',
             name: 'Starter',
             credits: 3,
+            apple_product_id: 'by.tryclario.credits.starter.ios',
+            google_product_id: 'by.tryclario.credits.starter.android',
             price_minor: null,
             currency: 'BYN',
             active: true,
@@ -257,6 +265,8 @@ describe('getCreditPacks', () => {
             id: 'starter',
             name: 'Starter',
             credits: 8,
+            apple_product_id: 'by.tryclario.credits.starter.ios',
+            google_product_id: 'by.tryclario.credits.starter.android',
             price_minor: null,
             currency: 'BYN',
             active: true,
@@ -295,6 +305,8 @@ describe('getAllCreditPacks', () => {
           id: 'starter',
           name: 'Starter',
           credits: 3,
+          apple_product_id: 'by.tryclario.credits.starter.ios',
+          google_product_id: 'by.tryclario.credits.starter.android',
           price_minor: null,
           currency: 'BYN',
           active: true,
@@ -304,6 +316,8 @@ describe('getAllCreditPacks', () => {
           id: 'archived',
           name: 'Archived',
           credits: 5,
+          apple_product_id: 'by.tryclario.credits.archived.ios',
+          google_product_id: 'by.tryclario.credits.archived.android',
           price_minor: 500,
           currency: 'BYN',
           active: false,
@@ -317,6 +331,8 @@ describe('getAllCreditPacks', () => {
     expect(packs).toHaveLength(2);
     expect(packs[1].id).toBe('archived');
     expect(packs[1].active).toBe(false);
+    expect(packs[1].appleProductId).toBe('by.tryclario.credits.archived.ios');
+    expect(packs[1].googleProductId).toBe('by.tryclario.credits.archived.android');
   });
 
   it('returns empty array on DB error', async () => {

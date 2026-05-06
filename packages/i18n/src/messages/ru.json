@@ -1129,6 +1129,14 @@
     "nextPage": "Вперёд",
     "pageLabel": "Стр. {current} из {total}",
     "comingSoon": "Скоро",
+    "billingUnavailable": "Покупки пока недоступны на этом устройстве",
+    "purchaseSuccess": "Кредиты добавлены на ваш баланс",
+    "purchaseCancelled": "Покупка отменена",
+    "purchaseFailed": "Не удалось завершить покупку прямо сейчас",
+    "restorePurchases": "Восстановить покупки",
+    "restoreSuccess": "Восстановлено покупок: {count}",
+    "restoreEmpty": "Предыдущие покупки не найдены",
+    "restoreFailed": "Не удалось восстановить покупки прямо сейчас",
     "insufficientTitle": "Недостаточно кредитов",
     "insufficientDescription": "Для этого действия нужно {required} кр., у вас {balance} кр.",
     "insufficientDescriptionShort": "Пополните баланс, чтобы продолжить.",
@@ -1159,7 +1167,8 @@
     "reasonChatPackDebit": "Чат",
     "reasonWelcomeBonus": "Бонус при регистрации",
     "reasonRefundLlmFailure": "Возврат (ошибка генерации)",
-    "reasonRefundAdmin": "Возврат администратором"
+    "reasonRefundAdmin": "Возврат администратором",
+    "reasonRefundStoreRevoke": "Возврат через магазин"
   },
   "adminCredits": {
     "grantCredits": "Начислить кредиты",

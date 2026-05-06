@@ -17,6 +17,7 @@ import { useColors } from '@/lib/colors';
 import { ThemeProvider } from '@/lib/theme-context';
 import { toastConfig } from '@/lib/toastConfig';
 import { InsufficientCreditsProvider } from '@/lib/insufficient-credits-context';
+import { configureBilling, syncBillingIdentity } from '@/lib/billing';
 
 export default function RootLayout() {
   const themeColors = useColors();
@@ -30,6 +31,12 @@ export default function RootLayout() {
     void requestNotificationPermissions();
 
     async function init() {
+      try {
+        await configureBilling();
+      } catch (error) {
+        console.warn('Failed to configure billing', error);
+      }
+
       // Await the initial URL BEFORE subscribing to auth state.
       // Linking.getInitialURL() is cached after the first native call so it
       // resolves near-instantly on subsequent calls — no perceptible delay.
@@ -45,6 +52,10 @@ export default function RootLayout() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event, session) => {
+        void syncBillingIdentity(session?.user?.id ?? null).catch((error) => {
+          console.warn('Failed to sync billing identity', error);
+        });
+
         if (event === 'INITIAL_SESSION') {
           if (!session && !isAuthCallback) {
             router.replace('/(auth)/login');
