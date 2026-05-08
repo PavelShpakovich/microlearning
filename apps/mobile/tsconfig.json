@@ -1,12 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowJs": true,
+    "customConditions": ["react-native"],
     "jsx": "react-native",
     "lib": ["ES2022", "DOM"],
+    "module": "preserve",
+    "moduleDetection": "force",
     "moduleResolution": "bundler",
+    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules", "android", "ios"]
 }

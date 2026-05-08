@@ -17,7 +17,7 @@ import {
   routes,
 } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { readingsApi, getAuthHeaders, resolveUrl } from '@clario/api-client';
 import type { ReadingDetail } from '@clario/api-client';

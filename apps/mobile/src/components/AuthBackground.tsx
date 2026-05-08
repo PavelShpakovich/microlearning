@@ -1,5 +1,5 @@
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Stop, Rect } from '@/lib/svg';
 
 /**
  * Full-screen radial gradient matching the web auth-shell:

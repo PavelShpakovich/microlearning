@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { Swipeable, type SwipeableRef } from '@/lib/gesture-handler';
 import { useColors } from '@/lib/colors';
 import { useTranslations } from '@/lib/i18n';
 
-let openSwipeable: Swipeable | null = null;
+let openSwipeable: SwipeableRef | null = null;
 
 type SwipeToDeleteRowProps = {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ export function SwipeToDeleteRow({
 }: SwipeToDeleteRowProps) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors, borderRadius), [colors, borderRadius]);
-  const swipeableRef = useRef<Swipeable | null>(null);
+  const swipeableRef = useRef<SwipeableRef | null>(null);
   const tCommon = useTranslations('common');
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function SwipeToDeleteRow({
     }
   }
 
-  async function handleDelete(swipeable: Swipeable) {
+  async function handleDelete(swipeable: SwipeableRef) {
     swipeable.close();
     if (openSwipeable === swipeable) {
       openSwipeable = null;
@@ -70,7 +70,7 @@ export function SwipeToDeleteRow({
       childrenContainerStyle={styles.childrenContainer}
       onSwipeableWillOpen={handleSwipeableWillOpen}
       onSwipeableClose={handleSwipeableClose}
-      renderRightActions={(_, __, methods) => (
+      renderRightActions={(_progress: unknown, _drag: unknown, methods: SwipeableRef) => (
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             testID={testID}

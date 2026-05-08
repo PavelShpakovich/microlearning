@@ -11,15 +11,7 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { goBackTo, openChartDetail, routes } from '@/lib/navigation';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, {
-  Path,
-  Circle,
-  Line,
-  Text as SvgText,
-  Defs,
-  LinearGradient,
-  Stop,
-} from 'react-native-svg';
+import Svg, { Path, Circle, Line, Text as SvgText, Defs, LinearGradient, Stop } from '@/lib/svg';
 import { compatibilityApi } from '@clario/api-client';
 import type { CompatibilityReport } from '@clario/api-client';
 import { useTranslations, getLocale } from '@/lib/i18n';

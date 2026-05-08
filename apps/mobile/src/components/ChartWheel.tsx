@@ -14,7 +14,7 @@
  * Increasing ecliptic longitude goes counterclockwise.
  */
 
-import Svg, { Circle, Defs, G, Line, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Line, Path, Text as SvgText } from '@/lib/svg';
 import { useWindowDimensions } from 'react-native';
 
 // ─── types ────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/lib/colors';
 import { useTranslations } from '@/lib/i18n';
@@ -164,7 +165,7 @@ export function DateTimePickerField({
                   mode={mode}
                   display="spinner"
                   maximumDate={mode === 'date' ? maximumDate : undefined}
-                  onChange={(_, selectedDate) => {
+                  onChange={(_event: DateTimePickerEvent, selectedDate?: Date) => {
                     if (selectedDate) setDraftValue(selectedDate);
                   }}
                 />

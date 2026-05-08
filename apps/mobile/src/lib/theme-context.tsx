@@ -23,13 +23,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     void SecureStore.getItemAsync(STORAGE_KEY).then((stored) => {
       const pref = (stored as ThemePreference | null) ?? 'system';
       setThemeState(pref);
-      Appearance.setColorScheme(pref === 'system' ? null : pref);
+      Appearance.setColorScheme(pref === 'system' ? 'unspecified' : pref);
     });
   }, []);
 
   function setTheme(newTheme: ThemePreference) {
     setThemeState(newTheme);
-    Appearance.setColorScheme(newTheme === 'system' ? null : newTheme);
+    Appearance.setColorScheme(newTheme === 'system' ? 'unspecified' : newTheme);
     void SecureStore.setItemAsync(STORAGE_KEY, newTheme);
   }
 

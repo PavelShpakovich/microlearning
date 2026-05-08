@@ -240,12 +240,10 @@ packages/
 └── validation/               # Shared Zod validation and helpers
 supabase/
 └── migrations/               # Database schema and product migrations
-patches/
-└── expo-localization@15.0.3.patch
 ```
 
 ## Notes
 
 - The source of truth is the current codebase, not older product notes.
 - If README and implementation ever disagree, prefer the code and update the README.
-- `pnpm-workspace.yaml` currently applies a patch for `expo-localization@15.0.3`; see [docs/future-improvements.md](docs/future-improvements.md) for the planned Expo SDK upgrade that should remove it.
+- `apps/mobile` is aligned to Expo SDK 55 and its native projects can be regenerated with `npx expo prebuild --no-install --clean`.

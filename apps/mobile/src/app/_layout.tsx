@@ -4,7 +4,7 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from '@/lib/gesture-handler';
 import { configureApiClient } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { requestNotificationPermissions } from '@/lib/notifications';
