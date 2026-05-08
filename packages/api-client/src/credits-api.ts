@@ -21,8 +21,6 @@ export interface CreditPack {
   id: string;
   name: string;
   credits: number;
-  priceminor: number | null;
-  currency: string;
   appleProductId: string;
   googleProductId: string;
   active?: boolean;

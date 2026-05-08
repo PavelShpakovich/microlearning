@@ -26,13 +26,21 @@ export interface CreditPack {
   id: string;
   name: string;
   credits: number;
-  priceminor: number | null;
-  currency: string;
   appleProductId: string;
   googleProductId: string;
   active: boolean;
   sortOrder: number;
 }
+
+type CreditPackRow = {
+  id: string;
+  name: string;
+  credits: number;
+  apple_product_id?: string | null;
+  google_product_id?: string | null;
+  active: boolean;
+  sort_order: number;
+};
 
 // ─── In-memory cache with TTL ───────────────────────────────────────────────
 
@@ -58,6 +66,58 @@ let freeProductsCache: CacheEntry<FreeProducts> | null = null;
 let productPricingCache: CacheEntry<Record<ProductKind, { cost: number; isFree: boolean }>> | null =
   null;
 let creditPacksCache: CacheEntry<CreditPack[]> | null = null;
+
+function inferStoreProductId(packId: string): string {
+  return `by.tryclario.credits.${packId}`;
+}
+
+function mapCreditPackRow(row: CreditPackRow): CreditPack {
+  return {
+    id: row.id,
+    name: row.name,
+    credits: row.credits,
+    appleProductId: row.apple_product_id ?? inferStoreProductId(row.id),
+    googleProductId: row.google_product_id ?? inferStoreProductId(row.id),
+    active: row.active,
+    sortOrder: row.sort_order,
+  };
+}
+
+async function loadCreditPackRows(includeInactive = false): Promise<CreditPackRow[]> {
+  const baseQuery = db.from('credit_packs');
+  const fullQuery = includeInactive
+    ? baseQuery
+        .select('id, name, credits, apple_product_id, google_product_id, active, sort_order')
+        .order('sort_order', { ascending: true })
+    : baseQuery
+        .select('id, name, credits, apple_product_id, google_product_id, active, sort_order')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+  const { data, error } = await fullQuery;
+  if (!error) {
+    return (data ?? []) as CreditPackRow[];
+  }
+
+  logger.warn(
+    { error, includeInactive },
+    'Failed to load credit packs with store product ID columns, retrying with legacy column set',
+  );
+
+  const fallbackQuery = includeInactive
+    ? baseQuery
+        .select('id, name, credits, active, sort_order')
+        .order('sort_order', { ascending: true })
+    : baseQuery
+        .select('id, name, credits, active, sort_order')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+  const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+  if (fallbackError) throw fallbackError;
+
+  return (fallbackData ?? []) as CreditPackRow[];
+}
 
 export function invalidatePricingCache(): void {
   creditCostsCache = null;
@@ -180,27 +240,8 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
   }
 
   try {
-    const { data, error } = await db
-      .from('credit_packs')
-      .select(
-        'id, name, credits, price_minor, currency, apple_product_id, google_product_id, active, sort_order',
-      )
-      .eq('active', true)
-      .order('sort_order', { ascending: true });
-
-    if (error) throw error;
-
-    const packs: CreditPack[] = (data ?? []).map((row) => ({
-      id: row.id,
-      name: row.name,
-      credits: row.credits,
-      priceminor: row.price_minor,
-      currency: row.currency,
-      appleProductId: row.apple_product_id,
-      googleProductId: row.google_product_id,
-      active: row.active,
-      sortOrder: row.sort_order,
-    }));
+    const rows = await loadCreditPackRows(false);
+    const packs: CreditPack[] = rows.map(mapCreditPackRow);
 
     creditPacksCache = { data: packs, expiresAt: Date.now() + CREDIT_PACKS_CACHE_TTL_MS };
     return packs;
@@ -214,26 +255,8 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
 
 export async function getAllCreditPacks(): Promise<CreditPack[]> {
   try {
-    const { data, error } = await db
-      .from('credit_packs')
-      .select(
-        'id, name, credits, price_minor, currency, apple_product_id, google_product_id, active, sort_order',
-      )
-      .order('sort_order', { ascending: true });
-
-    if (error) throw error;
-
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      name: row.name,
-      credits: row.credits,
-      priceminor: row.price_minor,
-      currency: row.currency,
-      appleProductId: row.apple_product_id,
-      googleProductId: row.google_product_id,
-      active: row.active,
-      sortOrder: row.sort_order,
-    }));
+    const rows = await loadCreditPackRows(true);
+    return rows.map(mapCreditPackRow);
   } catch (err) {
     logger.error({ error: err }, 'Failed to load all credit packs from DB');
     return [];

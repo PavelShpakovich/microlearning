@@ -356,20 +356,18 @@ export default function StoreScreen() {
             </Text>
           </View>
           <View style={styles.packAction}>
-            {pack.priceminor !== null ? (
+            {getPlatformProductId(pack) ? (
               <TouchableOpacity
-                style={[
-                  styles.buyButton,
-                  (!getPlatformProductId(pack) || purchasePackId === pack.id) &&
-                    styles.buyButtonDisabled,
-                ]}
+                style={[styles.buyButton, purchasePackId === pack.id && styles.buyButtonDisabled]}
                 onPress={() => void handlePurchase(pack)}
-                disabled={!getPlatformProductId(pack) || purchasePackId === pack.id}
+                disabled={purchasePackId === pack.id}
               >
                 {purchasePackId === pack.id ? (
                   <ActivityIndicator size="small" color={colors.primaryForeground} />
                 ) : (
-                  <Text style={styles.buyButtonText}>{formatPackPrice(pack, storeProducts)}</Text>
+                  <Text style={styles.buyButtonText}>
+                    {formatPackPrice(pack, storeProducts, tCredits)}
+                  </Text>
                 )}
               </TouchableOpacity>
             ) : (
@@ -519,14 +517,14 @@ export default function StoreScreen() {
 function formatPackPrice(
   pack: CreditPack,
   storeProducts: Record<string, PurchasesStoreProduct>,
+  tCredits: ReturnType<typeof useTranslations>,
 ): string {
   const productId = getPlatformProductId(pack);
   if (productId && storeProducts[productId]) {
     return storeProducts[productId].priceString;
   }
 
-  if (pack.priceminor === null) return '';
-  return `${(pack.priceminor / 100).toFixed(2)} ${pack.currency}`;
+  return tCredits('buyNow' as Parameters<typeof tCredits>[0]);
 }
 
 function createStyles(colors: ReturnType<typeof useColors>) {

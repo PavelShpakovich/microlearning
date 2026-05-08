@@ -203,8 +203,6 @@ describe('getCreditPacks', () => {
           credits: 3,
           apple_product_id: 'by.tryclario.credits.starter.ios',
           google_product_id: 'by.tryclario.credits.starter.android',
-          price_minor: null,
-          currency: 'BYN',
           active: true,
           sort_order: 1,
         },
@@ -214,8 +212,6 @@ describe('getCreditPacks', () => {
           credits: 7,
           apple_product_id: 'by.tryclario.credits.standard.ios',
           google_product_id: 'by.tryclario.credits.standard.android',
-          price_minor: 1990,
-          currency: 'BYN',
           active: true,
           sort_order: 2,
         },
@@ -229,8 +225,6 @@ describe('getCreditPacks', () => {
     expect(packs[0].credits).toBe(3);
     expect(packs[0].appleProductId).toBe('by.tryclario.credits.starter.ios');
     expect(packs[0].googleProductId).toBe('by.tryclario.credits.starter.android');
-    expect(packs[0].priceminor).toBeNull();
-    expect(packs[1].priceminor).toBe(1990);
   });
 
   it('re-fetches shortly after the pack cache TTL expires', async () => {
@@ -248,8 +242,6 @@ describe('getCreditPacks', () => {
             credits: 3,
             apple_product_id: 'by.tryclario.credits.starter.ios',
             google_product_id: 'by.tryclario.credits.starter.android',
-            price_minor: null,
-            currency: 'BYN',
             active: true,
             sort_order: 1,
           },
@@ -267,8 +259,6 @@ describe('getCreditPacks', () => {
             credits: 8,
             apple_product_id: 'by.tryclario.credits.starter.ios',
             google_product_id: 'by.tryclario.credits.starter.android',
-            price_minor: null,
-            currency: 'BYN',
             active: true,
             sort_order: 1,
           },
@@ -307,8 +297,6 @@ describe('getAllCreditPacks', () => {
           credits: 3,
           apple_product_id: 'by.tryclario.credits.starter.ios',
           google_product_id: 'by.tryclario.credits.starter.android',
-          price_minor: null,
-          currency: 'BYN',
           active: true,
           sort_order: 1,
         },
@@ -318,8 +306,6 @@ describe('getAllCreditPacks', () => {
           credits: 5,
           apple_product_id: 'by.tryclario.credits.archived.ios',
           google_product_id: 'by.tryclario.credits.archived.android',
-          price_minor: 500,
-          currency: 'BYN',
           active: false,
           sort_order: 99,
         },

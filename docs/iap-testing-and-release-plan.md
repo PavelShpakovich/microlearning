@@ -4,34 +4,57 @@
 
 ## Текущий статус кода
 
-| Компонент                                         | Статус            | Замечания                                                 |
-| ------------------------------------------------- | ----------------- | --------------------------------------------------------- |
-| Mobile `billing.ts` (RevenueCat SDK)              | ✅ Готов          | configure, purchase, restore, reconcile                   |
-| Mobile Store screen UI                            | ✅ Готов          | Баланс, паки, история, покупка                            |
-| Backend webhook `/api/billing/revenuecat/webhook` | ✅ Готов          | initial_purchase, cancellation                            |
-| Backend reconcile `/api/billing/reconcile`        | ✅ Готов          | Client-side safety net                                    |
-| Backend `store-purchases.ts`                      | ✅ Готов          | grant, revoke, idempotent                                 |
-| Backend `revenuecat.ts`                           | ✅ Готов          | Normalize events, verify auth                             |
-| DB: `credit_packs` (с product IDs)                | ✅ Готов          | apple/google product IDs заполнены                        |
-| DB: `store_purchases` + events                    | ✅ Готов          | Уникальный индекс на provider+tx                          |
-| DB: `grant_store_purchase_atomic`                 | ✅ Готов          | Идемпотентный upsert                                      |
-| DB: `revoke_store_purchase_atomic`                | ✅ Готов          | Обработка отмен                                           |
-| DB: Credit packs pricing                          | ⚠️ Нужна миграция | Создана: `20260507120000_update_credit_packs_pricing.sql` |
-| API client `credits-api.ts`                       | ✅ Готов          | reconcileStorePurchase, все типы                          |
-| `.env` mobile (ключи)                             | ⚠️ Плейсхолдеры   | Заменить на реальные после создания RevenueCat проекта    |
-| `.env` web (webhook auth)                         | ✅ Готов          | Токен сгенерирован                                        |
+| Компонент                                         | Статус          | Замечания                                                |
+| ------------------------------------------------- | --------------- | -------------------------------------------------------- |
+| Mobile `billing.ts` (RevenueCat SDK)              | ✅ Готов        | configure, purchase, restore, reconcile                  |
+| Mobile Store screen UI                            | ✅ Готов        | Баланс, паки, история, покупка                           |
+| Backend webhook `/api/billing/revenuecat/webhook` | ✅ Готов        | initial_purchase, cancellation                           |
+| Backend reconcile `/api/billing/reconcile`        | ✅ Готов        | Client-side safety net                                   |
+| Backend `store-purchases.ts`                      | ✅ Готов        | grant, revoke, idempotent                                |
+| Backend `revenuecat.ts`                           | ✅ Готов        | Normalize events, verify auth                            |
+| DB: `credit_packs` (с product IDs)                | ✅ Готов        | apple/google product IDs заполнены                       |
+| DB: `store_purchases` + events                    | ✅ Готов        | Уникальный индекс на provider+tx                         |
+| DB: `grant_store_purchase_atomic`                 | ✅ Готов        | Идемпотентный upsert                                     |
+| DB: `revoke_store_purchase_atomic`                | ✅ Готов        | Обработка отмен                                          |
+| DB: Credit pack storefront pricing                | ✅ Удалено      | Цены больше не хранятся в backend; их контролирует store |
+| API client `credits-api.ts`                       | ✅ Готов        | reconcileStorePurchase, все типы                         |
+| `.env` mobile (ключи)                             | ⚠️ Плейсхолдеры | Заменить на реальные после создания RevenueCat проекта   |
+| `.env` web (webhook auth)                         | ✅ Готов        | Токен сгенерирован                                       |
 
 ## Найденные проблемы и фиксы
 
 1. **RevenueCat crash с невалидным ключом** — исправлено: `getRevenueCatApiKey()` теперь возвращает `undefined` для ключей начинающихся с `test_`
-2. **Credit packs в БД имели старые значения** (3/7/15 кредитов, BYN) — создана миграция `20260507120000` для обновления до 5/12/25 USD
+2. **Дублирование pack prices между backend и stores** — исправлено: storefront цены удалены из `credit_packs`; теперь деньги контролируются только App Store / Google Play, а backend хранит только credits + product IDs
 
 ---
 
-## Этап 1: Получение Apple Developer Account
+## Этап 1: Apple Developer Account
 
-1. Купить Apple Developer Program ($99/год): https://developer.apple.com/programs/
-2. Дождаться активации (обычно 24-48 часов)
+Статус: выполнено 2026-05-08.
+
+1. Apple Developer Program активирован
+2. Можно переходить к App Store Connect и sandbox-тестированию
+
+## Быстрый старт: что сделать прямо сейчас
+
+Если цель - как можно быстрее дойти до первой тестовой покупки, делай в таком порядке:
+
+1. В App Store Connect создай приложение `by.tryclario.app`, если его еще нет.
+2. Создай 3 consumable IAP продукта с ID из этого документа.
+3. Создай Sandbox Test User.
+4. В RevenueCat создай iOS app c тем же bundle ID и импортируй продукты.
+5. Возьми Public API Key `appl_...` из RevenueCat.
+6. Локально создай `apps/mobile/.env` и заполни RevenueCat sandbox-конфиг.
+7. Примени последние Supabase migrations, включая удаление backend-цен из `credit_packs`.
+8. Собери iOS build командой `npx expo run:ios --device --configuration Release`.
+9. На устройстве открой Store screen и проверь, что подтянулись App Store цены.
+10. Сделай покупку `Starter` и проверь запись в БД и webhook.
+
+Важно:
+
+- Для реального sandbox IAP тестирования используй не Expo Go, а нативный iOS build через `expo run:ios`.
+- Лучше тестировать на физическом iPhone с залогиненным Sandbox Account.
+- Без `EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY` billing в приложении не включится: код в `billing.ts` специально отключает конфиг без валидного ключа.
 
 ## Этап 2: App Store Connect — создание продуктов
 
@@ -86,9 +109,13 @@ EXPO_PUBLIC_REVENUECAT_ENVIRONMENT=sandbox
 ```bash
 # Через Supabase CLI или Dashboard:
 supabase db push
-# Или вручную выполнить SQL из:
-# supabase/migrations/20260507120000_update_credit_packs_pricing.sql
 ```
+
+Примечание:
+
+- storefront цена больше не должна храниться или редактироваться в backend
+- App Store Connect управляет суммой списания с пользователя
+- backend управляет только количеством кредитов, `apple_product_id` / `google_product_id`, активностью пака и reconcile/webhook логикой
 
 ## Этап 6: Sandbox тестирование
 

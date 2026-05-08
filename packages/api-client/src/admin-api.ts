@@ -179,7 +179,7 @@ class AdminApi {
 
   async updateCreditPack(
     packId: string,
-    updates: { credits?: number; priceminor?: number | null; currency?: string; active?: boolean },
+    updates: { credits?: number; active?: boolean },
   ): Promise<{ success: boolean; pack: Record<string, unknown> }> {
     return fetchJson('/api/admin/pricing/packs', {
       method: 'PATCH',

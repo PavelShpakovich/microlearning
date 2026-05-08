@@ -195,13 +195,9 @@ export default function StorePage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      {pack.priceminor !== null ? (
-                        <p className="font-semibold">
-                          {(pack.priceminor / 100).toFixed(2)} {pack.currency}
-                        </p>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">{t('comingSoon')}</span>
-                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {t('availableInMobileApp')}
+                      </span>
                     </div>
                   </div>
                 ))}

@@ -317,11 +317,9 @@ export type Database = {
           apple_product_id: string;
           created_at: string;
           credits: number;
-          currency: string;
           google_product_id: string;
           id: string;
           name: string;
-          price_minor: number | null;
           sort_order: number;
           updated_at: string;
         };
@@ -330,11 +328,9 @@ export type Database = {
           apple_product_id: string;
           created_at?: string;
           credits: number;
-          currency?: string;
           google_product_id: string;
           id: string;
           name: string;
-          price_minor?: number | null;
           sort_order?: number;
           updated_at?: string;
         };
@@ -343,11 +339,9 @@ export type Database = {
           apple_product_id?: string;
           created_at?: string;
           credits?: number;
-          currency?: string;
           google_product_id?: string;
           id?: string;
           name?: string;
-          price_minor?: number | null;
           sort_order?: number;
           updated_at?: string;
         };

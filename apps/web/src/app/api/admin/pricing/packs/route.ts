@@ -11,8 +11,6 @@ type CreditPackUpdate = Database['public']['Tables']['credit_packs']['Update'];
 const updateSchema = z.object({
   packId: z.string().min(1),
   credits: z.number().int().min(1).max(1000).optional(),
-  priceminor: z.number().int().min(0).nullable().optional(),
-  currency: z.string().min(1).max(10).optional(),
   active: z.boolean().optional(),
 });
 
@@ -27,19 +25,17 @@ export const PATCH = withApiHandler(async (req: Request) => {
     );
   }
 
-  const { packId, credits, priceminor, currency, active } = parsed.data;
+  const { packId, credits, active } = parsed.data;
 
   const updates: CreditPackUpdate = { updated_at: new Date().toISOString() };
   if (credits !== undefined) updates.credits = credits;
-  if (priceminor !== undefined) updates.price_minor = priceminor;
-  if (currency !== undefined) updates.currency = currency;
   if (active !== undefined) updates.active = active;
 
   const { data, error } = await supabaseAdmin
     .from('credit_packs')
     .update(updates)
     .eq('id', packId)
-    .select('id, name, credits, price_minor, currency, active, sort_order')
+    .select('id, name, credits, active, sort_order')
     .single();
 
   if (error) throw error;

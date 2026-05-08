@@ -988,8 +988,6 @@ interface PackRow {
   id: string;
   name: string;
   credits: number;
-  priceminor: number | null;
-  currency: string;
   active: boolean;
 }
 
