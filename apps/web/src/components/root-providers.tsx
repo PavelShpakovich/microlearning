@@ -1,5 +1,6 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import type { AbstractIntlMessages } from 'next-intl';
 import { SessionProvider } from 'next-auth/react';
@@ -8,6 +9,8 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { CreditsProvider } from '@/components/providers/credits-provider';
 import { TOAST_DURATION_MS } from '@/lib/constants';
+
+const AppThemeProvider = ThemeProvider as unknown as ComponentType<any>;
 
 interface RootProvidersProps {
   children: React.ReactNode;
@@ -30,12 +33,12 @@ export function RootProviders({
     <SessionProvider session={session}>
       <CreditsProvider enabled={Boolean(session?.user)}>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone} now={now}>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <AppThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <div className="flex flex-col flex-1">
               {children}
               <Toaster position="bottom-right" duration={TOAST_DURATION_MS} />
             </div>
-          </ThemeProvider>
+          </AppThemeProvider>
         </NextIntlClientProvider>
       </CreditsProvider>
     </SessionProvider>

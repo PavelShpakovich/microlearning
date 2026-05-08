@@ -1,5 +1,16 @@
 import path from 'path';
+import type { ComponentType } from 'react';
 import { Document, Font, Page, View, Text, StyleSheet } from '@react-pdf/renderer';
+
+const PdfDocument = Document as unknown as ComponentType<any>;
+const PdfPage = Page as unknown as ComponentType<any>;
+const PdfView = View as unknown as ComponentType<any>;
+const PdfText = Text as unknown as ComponentType<any>;
+
+type PdfRenderContext = {
+  pageNumber: number;
+  totalPages: number;
+};
 
 // Register Noto Sans – supports Latin, Cyrillic, and most other scripts.
 // Font files are bundled in public/fonts/ so no network request is needed at render time.
@@ -196,76 +207,78 @@ export function ReadingPdfDocument({
   disclaimers,
 }: ReadingPdfProps) {
   return (
-    <Document title={title} author="Clario Astrology">
-      <Page size="A4" style={styles.page}>
+    <PdfDocument title={title} author="Clario Astrology">
+      <PdfPage size="A4" style={styles.page}>
         {/* Brand header */}
-        <View style={styles.brandRow}>
-          <Text style={styles.brandName}>CLARIO ASTROLOGY</Text>
-        </View>
+        <PdfView style={styles.brandRow}>
+          <PdfText style={styles.brandName}>CLARIO ASTROLOGY</PdfText>
+        </PdfView>
 
         {/* Reading header */}
-        <Text style={styles.typeLabel}>{typeLabel}</Text>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.dateText}>{createdAt}</Text>
+        <PdfText style={styles.typeLabel}>{typeLabel}</PdfText>
+        <PdfText style={styles.title}>{title}</PdfText>
+        <PdfText style={styles.dateText}>{createdAt}</PdfText>
 
         {/* Summary */}
         {summary ? (
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryText}>{summary}</Text>
-          </View>
+          <PdfView style={styles.summaryBox}>
+            <PdfText style={styles.summaryText}>{summary}</PdfText>
+          </PdfView>
         ) : null}
 
         {/* Sections */}
         {(sections ?? []).map((section, idx) => (
-          <View key={section.key} style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow} wrap={false}>
-              <View style={styles.sectionNumber}>
-                <Text style={styles.sectionNumberText}>{idx + 1}</Text>
-              </View>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-            </View>
-            <View style={styles.sectionContent}>
+          <PdfView key={section.key} style={styles.sectionContainer}>
+            <PdfView style={styles.sectionHeaderRow} wrap={false}>
+              <PdfView style={styles.sectionNumber}>
+                <PdfText style={styles.sectionNumberText}>{idx + 1}</PdfText>
+              </PdfView>
+              <PdfText style={styles.sectionTitle}>{section.title}</PdfText>
+            </PdfView>
+            <PdfView style={styles.sectionContent}>
               {section.content
                 .split('\n\n')
                 .filter(Boolean)
                 .map((para, pIdx) => (
-                  <Text key={pIdx} style={styles.paragraph}>
+                  <PdfText key={pIdx} style={styles.paragraph}>
                     {para}
-                  </Text>
+                  </PdfText>
                 ))}
-            </View>
-          </View>
+            </PdfView>
+          </PdfView>
         ))}
 
         {/* Advice */}
         {advice && advice.length > 0 ? (
-          <View style={styles.adviceContainer}>
-            <Text style={styles.adviceHeader}>Ключевые рекомендации</Text>
+          <PdfView style={styles.adviceContainer}>
+            <PdfText style={styles.adviceHeader}>Ключевые рекомендации</PdfText>
             {advice.map((item, idx) => (
-              <View key={idx} style={styles.adviceItem}>
-                <View style={styles.adviceBullet}>
-                  <Text style={styles.adviceBulletText}>{idx + 1}</Text>
-                </View>
-                <Text style={styles.adviceText}>{item}</Text>
-              </View>
+              <PdfView key={idx} style={styles.adviceItem}>
+                <PdfView style={styles.adviceBullet}>
+                  <PdfText style={styles.adviceBulletText}>{idx + 1}</PdfText>
+                </PdfView>
+                <PdfText style={styles.adviceText}>{item}</PdfText>
+              </PdfView>
             ))}
-          </View>
+          </PdfView>
         ) : null}
 
         {/* Disclaimers */}
         {disclaimers && disclaimers.length > 0 ? (
-          <Text style={styles.disclaimerText}>{disclaimers.join(' ')}</Text>
+          <PdfText style={styles.disclaimerText}>{disclaimers.join(' ')}</PdfText>
         ) : null}
 
         {/* Footer */}
-        <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>clario.app</Text>
-          <Text
+        <PdfView style={styles.footer} fixed>
+          <PdfText style={styles.footerText}>clario.app</PdfText>
+          <PdfText
             style={styles.footerText}
-            render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+            render={({ pageNumber, totalPages }: PdfRenderContext) =>
+              `${pageNumber} / ${totalPages}`
+            }
           />
-        </View>
-      </Page>
-    </Document>
+        </PdfView>
+      </PdfPage>
+    </PdfDocument>
   );
 }
