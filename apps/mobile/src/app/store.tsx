@@ -29,7 +29,6 @@ import {
   isPurchaseCancelled,
   loadStoreProductsForPacks,
   purchaseCreditPack,
-  restoreAndReconcilePurchases,
 } from '@/lib/billing';
 import { toast } from '@/lib/toast';
 import type { PurchasesStoreProduct } from 'react-native-purchases';
@@ -153,7 +152,6 @@ export default function StoreScreen() {
   const [page, setPage] = useState(1);
   const [storeProducts, setStoreProducts] = useState<Record<string, PurchasesStoreProduct>>({});
   const [purchasePackId, setPurchasePackId] = useState<string | null>(null);
-  const [restoreLoading, setRestoreLoading] = useState(false);
   const hasLoadedRef = useRef(false);
   const PAGE_SIZE = 5;
 
@@ -207,30 +205,6 @@ export default function StoreScreen() {
     },
     [loadStatic, tCredits],
   );
-
-  const handleRestore = useCallback(async () => {
-    if (!isBillingAvailable()) {
-      toast.error(tCredits('billingUnavailable'));
-      return;
-    }
-
-    setRestoreLoading(true);
-    try {
-      const results = await restoreAndReconcilePurchases(packs);
-      await loadStatic(true);
-
-      if (results.length === 0) {
-        toast.info(tCredits('restoreEmpty'));
-        return;
-      }
-
-      toast.success(tCredits('restoreSuccess').replace('{count}', String(results.length)));
-    } catch {
-      toast.error(tCredits('restoreFailed'));
-    } finally {
-      setRestoreLoading(false);
-    }
-  }, [loadStatic, packs, tCredits]);
 
   const { refreshing, handleRefresh } = usePullToRefresh(() => loadStatic(true));
 
@@ -299,20 +273,6 @@ export default function StoreScreen() {
           </View>
         </View>
         <Text style={styles.storeDesc}>{tCredits('storeDescription')}</Text>
-        <TouchableOpacity
-          style={[styles.restoreButton, restoreLoading && styles.restoreButtonDisabled]}
-          onPress={() => void handleRestore()}
-          disabled={restoreLoading}
-        >
-          {restoreLoading ? (
-            <ActivityIndicator size="small" color={colors.foreground} />
-          ) : (
-            <>
-              <Ionicons name="refresh-outline" size={16} color={colors.foreground} />
-              <Text style={styles.restoreButtonText}>{tCredits('restorePurchases')}</Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
 
       {/* Balance card */}
@@ -483,6 +443,7 @@ export default function StoreScreen() {
             const reasonLabel = reasonKey
               ? tCredits(reasonKey as Parameters<typeof tCredits>[0])
               : tx.reason;
+            const note = shouldDisplayTransactionNote(tx.reason, tx.note) ? tx.note : null;
             return (
               <View
                 key={tx.id}
@@ -493,7 +454,7 @@ export default function StoreScreen() {
               >
                 <View style={styles.txLeft}>
                   <Text style={styles.txReason}>{reasonLabel}</Text>
-                  {tx.note ? <Text style={styles.txNote}>{tx.note}</Text> : null}
+                  {note ? <Text style={styles.txNote}>{note}</Text> : null}
                   <Text style={styles.txDate}>
                     {new Date(tx.created_at).toLocaleString(getLocale())}
                   </Text>
@@ -525,6 +486,18 @@ function formatPackPrice(
   }
 
   return tCredits('buyNow' as Parameters<typeof tCredits>[0]);
+}
+
+function shouldDisplayTransactionNote(reason: string, note: string | null): boolean {
+  if (!note) return false;
+
+  // Store reconciliation notes are currently technical backend strings.
+  // The localized reason label is enough for the user-facing history list.
+  if (reason === 'pack_purchase' || reason === 'refund_store_revoke') {
+    return false;
+  }
+
+  return true;
 }
 
 function createStyles(colors: ReturnType<typeof useColors>) {
@@ -589,27 +562,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       color: colors.mutedForeground,
       lineHeight: 19,
       marginTop: 4,
-    },
-    restoreButton: {
-      marginTop: 12,
-      alignSelf: 'flex-start',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    restoreButtonDisabled: {
-      opacity: 0.6,
-    },
-    restoreButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.foreground,
     },
     // Balance card
     balanceCard: {

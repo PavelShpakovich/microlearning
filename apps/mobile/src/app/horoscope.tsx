@@ -76,7 +76,6 @@ export default function HoroscopeScreen() {
 
   const insets = useSafeAreaInsets();
   const [forecast, setForecast] = useState<DailyForecastRecord | null>(null);
-  const [preview, setPreview] = useState(false);
   const [fullAccessRequired, setFullAccessRequired] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -97,7 +96,6 @@ export default function HoroscopeScreen() {
     try {
       const data: DailyForecastResponse = await forecastsApi.getDailyForecast();
       setForecast(data.forecast);
-      setPreview(data.preview);
       setFullAccessRequired(data.fullAccessRequired);
       setDisplayName(data.displayName ?? '');
       if (data.forecast?.status === 'pending') {
@@ -126,7 +124,6 @@ export default function HoroscopeScreen() {
       try {
         const data = await forecastsApi.getDailyForecast();
         setForecast(data.forecast);
-        setPreview(data.preview);
         setFullAccessRequired(data.fullAccessRequired);
         setDisplayName(data.displayName ?? '');
         if (data.forecast?.status === 'ready' || data.forecast?.status === 'error') {
@@ -339,6 +336,8 @@ export default function HoroscopeScreen() {
   const keyTheme = content?.keyTheme ?? '';
   const moonPhase = content?.moonPhase ?? '';
   const paragraphs = interpretation.split('\n\n').filter(Boolean);
+  const isLockedPreview = fullAccessRequired;
+  const visibleParagraphs = isLockedPreview ? paragraphs.slice(0, 1) : paragraphs;
 
   const forecastDate = forecast.target_start_date
     ? new Date(`${forecast.target_start_date}T12:00:00`)
@@ -368,7 +367,7 @@ export default function HoroscopeScreen() {
             <Text style={styles.eyebrow}>{tHoro('pageTitle')}</Text>
             <Text style={styles.title}>{displayName || tHoro('pageTitle')}</Text>
           </View>
-          {!fullAccessRequired && (
+          {!isLockedPreview && (
             <TouchableOpacity
               style={styles.regenerateButton}
               onPress={handleRegeneratePress}
@@ -394,22 +393,22 @@ export default function HoroscopeScreen() {
       ) : null}
 
       {/* Moon phase — full access only */}
-      {!preview && moonPhase ? (
+      {!isLockedPreview && moonPhase ? (
         <View style={styles.moonPhaseRow}>
           <Text style={styles.moonPhaseText}>{moonPhase}</Text>
         </View>
       ) : null}
 
       {/* Interpretation card */}
-      {paragraphs.length > 0 ? (
+      {visibleParagraphs.length > 0 ? (
         <View style={styles.interpretationBlock}>
-          {paragraphs.map((para, i) => (
+          {visibleParagraphs.map((para, i) => (
             <Text key={i} style={[styles.interpretationText, i > 0 && { marginTop: 12 }]}>
               {para}
             </Text>
           ))}
           {/* Fade overlay for preview */}
-          {preview && <View style={styles.previewFade} pointerEvents="none" />}
+          {isLockedPreview && <View style={styles.previewFade} pointerEvents="none" />}
         </View>
       ) : null}
 
@@ -435,7 +434,7 @@ export default function HoroscopeScreen() {
       )}
 
       {/* Advice block — full access only */}
-      {!preview && advice ? (
+      {!isLockedPreview && advice ? (
         <View style={styles.adviceBlock}>
           <Text style={styles.adviceLabel}>{tHoro('adviceLabel')}</Text>
           <Text style={styles.adviceText}>{advice}</Text>

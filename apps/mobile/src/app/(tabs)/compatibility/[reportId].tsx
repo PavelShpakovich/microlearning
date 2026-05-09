@@ -1008,7 +1008,7 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       flex: 1,
       letterSpacing: -0.3,
     },
-    sectionBody: { paddingLeft: 38, gap: 10 },
+    sectionBody: { gap: 10 },
     sectionParagraph: { fontSize: 15, color: colors.foreground, lineHeight: 26 },
 
     // ── Advice ────────────────────────────────────────────────────────────────────

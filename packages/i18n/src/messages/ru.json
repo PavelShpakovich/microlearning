@@ -1160,7 +1160,7 @@
     "forecastPreview": "Предварительный просмотр",
     "unlockForecast": "Открыть полный прогноз",
     "unlockChat": "Разблокировать чат",
-    "reasonPackPurchase": "Покупка пакета",
+    "reasonPackPurchase": "Покупка кредитов",
     "reasonAdminGrant": "Начисление администратором",
     "reasonAdminRevoke": "Списание администратором",
     "reasonReadingDebit": "Натальный разбор",
@@ -1170,7 +1170,7 @@
     "reasonWelcomeBonus": "Бонус при регистрации",
     "reasonRefundLlmFailure": "Возврат (ошибка генерации)",
     "reasonRefundAdmin": "Возврат администратором",
-    "reasonRefundStoreRevoke": "Возврат через магазин"
+    "reasonRefundStoreRevoke": "Возврат покупки"
   },
   "adminCredits": {
     "grantCredits": "Начислить кредиты",

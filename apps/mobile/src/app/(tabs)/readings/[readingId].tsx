@@ -740,7 +740,6 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       letterSpacing: -0.3,
     },
     sectionBody: {
-      paddingLeft: 38,
       gap: 10,
     },
     sectionParagraph: {

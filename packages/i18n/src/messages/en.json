@@ -1160,7 +1160,7 @@
     "forecastPreview": "Preview",
     "unlockForecast": "Unlock full forecast",
     "unlockChat": "Unlock chat",
-    "reasonPackPurchase": "Pack purchase",
+    "reasonPackPurchase": "Credit purchase",
     "reasonAdminGrant": "Admin grant",
     "reasonAdminRevoke": "Admin deduction",
     "reasonReadingDebit": "Natal reading",
@@ -1170,7 +1170,7 @@
     "reasonWelcomeBonus": "Welcome bonus",
     "reasonRefundLlmFailure": "Refund (generation error)",
     "reasonRefundAdmin": "Admin refund",
-    "reasonRefundStoreRevoke": "Store refund"
+    "reasonRefundStoreRevoke": "Purchase refund"
   },
   "adminCredits": {
     "grantCredits": "Grant credits",

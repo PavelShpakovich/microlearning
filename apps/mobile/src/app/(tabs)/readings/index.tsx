@@ -47,7 +47,7 @@ function ReadingsListSkeleton() {
         <Skeleton width={'85%'} height={12} style={{ marginTop: 8 }} />
       </View>
       {/* Search bar skeleton */}
-      <View style={{ paddingHorizontal: 10, marginBottom: 10 }}>
+      <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
         <Skeleton width={'100%'} height={40} borderRadius={10} />
       </View>
       {/* Filter chips — dynamic based on READING_TYPES */}
@@ -55,7 +55,7 @@ function ReadingsListSkeleton() {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.filterScroll}
-        contentContainerStyle={[styles.filterRow, { paddingLeft: 12 }]}
+        contentContainerStyle={[styles.filterRow, { paddingHorizontal: 20 }]}
       >
         {['all', 'tarot', 'natal', 'transit', 'synastry'].map((_, i) => (
           <Skeleton

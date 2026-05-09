@@ -56,6 +56,11 @@ export default function StorePage() {
     }
   };
 
+  const shouldDisplayTransactionNote = (reason: string, note: string | null) => {
+    if (!note) return false;
+    return reason !== 'pack_purchase' && reason !== 'refund_store_revoke';
+  };
+
   const costItems = costs
     ? [
         {
@@ -288,7 +293,7 @@ export default function StorePage() {
                           {new Date(txn.created_at).toLocaleString('ru-RU')}
                         </span>
                       </div>
-                      {txn.note ? (
+                      {shouldDisplayTransactionNote(txn.reason, txn.note) ? (
                         <p className="mt-1 text-xs text-muted-foreground wrap-break-word">
                           {txn.note}
                         </p>
