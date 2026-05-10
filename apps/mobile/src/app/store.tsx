@@ -701,8 +701,8 @@ function createStyles(colors: ReturnType<typeof useColors>) {
     },
     buyButton: {
       minWidth: 96,
+      height: 40,
       paddingHorizontal: 14,
-      paddingVertical: 10,
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',

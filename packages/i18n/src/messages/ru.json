@@ -444,7 +444,12 @@
     "resetUsageSuccess": "Счётчики сброшены",
     "failedResetUsage": "Не удалось сбросить счётчики",
     "resetUsageConfirmTitle": "Сбросить счётчики?",
-    "resetUsageConfirmDesc": "Обнулить использование за текущий месяц для {user}?"
+    "resetUsageConfirmDesc": "Обнулить использование за текущий месяц для {user}?",
+    "resetAllUsage": "Сбросить всех",
+    "resetAllUsageConfirmTitle": "Сбросить счётчики всех?",
+    "resetAllUsageConfirmDesc": "Обнулить использование за текущий месяц для всех пользователей. Это действие необратимо.",
+    "resetAllUsageSuccess": "Счётчики всех пользователей сброшены",
+    "failedResetAllUsage": "Не удалось сбросить счётчики"
   },
   "workspace": {
     "chartsPageTitle": "Карты",
@@ -1202,7 +1207,13 @@
     "productName_follow_up_pack": "Чат",
     "productName_natal_report": "Натальный разбор",
     "productName_compatibility_report": "Совместимость",
-    "productName_forecast_report": "Прогноз"
+    "productName_forecast_report": "Прогноз",
+    "productName_career": "Карьера",
+    "productName_natal_overview": "Натальный обзор",
+    "productName_transit": "Транзиты",
+    "productName_personality": "Личность",
+    "productName_strengths": "Сильные стороны",
+    "productName_love": "Любовь"
   },
   "adminLlm": {
     "title": "LLM-провайдер",

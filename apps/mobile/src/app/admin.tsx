@@ -479,11 +479,13 @@ export default function AdminScreen() {
   const insets = useSafeAreaInsets();
   const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const t = useTranslations('admin');
+  const tCredits = useTranslations('adminCredits');
   const tCommon = useTranslations('common');
   const confirm = useConfirm();
 
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [resetAllLoading, setResetAllLoading] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -590,6 +592,31 @@ export default function AdminScreen() {
     }
   }
 
+  async function handleResetAllUsage() {
+    const ok = await confirm({
+      title: t('resetAllUsageConfirmTitle'),
+      description: t('resetAllUsageConfirmDesc'),
+      confirmText: t('resetAllUsage'),
+      cancelText: tCommon('cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    setResetAllLoading(true);
+    try {
+      await runToastMutation({
+        action: () => adminFetch('/api/admin/reset-all-usage', { method: 'POST' }),
+        successMessage: t('resetAllUsageSuccess'),
+        errorMessage: t('failedResetAllUsage'),
+        toastKey: 'admin-reset-all-usage',
+        onSuccess: () => void loadAll(1, true),
+      });
+    } catch {
+      // handled by runToastMutation
+    } finally {
+      setResetAllLoading(false);
+    }
+  }
+
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     return (
@@ -664,6 +691,18 @@ export default function AdminScreen() {
               </TouchableOpacity>
               <Text style={styles.title}>{t('title')}</Text>
               <TouchableOpacity
+                onPress={handleResetAllUsage}
+                style={styles.refreshBtn}
+                hitSlop={8}
+                disabled={resetAllLoading}
+              >
+                {resetAllLoading ? (
+                  <ActivityIndicator size="small" color={colors.mutedForeground} />
+                ) : (
+                  <Ionicons name="close-circle-outline" size={20} color={colors.mutedForeground} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={() => void loadAll(page)}
                 style={styles.refreshBtn}
                 hitSlop={8}
@@ -678,6 +717,47 @@ export default function AdminScreen() {
                 title={t('analyticsTitle')}
                 stats={analyticsStats}
               />
+
+              {/* Readings by type */}
+              {analyticsLoading ? (
+                <View style={[styles.card, { gap: 8 }]}>
+                  <View style={styles.cardHeader}>
+                    <Skeleton width={15} height={15} borderRadius={4} />
+                    <Skeleton width={140} height={13} />
+                  </View>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} height={36} borderRadius={8} />
+                  ))}
+                </View>
+              ) : analytics && Object.keys(analytics.readingsByType ?? {}).length > 0 ? (
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="list-outline" size={15} color={colors.primary} />
+                    <Text style={styles.cardTitle}>{t('analyticsReadingTypes')}</Text>
+                  </View>
+                  {Object.entries(analytics.readingsByType).map(([kind, count], index, arr) => {
+                    const labelKey = `productName_${kind}` as Parameters<typeof tCredits>[0];
+                    let label: string;
+                    try {
+                      label = tCredits(labelKey) || kind;
+                    } catch {
+                      label = kind;
+                    }
+                    return (
+                      <View
+                        key={kind}
+                        style={[
+                          styles.readingTypeRow,
+                          index === arr.length - 1 && styles.readingTypeRowLast,
+                        ]}
+                      >
+                        <Text style={styles.readingTypeLabel}>{label}</Text>
+                        <Text style={styles.readingTypeValue}>{count}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
 
               <AdminUsersHeaderCard
                 title={t('usersTitle')}
@@ -925,6 +1005,18 @@ function createStyles(colors: ReturnType<typeof useColors>) {
 
     emptyBox: { alignItems: 'center', paddingVertical: 40, gap: 10 },
     emptyText: { fontSize: 14, color: colors.mutedForeground },
+
+    readingTypeRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    readingTypeRowLast: { borderBottomWidth: 0 },
+    readingTypeLabel: { fontSize: 14, color: colors.foreground, flex: 1 },
+    readingTypeValue: { fontSize: 14, fontWeight: '600', color: colors.primary },
 
     pagination: {
       flexDirection: 'row',

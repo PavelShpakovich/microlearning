@@ -444,7 +444,12 @@
     "resetUsageSuccess": "Counters reset",
     "failedResetUsage": "Failed to reset counters",
     "resetUsageConfirmTitle": "Reset counters?",
-    "resetUsageConfirmDesc": "Reset current month usage for {user}?"
+    "resetUsageConfirmDesc": "Reset current month usage for {user}?",
+    "resetAllUsage": "Reset all",
+    "resetAllUsageConfirmTitle": "Reset all counters?",
+    "resetAllUsageConfirmDesc": "This will reset this month's usage counters for every user. This cannot be undone.",
+    "resetAllUsageSuccess": "All usage counters reset",
+    "failedResetAllUsage": "Failed to reset counters"
   },
   "workspace": {
     "chartsPageTitle": "Charts",
@@ -1202,7 +1207,13 @@
     "productName_follow_up_pack": "Chat",
     "productName_natal_report": "Natal reading",
     "productName_compatibility_report": "Compatibility",
-    "productName_forecast_report": "Forecast"
+    "productName_forecast_report": "Forecast",
+    "productName_career": "Career",
+    "productName_natal_overview": "Natal overview",
+    "productName_transit": "Transits",
+    "productName_personality": "Personality",
+    "productName_strengths": "Strengths",
+    "productName_love": "Love"
   },
   "adminLlm": {
     "title": "LLM Provider",
