@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 
 import { openCalendar, openNewChart, routes } from '@/lib/navigation';
@@ -20,7 +19,7 @@ import { runToastMutation } from '@/lib/mutation-toast';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 function HoroscopeSkeleton() {
@@ -354,10 +353,10 @@ export default function HoroscopeScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

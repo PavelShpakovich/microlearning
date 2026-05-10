@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { calendarApi } from '@clario/api-client';
@@ -11,7 +11,7 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { goBackTo, routes } from '@/lib/navigation';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function CalendarSkeleton() {
   const colors = useColors();
@@ -150,10 +150,10 @@ export default function CalendarScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

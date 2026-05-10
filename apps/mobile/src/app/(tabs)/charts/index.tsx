@@ -14,7 +14,7 @@ import { getChartElement, getElementColors } from '@/lib/chart-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { SwipeToDeleteRow } from '@/components/SwipeToDeleteRow';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function ChartsListSkeleton() {
   const colors = useColors();
@@ -131,134 +131,138 @@ export default function ChartsListScreen() {
     return <ChartsListSkeleton />;
   }
 
+  const listEmptyComponent = (
+    <View style={styles.emptyWrapper}>
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyTitle}>{tWorkspace('noChartsTitle')}</Text>
+        <Text style={styles.emptyDesc}>{tWorkspace('noChartsDescription')}</Text>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => openNewChart(routes.tabs.charts)}
+        >
+          <Text style={styles.primaryButtonText}>{tWorkspace('createChart')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {charts.length === 0 ? (
-        <View style={styles.emptyWrapper}>
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>{tWorkspace('noChartsTitle')}</Text>
-            <Text style={styles.emptyDesc}>{tWorkspace('noChartsDescription')}</Text>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => openNewChart(routes.tabs.charts)}
-            >
-              <Text style={styles.primaryButtonText}>{tWorkspace('createChart')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <FlatList
-          data={charts}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          ListHeaderComponent={
-            <>
-              <View
-                style={[styles.headerBar, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}
-              >
-                <View style={styles.headerTop}>
-                  <View style={styles.headerText}>
-                    <Text style={styles.eyebrow}>{tWorkspace('sectionLabel')}</Text>
-                    <Text style={styles.pageTitle}>{tWorkspace('heading')}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => openNewChart(routes.tabs.charts)}
-                  >
-                    <Ionicons name="add" size={20} color={colors.primaryForeground} />
-                  </TouchableOpacity>
+      <FlatList
+        data={charts}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <AppRefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
+          />
+        }
+        ListHeaderComponent={
+          <>
+            <View style={[styles.headerBar, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}>
+              <View style={styles.headerTop}>
+                <View style={styles.headerText}>
+                  <Text style={styles.eyebrow}>{tWorkspace('sectionLabel')}</Text>
+                  <Text style={styles.pageTitle}>{tWorkspace('heading')}</Text>
                 </View>
-                <Text style={styles.pageDesc}>{tWorkspace('description')}</Text>
-              </View>
-              <View style={styles.listSectionHeader}>
-                <Text style={styles.listSectionTitle}>{tWorkspace('savedCharts')}</Text>
-                <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{charts.length}</Text>
-                </View>
-              </View>
-            </>
-          }
-          renderItem={({ item }) => {
-            const element = getChartElement(item);
-            const elementColors = getElementColors(element, colors);
-            const initial = (item.person_name ?? '?')[0]?.toUpperCase() ?? '?';
-            const bigThree = item.big_three;
-            const birthTimeLine =
-              item.birth_time_known && item.birth_time
-                ? `${item.birth_date} · ${item.birth_time}`
-                : item.birth_date;
-
-            return (
-              <SwipeToDeleteRow onDeletePress={() => confirmDelete(item)}>
                 <TouchableOpacity
-                  style={styles.card}
-                  onPress={() => openChartDetail(item.id, routes.tabs.charts)}
+                  style={styles.addButton}
+                  onPress={() => openNewChart(routes.tabs.charts)}
                 >
-                  {/* Element accent bar */}
-                  <View style={[styles.cardAccent, { backgroundColor: elementColors.text }]} />
-
-                  <View style={styles.cardBody}>
-                    {/* Avatar */}
-                    <View style={[styles.avatar, { backgroundColor: elementColors.bg }]}>
-                      <Text style={[styles.avatarText, { color: elementColors.text }]}>
-                        {initial}
-                      </Text>
-                    </View>
-
-                    {/* Info */}
-                    <View style={styles.cardInfo}>
-                      <View style={styles.cardHeaderRow}>
-                        <Text style={styles.cardLabel} numberOfLines={1}>
-                          {item.label}
-                        </Text>
-                        <View style={[styles.typeBadge, { backgroundColor: elementColors.bg }]}>
-                          <Text style={[styles.typeBadgeText, { color: elementColors.text }]}>
-                            {subjectTypeLabels[item.subject_type] ?? item.subject_type}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text style={styles.cardSub}>{item.person_name}</Text>
-                      <Text style={styles.cardSub}>
-                        {birthTimeLine}
-                        {item.city ? ` · ${item.city}` : ''}
-                      </Text>
-
-                      {/* Big Three badges */}
-                      {bigThree && (bigThree.sun || bigThree.moon || bigThree.asc) && (
-                        <View style={styles.bigThreeRow}>
-                          {bigThree.sun && (
-                            <View style={[styles.bigThreeBadge, styles.sunBadge]}>
-                              <Text style={[styles.bigThreeText, styles.sunText]}>
-                                {'☉ ' + (signsMap[bigThree.sun] ?? bigThree.sun)}
-                              </Text>
-                            </View>
-                          )}
-                          {bigThree.moon && (
-                            <View style={[styles.bigThreeBadge, styles.moonBadge]}>
-                              <Text style={[styles.bigThreeText, styles.moonText]}>
-                                {'☽ ' + (signsMap[bigThree.moon] ?? bigThree.moon)}
-                              </Text>
-                            </View>
-                          )}
-                          {bigThree.asc && (
-                            <View style={[styles.bigThreeBadge, styles.ascBadge]}>
-                              <Text style={[styles.bigThreeText, styles.ascText]}>
-                                {'↑ ' + (signsMap[bigThree.asc] ?? bigThree.asc)}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  </View>
+                  <Ionicons name="add" size={20} color={colors.primaryForeground} />
                 </TouchableOpacity>
-              </SwipeToDeleteRow>
-            );
-          }}
-        />
-      )}
+              </View>
+              <Text style={styles.pageDesc}>{tWorkspace('description')}</Text>
+            </View>
+            <View style={styles.listSectionHeader}>
+              <Text style={styles.listSectionTitle}>{tWorkspace('savedCharts')}</Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{charts.length}</Text>
+              </View>
+            </View>
+          </>
+        }
+        ListEmptyComponent={listEmptyComponent}
+        renderItem={({ item }) => {
+          const element = getChartElement(item);
+          const elementColors = getElementColors(element, colors);
+          const initial = (item.person_name ?? '?')[0]?.toUpperCase() ?? '?';
+          const bigThree = item.big_three;
+          const birthTimeLine =
+            item.birth_time_known && item.birth_time
+              ? `${item.birth_date} · ${item.birth_time}`
+              : item.birth_date;
+
+          return (
+            <SwipeToDeleteRow onDeletePress={() => confirmDelete(item)}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => openChartDetail(item.id, routes.tabs.charts)}
+              >
+                {/* Element accent bar */}
+                <View style={[styles.cardAccent, { backgroundColor: elementColors.text }]} />
+
+                <View style={styles.cardBody}>
+                  {/* Avatar */}
+                  <View style={[styles.avatar, { backgroundColor: elementColors.bg }]}>
+                    <Text style={[styles.avatarText, { color: elementColors.text }]}>
+                      {initial}
+                    </Text>
+                  </View>
+
+                  {/* Info */}
+                  <View style={styles.cardInfo}>
+                    <View style={styles.cardHeaderRow}>
+                      <Text style={styles.cardLabel} numberOfLines={1}>
+                        {item.label}
+                      </Text>
+                      <View style={[styles.typeBadge, { backgroundColor: elementColors.bg }]}>
+                        <Text style={[styles.typeBadgeText, { color: elementColors.text }]}>
+                          {subjectTypeLabels[item.subject_type] ?? item.subject_type}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.cardSub}>{item.person_name}</Text>
+                    <Text style={styles.cardSub}>
+                      {birthTimeLine}
+                      {item.city ? ` · ${item.city}` : ''}
+                    </Text>
+
+                    {/* Big Three badges */}
+                    {bigThree && (bigThree.sun || bigThree.moon || bigThree.asc) && (
+                      <View style={styles.bigThreeRow}>
+                        {bigThree.sun && (
+                          <View style={[styles.bigThreeBadge, styles.sunBadge]}>
+                            <Text style={[styles.bigThreeText, styles.sunText]}>
+                              {'☉ ' + (signsMap[bigThree.sun] ?? bigThree.sun)}
+                            </Text>
+                          </View>
+                        )}
+                        {bigThree.moon && (
+                          <View style={[styles.bigThreeBadge, styles.moonBadge]}>
+                            <Text style={[styles.bigThreeText, styles.moonText]}>
+                              {'☽ ' + (signsMap[bigThree.moon] ?? bigThree.moon)}
+                            </Text>
+                          </View>
+                        )}
+                        {bigThree.asc && (
+                          <View style={[styles.bigThreeBadge, styles.ascBadge]}>
+                            <Text style={[styles.bigThreeText, styles.ascText]}>
+                              {'↑ ' + (signsMap[bigThree.asc] ?? bigThree.asc)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </SwipeToDeleteRow>
+          );
+        }}
+      />
     </View>
   );
 }
@@ -326,6 +330,7 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       paddingTop: 4,
       paddingBottom: 32,
       gap: 10,
+      flexGrow: 1,
     },
 
     // ── Chart card ───────────────────────────────────────────────────────────────

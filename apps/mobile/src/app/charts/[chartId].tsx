@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
   goBackTo,
@@ -35,7 +35,7 @@ import type { WheelPosition, WheelAspect } from '@/components/ChartWheel';
 import { Skeleton } from '@/components/Skeleton';
 import { ApiClientError } from '@clario/api-client';
 import { useInsufficientCredits } from '@/lib/insufficient-credits-context';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 import { useCreditSpendConfirm } from '@/hooks/useCreditSpendConfirm';
 
 function ChartDetailSkeleton() {
@@ -757,10 +757,10 @@ export default function ChartDetailScreen() {
         style={styles.container}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl
+          <AppRefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
           />
         }
       >

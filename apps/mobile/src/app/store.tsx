@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +21,7 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 import {
   getPlatformProductId,
   isBillingAvailable,
@@ -237,14 +236,24 @@ export default function StoreScreen() {
 
   if (!balance || !pricing) {
     return (
-      <View style={styles.center}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, styles.center]}
+        refreshControl={
+          <AppRefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
+          />
+        }
+      >
         <Ionicons name="cloud-offline-outline" size={44} color={colors.border} />
         <Text style={styles.errorTitle}>{tCredits('loadErrorTitle')}</Text>
         <Text style={styles.errorText}>{tCredits('loadErrorDescription')}</Text>
         <TouchableOpacity style={styles.primaryAction} onPress={() => void loadStatic()}>
           <Text style={styles.primaryActionText}>{tCredits('loadErrorRetry')}</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     );
   }
 
@@ -255,10 +264,10 @@ export default function StoreScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

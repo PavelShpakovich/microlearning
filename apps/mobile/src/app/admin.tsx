@@ -32,7 +32,7 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function UserRowSkeleton() {
   const colors = useColors();
@@ -690,8 +690,13 @@ export default function AdminScreen() {
             </View>
           </>
         }
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+        refreshControl={
+          <AppRefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
+          />
+        }
         data={
           usersLoading && users.length === 0
             ? (Array.from({ length: 8 }, (_, i) => ({ id: `sk-${i}` })) as AdminUser[])

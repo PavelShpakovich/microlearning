@@ -18,7 +18,7 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/Skeleton';
 import { SwipeToDeleteRow } from '@/components/SwipeToDeleteRow';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function CompatibilityListSkeleton() {
   const colors = useColors();
@@ -170,8 +170,13 @@ export default function CompatibilityListScreen() {
         data={reports}
         keyExtractor={(r) => r.id}
         contentContainerStyle={styles.list}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+        refreshControl={
+          <AppRefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
+          />
+        }
         ListHeaderComponent={
           <View style={[styles.headerBar, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}>
             <View style={styles.headerTop}>

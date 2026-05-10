@@ -8,7 +8,6 @@ import {
   ScrollView,
   Switch,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { openAdmin, openStore, routes } from '@/lib/navigation';
@@ -29,7 +28,7 @@ import { TONE_STYLES } from '@clario/types';
 import { TimezonePickerModal, timezoneLabel } from '@/components/TimezonePickerModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { Skeleton, SkeletonInput, SkeletonSelect } from '@/components/Skeleton';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function SettingsSkeleton() {
   const colors = useColors();
@@ -251,10 +250,10 @@ export default function SettingsScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

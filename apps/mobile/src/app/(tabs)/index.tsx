@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -31,7 +31,7 @@ import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { getChartElement, getElementColors } from '@/lib/chart-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton, SkeletonInput } from '@/components/Skeleton';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 const SIGN_ELEMENT: Record<string, string> = {
   aries: 'fire',
@@ -271,10 +271,10 @@ export default function DashboardScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

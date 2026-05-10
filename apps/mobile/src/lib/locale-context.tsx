@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { type SupportedLocale, allMessages } from '@clario/i18n';
-import { setLocale, getLocale } from '@/lib/i18n';
+import { setLocale, useCurrentLocale } from '@/lib/i18n';
 import { profileApi } from '@clario/api-client';
 
 interface LocaleContextValue {
@@ -14,7 +14,7 @@ const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
 const LOCALE_STORAGE_KEY = 'clario_locale';
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<SupportedLocale>(getLocale());
+  const locale = useCurrentLocale();
 
   // Hydrate from SecureStore on mount — overrides the device-language default
   // and keeps both the global variable and React state in sync.
@@ -23,7 +23,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       .then((saved) => {
         if (saved && saved in allMessages) {
           setLocale(saved as SupportedLocale);
-          setLocaleState(saved as SupportedLocale);
         }
       })
       .catch(() => {});
@@ -35,7 +34,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       newLocale = 'ru';
     }
     setLocale(newLocale);
-    setLocaleState(newLocale);
     try {
       await SecureStore.setItemAsync(LOCALE_STORAGE_KEY, newLocale);
     } catch (e) {

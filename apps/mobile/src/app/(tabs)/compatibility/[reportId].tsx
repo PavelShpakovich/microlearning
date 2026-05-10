@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { goBackTo, openChartDetail, routes } from '@/lib/navigation';
@@ -26,7 +25,7 @@ import { DetailNotFoundState } from '@/components/DetailNotFoundState';
 import { Skeleton } from '@/components/Skeleton';
 import { useGenerationPolling } from '@/hooks/useGenerationPolling';
 import { useGenerationStepTicker } from '@/hooks/useGenerationStepTicker';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 type CompatType = 'romantic' | 'friendship' | 'business' | 'family';
 
@@ -465,10 +464,10 @@ export default function CompatibilityDetailScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
@@ -33,7 +32,7 @@ import { DetailNotFoundState } from '@/components/DetailNotFoundState';
 import { Skeleton } from '@/components/Skeleton';
 import { useGenerationPolling } from '@/hooks/useGenerationPolling';
 import { useGenerationStepTicker } from '@/hooks/useGenerationStepTicker';
-import { usePullToRefresh } from '@/lib/refresh';
+import { AppRefreshControl, usePullToRefresh } from '@/lib/refresh';
 
 function ReadingDetailSkeleton() {
   const colors = useColors();
@@ -275,10 +274,10 @@ export default function ReadingDetailScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       refreshControl={
-        <RefreshControl
+        <AppRefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.primary}
+          progressViewOffset={insets.top + SCREEN_TOP_INSET_OFFSET}
         />
       }
     >
