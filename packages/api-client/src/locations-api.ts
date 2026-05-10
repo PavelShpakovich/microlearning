@@ -22,7 +22,7 @@ export interface CityOption {
 }
 
 class LocationsApi {
-  async searchCities(query: string): Promise<CityOption[]> {
+  async searchCities(query: string, locale = 'en'): Promise<CityOption[]> {
     if (query.length < 2) return [];
 
     try {
@@ -33,8 +33,9 @@ class LocationsApi {
       url.searchParams.set('addressdetails', '1');
       url.searchParams.set('featuretype', 'settlement');
 
+      const acceptLanguage = locale === 'ru' ? 'ru,en' : 'en,ru';
       const results = await fetchJson<NominatimResult[]>(url, {
-        headers: { 'Accept-Language': 'ru,en', 'User-Agent': 'Clario/1.0' },
+        headers: { 'Accept-Language': acceptLanguage, 'User-Agent': 'Clario/1.0' },
       });
 
       return results.map((result) => ({

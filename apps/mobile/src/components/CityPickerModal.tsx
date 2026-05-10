@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/lib/colors';
+import { useLocale } from '@/lib/locale-context';
 import { locationsApi } from '@clario/api-client';
 import type { CityOption } from '@clario/api-client';
 
@@ -19,14 +20,25 @@ interface Props {
   visible: boolean;
   /** Display name of the currently selected city, used to show a checkmark. */
   value: string;
+  title: string;
   placeholder: string;
+  emptyText: string;
   onSelect: (city: CityOption) => void;
   onClose: () => void;
 }
 
-export function CityPickerModal({ visible, value, placeholder, onSelect, onClose }: Props) {
+export function CityPickerModal({
+  visible,
+  value,
+  title,
+  placeholder,
+  emptyText,
+  onSelect,
+  onClose,
+}: Props) {
   const colors = useColors();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { locale } = useLocale();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CityOption[]>([]);
@@ -50,7 +62,7 @@ export function CityPickerModal({ visible, value, placeholder, onSelect, onClose
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const r = await locationsApi.searchCities(query);
+        const r = await locationsApi.searchCities(query, locale);
         setResults(r);
       } finally {
         setSearching(false);
@@ -78,7 +90,7 @@ export function CityPickerModal({ visible, value, placeholder, onSelect, onClose
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Город рождения</Text>
+          <Text style={styles.title}>{title}</Text>
           <TouchableOpacity onPress={onClose} hitSlop={8}>
             <Ionicons name="close" size={22} color={colors.mutedForeground} />
           </TouchableOpacity>
@@ -131,7 +143,7 @@ export function CityPickerModal({ visible, value, placeholder, onSelect, onClose
           ListEmptyComponent={
             query.length >= 2 && !searching ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyText}>Ничего не найдено</Text>
+                <Text style={styles.emptyText}>{emptyText}</Text>
               </View>
             ) : null
           }

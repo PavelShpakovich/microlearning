@@ -309,6 +309,7 @@
     "errorToastEdit": "Не удалось сохранить изменения",
     "selectPlaceholder": "Выберите",
     "notesCharCount": "{count}/500",
+    "citySearchTitle": "Город рождения",
     "citySearchLoading": "Поиск...",
     "citySearchNoResults": "Город не найден",
     "citySearchPlaceholder": "Введите название города",

@@ -242,7 +242,9 @@ export function ChartFormScreen({
             <CityPickerModal
               visible={cityModalOpen}
               value={cityDisplay}
+              title={tForm('citySearchTitle')}
               placeholder={tForm('citySearchPlaceholder')}
+              emptyText={tForm('citySearchNoResults')}
               onSelect={onSelectCity}
               onClose={() => onToggleCityModal(false)}
             />

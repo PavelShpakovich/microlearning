@@ -309,6 +309,7 @@
     "errorToastEdit": "Failed to save changes",
     "selectPlaceholder": "Select",
     "notesCharCount": "{count}/500",
+    "citySearchTitle": "Place of birth",
     "citySearchLoading": "Searching…",
     "citySearchNoResults": "City not found",
     "citySearchPlaceholder": "Enter city name",

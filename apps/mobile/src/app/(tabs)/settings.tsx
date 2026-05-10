@@ -142,7 +142,8 @@ export default function SettingsScreen() {
         supabase.auth.getSession(),
       ]);
       setDisplayName(profileData.display_name ?? '');
-      setTimezone(profileData.timezone ?? '');
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setTimezone(profileData.timezone ?? detectedTimezone ?? '');
       setEmail(session?.user?.email ?? '');
       setPrefs(prefsData);
       getAuthHeaders().then((headers) =>
@@ -172,9 +173,18 @@ export default function SettingsScreen() {
   async function handleSaveName() {
     setSavingName(true);
     try {
-      await profileApi.updateProfile({ displayName, timezone: timezone || null });
-      setSavedName(true);
-      setTimeout(() => setSavedName(false), 2000);
+      await runToastMutation({
+        action: () => profileApi.updateProfile({ displayName, timezone: timezone || undefined }),
+        successMessage: tSettings('nameSaved'),
+        errorMessage: tSettings('nameError'),
+        toastKey: 'mobile-save-profile',
+        onSuccess: () => {
+          setSavedName(true);
+          setTimeout(() => setSavedName(false), 2000);
+        },
+      });
+    } catch {
+      // Toast is handled by runToastMutation.
     } finally {
       setSavingName(false);
     }
@@ -305,9 +315,7 @@ export default function SettingsScreen() {
           visible={tzPickerOpen}
           value={timezone}
           locale={locale}
-          onSelect={(tz) => {
-            setTimezone(tz);
-          }}
+          onSelect={setTimezone}
           onClose={() => setTzPickerOpen(false)}
         />
 
