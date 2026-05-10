@@ -12,6 +12,7 @@
       "backgroundColor": "#0D1117"
     },
     "ios": {
+      "icon": "./assets/icon-ios.png",
       "supportsTablet": true,
       "bundleIdentifier": "by.tryclario.app",
       "infoPlist": {
