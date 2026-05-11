@@ -262,13 +262,23 @@ export default function HoroscopeScreen() {
 
   if (!forecast) {
     return (
-      <View style={styles.center}>
-        <Ionicons name="planet-outline" size={48} color={colors.border} />
-        <Text style={styles.noChartText}>{tHoro('noChartMessage')}</Text>
-        <TouchableOpacity onPress={() => openNewChart(routes.horoscope)}>
-          <Text style={styles.linkText}>{tWorkspace('createChart')}</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.headerBar, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}>
+          <View style={styles.headerTop}>
+            <View style={styles.headerText}>
+              <Text style={styles.eyebrow}>{tHoro('pageTitle')}</Text>
+              <Text style={styles.title}>{tHoro('pageTitle')}</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.center}>
+          <Ionicons name="planet-outline" size={48} color={colors.border} />
+          <Text style={styles.noChartText}>{tHoro('noChartMessage')}</Text>
+          <TouchableOpacity onPress={() => openNewChart(routes.horoscope)}>
+            <Text style={styles.linkText}>{tWorkspace('createChart')}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -282,9 +292,21 @@ export default function HoroscopeScreen() {
   // Generating
   if (forecast.status === 'pending' || forecast.status === 'generating') {
     return (
-      <View
-        style={[styles.generatingContainer, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}
-      >
+      <View style={[styles.container, styles.fullScreen]}>
+        <View
+          style={[
+            styles.headerBar,
+            styles.scrollContent,
+            { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET },
+          ]}
+        >
+          <View style={styles.headerTop}>
+            <View style={styles.headerText}>
+              <Text style={styles.eyebrow}>{tHoro('pageTitle')}</Text>
+              <Text style={styles.title}>{displayName || tHoro('pageTitle')}</Text>
+            </View>
+          </View>
+        </View>
         <View style={styles.generatingContent}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.generatingTitle}>{tHoro('generatingTitle')}</Text>
@@ -305,9 +327,21 @@ export default function HoroscopeScreen() {
   // Error
   if (forecast.status === 'error') {
     return (
-      <View
-        style={[styles.generatingContainer, { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET }]}
-      >
+      <View style={[styles.container, styles.fullScreen]}>
+        <View
+          style={[
+            styles.headerBar,
+            styles.scrollContent,
+            { paddingTop: insets.top + SCREEN_TOP_INSET_OFFSET },
+          ]}
+        >
+          <View style={styles.headerTop}>
+            <View style={styles.headerText}>
+              <Text style={styles.eyebrow}>{tHoro('pageTitle')}</Text>
+              <Text style={styles.title}>{displayName || tHoro('pageTitle')}</Text>
+            </View>
+          </View>
+        </View>
         <View style={styles.generatingContent}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
           <Text style={styles.errorTitle}>{tHoro('generatingErrorTitle')}</Text>
@@ -461,10 +495,8 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       paddingBottom: 48,
     },
     center: {
-      flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: colors.background,
+      paddingTop: 80,
       gap: 12,
       padding: 24,
     },
@@ -484,6 +516,9 @@ function createStyles(colors: ReturnType<typeof useColors>) {
       gap: 16,
       paddingHorizontal: 20,
       paddingBottom: 60,
+    },
+    fullScreen: {
+      flex: 1,
     },
     progressDots: {
       flexDirection: 'row',

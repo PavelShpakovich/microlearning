@@ -20,6 +20,9 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { SCREEN_TOP_INSET_OFFSET } from '@/lib/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleReadyNotification } from '@/lib/notifications';
+import { LinearGradient as _LinearGradient, type LinearGradientProps } from 'expo-linear-gradient';
+import type React from 'react';
+const ExpoLinearGradient = _LinearGradient as unknown as React.ComponentType<LinearGradientProps>;
 import { DetailErrorBanner } from '@/components/DetailErrorBanner';
 import { DetailNotFoundState } from '@/components/DetailNotFoundState';
 import { Skeleton } from '@/components/Skeleton';
@@ -584,7 +587,12 @@ export default function CompatibilityDetailScreen() {
           {/* Harmony score card */}
           <View style={styles.harmonyCard}>
             {/* Person pair header */}
-            <View style={styles.personPairRow}>
+            <ExpoLinearGradient
+              colors={['rgba(245,158,11,0.10)', 'rgba(99,102,241,0.06)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.personPairRow}
+            >
               <View style={styles.personCell}>
                 <View style={[styles.personAvatar, { backgroundColor: colors.primaryTint }]}>
                   <Text style={[styles.personInitial, { color: colors.primary }]}>
@@ -614,7 +622,7 @@ export default function CompatibilityDetailScreen() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </ExpoLinearGradient>
 
             {/* Gauge + score */}
             <View style={styles.gaugeSection}>
