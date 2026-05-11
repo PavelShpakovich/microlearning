@@ -348,7 +348,7 @@
     "section11Title": "11. Changes to the policy",
     "section11Body": "We may update this Policy as the app develops. If substantial changes are made, we will notify you by email or via an in‑app notification. The date at the top of the page shows the current version.",
     "section12Title": "12. Operator contact details",
-    "section12Body": "For questions regarding the processing of personal data, exercising your rights, or withdrawing consent, contact the operator at: pavelekname@gmail.com",
+    "section12Body": "For questions regarding the processing of personal data, exercising your rights, or withdrawing consent, contact the operator at:",
     "backToHome": "← Back to home"
   },
   "terms": {
@@ -360,7 +360,7 @@
     "section2Title": "2. Service description",
     "section2Body": "Clario Astrology is a mobile app for iOS and Android, available in the Apple App Store and Google Play. It provides personalized AI analysis based on birth data. You can create personal charts from birth data, obtain calculated chart data, generate structured readings, forecasts, compatibility reports and use the follow‑up question chat.",
     "section3Title": "3. Account registration",
-    "section3Body": "Registration requires a valid email address. You are responsible for the security of your login credentials and for actions taken through your account. By using the app, you confirm that you are at least 12 years old. Use by persons under 12 is allowed only with parental or legal guardian consent.",
+    "section3Body": "Registration requires a valid email address. You are responsible for the security of your login credentials and for actions taken through your account. By using the app, you confirm that you are at least 16 years old. Use by persons under 12 is allowed only with parental or legal guardian consent.",
     "section4Title": "4. Acceptable use",
     "section4Body": "You may not use the service for illegal activities, distribution of harmful or infringing content, or abuse of the service infrastructure. We may also restrict access if the service is used for mass automated content generation bypassing normal user scenarios.",
     "section5Title": "5. Service use and limitations",
@@ -379,12 +379,10 @@
     "section11Body": "We may restrict or terminate access to the app if you violate these Terms or create a risk to the product’s operation. You can delete your account at any time in the Settings page. After that, data is processed in accordance with the Privacy Policy.",
     "section12Title": "12. Changes to the terms",
     "section12Body": "We may update these Terms as the app develops. If changes are substantial, we will try to notify you by email or via an in‑app notification. Continuing to use the app after the changes take effect means you agree to the new version.",
-    "section13Title": "13. Applicable law",
-    "section13Body": "Disputes shall be resolved through negotiation. If no agreement can be reached, disputes will be resolved by the competent court.",
-    "section14Title": "14. App marketplace terms",
-    "section14Body": "The app is licensed, not sold. The license to the app is provided by the Operator. If you download or use the iOS version, the Apple Licensed Application End User License Agreement (EULA) and the Apple Media Services Terms and Conditions also apply. If you download or use the Android version, the Google Play Terms of Service and the applicable Google Play billing terms also apply. Apple Inc. and Google are not responsible for maintenance, support, repair, or any other services provided through the app, and they are not liable for any warranties, representations, or statements made by the Operator. All claims, losses, liabilities, damages, and expenses arising out of or related to the app must be submitted directly to the Operator, not to Apple or Google, except where mandatory platform rules provide otherwise.",
-    "section15Title": "15. Contact us",
-    "section15Body": "If you have questions about these Terms of Use, write to us: pavelekname@gmail.com",
+    "section13Title": "13. App marketplace terms",
+    "section13Body": "The app is licensed, not sold. The license to the app is provided by the Operator. If you download or use the iOS version, the Apple Licensed Application End User License Agreement (EULA) and the Apple Media Services Terms and Conditions also apply. If you download or use the Android version, the Google Play Terms of Service and the applicable Google Play billing terms also apply. Apple Inc. and Google are not responsible for maintenance, support, repair, or any other services provided through the app, and they are not liable for any warranties, representations, or statements made by the Operator. All claims, losses, liabilities, damages, and expenses arising out of or related to the app must be submitted directly to the Operator, not to Apple or Google, except where mandatory platform rules provide otherwise.",
+    "section14Title": "14. Contact us",
+    "section14Body": "If you have questions about these Terms of Use, write to us:",
     "backToHome": "← Back to home"
   },
   "admin": {

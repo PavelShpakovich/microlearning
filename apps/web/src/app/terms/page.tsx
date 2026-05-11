@@ -38,7 +38,6 @@ export default async function TermsPage() {
     { title: t('section12Title'), body: t('section12Body') },
     { title: t('section13Title'), body: t('section13Body') },
     { title: t('section14Title'), body: t('section14Body') },
-    { title: t('section15Title'), body: t('section15Body') },
   ];
 
   return (
@@ -63,13 +62,9 @@ export default async function TermsPage() {
           </div>
         ))}
 
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-3">{t('section13Title')}</h2>
-          <p className="text-muted-foreground leading-relaxed mb-2">{t('section13Body')}</p>
-          <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-medium">
-            {supportEmail}
-          </a>
-        </div>
+        <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-medium">
+          {supportEmail}
+        </a>
       </div>
     </main>
   );

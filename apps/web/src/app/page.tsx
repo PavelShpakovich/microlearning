@@ -68,6 +68,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
+  if (process.env.NEXT_PUBLIC_MOBILE_ONLY === 'true') redirect('/terms');
+
   const session = await auth();
   if (session) redirect('/dashboard');
 
@@ -226,7 +228,7 @@ export default async function LandingPage() {
           <FaqItem value="faq1" question={t('faq1Q')} answer={t('faq1A')} />
           <FaqItem value="faq2" question={t('faq2Q')} answer={t('faq2A')} />
           <FaqItem value="faq3" question={t('faq3Q')} answer={t('faq3A')} />
-          <FaqItem value="faq4" question={t('faq4Q')} answer={t('faq4A')} />
+          {/* <FaqItem value="faq4" question={t('faq4Q')} answer={t('faq4A')} /> */}
           <FaqItem value="faq5" question={t('faq5Q')} answer={t('faq5A')} />
           <FaqItem value="faq6" question={t('faq6Q')} answer={t('faq6A')} />
         </Accordion>

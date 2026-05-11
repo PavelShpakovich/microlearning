@@ -18,13 +18,7 @@ const PUBLIC_PAGES = [
 ];
 
 // Pages allowed when NEXT_PUBLIC_MOBILE_ONLY=true
-const MOBILE_ONLY_ALLOWED_PAGES = [
-  '/',
-  '/privacy',
-  '/terms',
-  '/auth/callback',
-  '/auth/reset-confirm',
-];
+const MOBILE_ONLY_ALLOWED_PAGES = ['/privacy', '/terms', '/auth/callback', '/auth/reset-confirm'];
 
 // Hardcoded: restrict web to mobile-only allowed pages.
 // Set to false to re-enable all pages.
@@ -44,14 +38,14 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── Mobile-only mode ────────────────────────────────────────────────────────
-  // When MOBILE_ONLY=true all page routes except landing, privacy, terms and
-  // auth/callback redirect to /. API routes are always allowed.
+  // When MOBILE_ONLY=true all page routes except privacy, terms and
+  // auth/callback redirect to /terms. API routes are always allowed.
   if (MOBILE_ONLY && !pathname.startsWith('/api')) {
     const allowed = MOBILE_ONLY_ALLOWED_PAGES.some(
       (p) => pathname === p || pathname.startsWith(p + '/'),
     );
     if (!allowed) {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/terms', request.url));
     }
   }
 
@@ -133,3 +127,4 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next|favicon\\.ico|[\\w-]+\\.[\\w]+$).*)'],
 };
+// kept for backward compatibility — actual config is re-declared in middleware.ts
