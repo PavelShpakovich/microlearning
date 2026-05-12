@@ -197,6 +197,7 @@ export default function StoreScreen() {
           return;
         }
 
+        console.warn('Purchase failed', error);
         toast.error(tCredits('purchaseFailed'));
       } finally {
         setPurchasePackId(null);
@@ -325,7 +326,7 @@ export default function StoreScreen() {
             </Text>
           </View>
           <View style={styles.packAction}>
-            {getPlatformProductId(pack) ? (
+            {getPlatformProductId(pack) && isBillingAvailable() ? (
               <TouchableOpacity
                 style={[styles.buyButton, purchasePackId === pack.id && styles.buyButtonDisabled]}
                 onPress={() => void handlePurchase(pack)}

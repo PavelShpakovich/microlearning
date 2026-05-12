@@ -47,6 +47,8 @@ PODS:
     - SDWebImageWebPCoder (~> 0.14.6)
   - ExpoKeepAwake (55.0.8):
     - ExpoModulesCore
+  - ExpoLinearGradient (55.0.13):
+    - ExpoModulesCore
   - ExpoLinking (55.0.15):
     - ExpoModulesCore
   - ExpoLocalization (55.0.13):
@@ -2301,6 +2303,7 @@ DEPENDENCIES:
   - "ExpoGlassEffect (from `../../../node_modules/.pnpm/expo-glass-effect@55.0.11_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react-na_944f94613c3047f8d168043156af6e08/node_modules/expo-glass-effect/ios`)"
   - "ExpoImage (from `../../../node_modules/.pnpm/expo-image@55.0.10_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react-native-co_d1135cd53344e101e28f66fa272a31d5/node_modules/expo-image/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@55.0.8_expo@55.0.23_react@19.2.0/node_modules/expo-keep-awake/ios`)"
+  - "ExpoLinearGradient (from `../../../node_modules/.pnpm/expo-linear-gradient@55.0.13_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react_0f831fb2fa0f28fc4f598fd634eddf62/node_modules/expo-linear-gradient/ios`)"
   - "ExpoLinking (from `../../../node_modules/.pnpm/expo-linking@55.0.15_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react-native-_5a665a124c5c7c03588472f2978a04fa/node_modules/expo-linking/ios`)"
   - "ExpoLocalization (from `../../../node_modules/.pnpm/expo-localization@55.0.13_expo@55.0.23_react@19.2.0/node_modules/expo-localization/ios`)"
   - "ExpoLogBox (from `../../../node_modules/.pnpm/@expo+log-box@55.0.12_@expo+dom-webview@55.0.6_expo@55.0.23_react-native@0.83.6_@babel+_c5b0c0a479e9a3eb8ddeafe9e1852545/node_modules/@expo/log-box`)"
@@ -2431,6 +2434,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-image@55.0.10_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react-native-co_d1135cd53344e101e28f66fa272a31d5/node_modules/expo-image/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@55.0.8_expo@55.0.23_react@19.2.0/node_modules/expo-keep-awake/ios"
+  ExpoLinearGradient:
+    :path: "../../../node_modules/.pnpm/expo-linear-gradient@55.0.13_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react_0f831fb2fa0f28fc4f598fd634eddf62/node_modules/expo-linear-gradient/ios"
   ExpoLinking:
     :path: "../../../node_modules/.pnpm/expo-linking@55.0.15_expo@55.0.23_react-native@0.83.6_@babel+core@7.29.0_@react-native-_5a665a124c5c7c03588472f2978a04fa/node_modules/expo-linking/ios"
   ExpoLocalization:
@@ -2634,6 +2639,7 @@ SPEC CHECKSUMS:
   ExpoGlassEffect: 2dedac2fe817f9b02d0dad29ce0aef7afebc5cd4
   ExpoImage: 74d26278507b0b0d85b1e50562412172603f59eb
   ExpoKeepAwake: d0eb7a0719500d2a43fbf29b6f79e84d70c75ebf
+  ExpoLinearGradient: c654e92d726a6d64c588a0988bb22bea331d5e79
   ExpoLinking: 40f36cf134ea6930f37867858c0643877b865d53
   ExpoLocalization: c5cd7fa65c797d3a2f1adbd1fd4c601c524fd677
   ExpoLogBox: a678d36477ab9544fe63e0b5328a0716539b6774

@@ -11,7 +11,7 @@ const reconcileSchema = z.object({
   externalProductId: z.string().min(1),
   environment: z.enum(['sandbox', 'production']).default('production'),
   purchasedAt: z.string().datetime().optional(),
-  revenuecatAppUserId: z.string().uuid().optional(),
+  revenuecatAppUserId: z.string().min(1).optional(),
   rawPayload: z.unknown().optional(),
 });
 
