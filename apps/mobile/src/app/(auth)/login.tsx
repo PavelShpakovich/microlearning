@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,6 @@ import { useColors, cardShadow } from '@/lib/colors';
 import { AuthActionButton } from '@/components/AuthActionButton';
 import { AuthBackground } from '@/components/AuthBackground';
 import { InlineErrorBanner } from '@/components/InlineErrorBanner';
-import { useEffect } from 'react';
 import { toast } from '@/lib/toast';
 
 export default function LoginScreen() {
@@ -33,18 +32,31 @@ export default function LoginScreen() {
   const [otp, setOtp] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+  const handledSuccessParamRef = useRef<string | null>(null);
 
   const tCommon = useTranslations('common');
   const tAuth = useTranslations('auth');
   const tValidation = useTranslations('validation');
+  const emailVerifiedMessage = tAuth('emailVerified');
+  const passwordUpdatedMessage = tAuth('passwordUpdated');
 
   useEffect(() => {
-    if (verified === 'true') {
-      toast.success(tAuth('emailVerified'));
-    } else if (reset === 'success') {
-      toast.success(tAuth('passwordUpdated'));
+    const successParam = verified === 'true' ? 'verified' : reset === 'success' ? 'reset' : null;
+
+    if (!successParam || handledSuccessParamRef.current === successParam) {
+      return;
     }
-  }, [verified, reset, tAuth]);
+
+    handledSuccessParamRef.current = successParam;
+
+    if (verified === 'true') {
+      toast.success(emailVerifiedMessage);
+    } else if (reset === 'success') {
+      toast.success(passwordUpdatedMessage);
+    }
+
+    router.replace('/(auth)/login');
+  }, [verified, reset, emailVerifiedMessage, passwordUpdatedMessage]);
 
   async function handleLogin() {
     if (!email.trim()) {
