@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { SettingsForm } from '@/components/settings/settings-form';
@@ -18,6 +18,7 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
+  const locale = (await getLocale()) === 'en' ? 'en' : 'ru';
   const t = await getTranslations('settingsPage');
 
   const [{ data: profile }, { data: preferences }, { data: authUserData }] = await Promise.all([
@@ -36,6 +37,7 @@ export default async function SettingsPage() {
     email: authUserData.user?.email ?? '',
     displayName: profile?.display_name ?? session.user.name ?? '',
     timezone: profile?.timezone ?? null,
+    locale,
     preferences: {
       tone_style: preferences?.tone_style ?? 'balanced',
       content_focus_love: preferences?.content_focus_love ?? true,

@@ -9,13 +9,14 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { authApi } from '@clario/api-client';
+import { ApiClientError, authApi } from '@clario/api-client';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { FormField } from '@/components/auth/form-field';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OTP_RE = /^\d{6}$/;
 
-type Field = 'email' | 'password';
+type Field = 'email' | 'password' | 'otp';
 type Errors = Partial<Record<Field, string>>;
 
 export function LoginForm() {
@@ -28,9 +29,11 @@ export function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
   const validate = (field: Field, value: string): string | undefined => {
@@ -40,7 +43,25 @@ export function LoginForm() {
       if (!EMAIL_RE.test(trimmed)) return v('invalidEmail');
     }
     if (field === 'password' && !value) return v('passwordRequired');
+    if (field === 'otp') {
+      if (!value) return t('otpInvalid');
+      if (!OTP_RE.test(value)) return t('otpInvalid');
+    }
     return undefined;
+  };
+
+  const normalizeOtp = (value: string) => value.replace(/\D/g, '').slice(0, 6);
+
+  const getOtpErrorMessage = (error: ApiClientError) => {
+    if (error.status === 400) {
+      return error.message.toLowerCase().includes('expired') ? t('otpExpired') : t('otpInvalid');
+    }
+
+    if (error.status === 429) {
+      return t('tooManyRequests');
+    }
+
+    return t('error');
   };
 
   const touch = (field: Field, value: string) =>
@@ -108,6 +129,53 @@ export function LoginForm() {
       toast.error(t('error'));
     } finally {
       setIsResending(false);
+    }
+  };
+
+  const onVerify = async () => {
+    const next: Errors = {
+      email: validate('email', email),
+      password: validate('password', password),
+      otp: validate('otp', otp),
+    };
+    setErrors((prev) => ({ ...prev, ...next }));
+    if (Object.values(next).some(Boolean)) return;
+
+    try {
+      setIsVerifying(true);
+      await authApi.verifyOtp(email.trim(), otp);
+      await signOut({ redirect: false });
+
+      const result = await signIn('password', {
+        email: email.trim(),
+        password,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (!result?.ok) {
+        setShowResend(false);
+        setOtp('');
+        toast.success(t('emailVerified'));
+        return;
+      }
+
+      toast.success(t('loginSuccess'));
+      window.location.href = result.url || callbackUrl;
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        const otpError = getOtpErrorMessage(error);
+        if (error.status === 400) {
+          setErrors((prev) => ({ ...prev, otp: otpError }));
+        } else {
+          toast.error(otpError);
+        }
+        return;
+      }
+
+      toast.error(t('error'));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -183,15 +251,46 @@ export function LoginForm() {
           {isSubmitting ? t('signingIn') : t('signIn')}
         </Button>
         {showResend && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => void onResend()}
-            disabled={isResending}
-          >
-            {isResending ? t('sending') : t('resendVerification')}
-          </Button>
+          <>
+            <p className="rounded-md border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+              {t('verifyEmailDescription', { email: email.trim() })}
+            </p>
+            <FormField id="login-otp" label={t('otpLabel')} error={errors.otp}>
+              <Input
+                id="login-otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otp}
+                onChange={(e) => change('otp', normalizeOtp(e.target.value), setOtp)}
+                onBlur={() => touch('otp', otp)}
+                placeholder={t('otpPlaceholder')}
+                disabled={isSubmitting || isVerifying}
+                aria-invalid={Boolean(errors.otp)}
+                aria-describedby="login-otp-error"
+                className={inputClass('otp')}
+                maxLength={6}
+                required
+              />
+            </FormField>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => void onVerify()}
+              disabled={isSubmitting || isVerifying}
+            >
+              {isVerifying ? t('verifying') : t('verifyButton')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => void onResend()}
+              disabled={isResending || isSubmitting || isVerifying}
+            >
+              {isResending ? t('sending') : t('resendVerification')}
+            </Button>
+          </>
         )}
       </form>
     </AuthShell>

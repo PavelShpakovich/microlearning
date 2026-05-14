@@ -35,6 +35,7 @@ export interface SettingsFormData {
   email: string;
   displayName: string;
   timezone: string | null;
+  locale: 'ru' | 'en';
   preferences: {
     tone_style: string;
     content_focus_love: boolean;
@@ -57,16 +58,44 @@ export function SettingsForm({ data }: { data: SettingsFormData }) {
   const t = useTranslations('settingsPage');
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const [currentLocale, setCurrentLocale] = useState<'ru' | 'en'>(() =>
-    typeof document !== 'undefined'
-      ? ((document.cookie.match(/NEXT_LOCALE=(ru|en)/)?.[1] as 'ru' | 'en') ?? 'ru')
-      : 'ru',
-  );
+  const [currentLocale, setCurrentLocale] = useState<'ru' | 'en'>(data.locale);
+
+  async function persistLocaleCookie(locale: 'ru' | 'en') {
+    const response = await fetch('/api/locale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to persist locale cookie');
+    }
+  }
 
   function handleLocaleChange(lang: 'ru' | 'en') {
-    document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+    if (lang === currentLocale) return;
+
+    const previousLocale = currentLocale;
     setCurrentLocale(lang);
-    window.location.reload();
+
+    startTransition(async () => {
+      try {
+        await runToastMutation({
+          action: async () => {
+            await profileApi.updateProfile({ locale: lang });
+            await persistLocaleCookie(lang);
+          },
+          silentSuccess: true,
+          errorMessage: t('saveError'),
+          toastKey: 'settings-language-save',
+          onSuccess: () => {
+            window.location.reload();
+          },
+        });
+      } catch {
+        setCurrentLocale(previousLocale);
+      }
+    });
   }
 
   // Profile state

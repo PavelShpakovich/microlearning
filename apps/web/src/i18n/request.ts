@@ -1,6 +1,8 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies, headers } from 'next/headers';
 import { allMessages, type SupportedLocale } from '@clario/i18n';
+import { auth } from '@/auth';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export default getRequestConfig(async () => {
   const headerStore = await headers();
@@ -12,6 +14,22 @@ export default getRequestConfig(async () => {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get('NEXT_LOCALE')?.value;
 
+  let profileLocale: SupportedLocale | null = null;
+  if (!xLang && !(cookieLocale && cookieLocale in allMessages)) {
+    const session = await auth();
+    if (session?.user?.id) {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('locale')
+        .eq('id', session.user.id)
+        .maybeSingle<{ locale: string | null }>();
+
+      if (profile?.locale && profile.locale in allMessages) {
+        profileLocale = profile.locale as SupportedLocale;
+      }
+    }
+  }
+
   // 3. Fallback: detect from Accept-Language header
   const acceptLang = headerStore.get('accept-language') ?? '';
   const headerLocale = acceptLang.toLowerCase().startsWith('en') ? 'en' : 'ru';
@@ -19,6 +37,7 @@ export default getRequestConfig(async () => {
   const locale: SupportedLocale =
     (xLang && xLang in allMessages ? (xLang as SupportedLocale) : null) ??
     (cookieLocale && cookieLocale in allMessages ? (cookieLocale as SupportedLocale) : null) ??
+    profileLocale ??
     headerLocale;
 
   return {

@@ -14,8 +14,9 @@ import { FormField } from '@/components/auth/form-field';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OTP_RE = /^\d{6}$/;
 
-type Field = 'email' | 'password' | 'confirmPassword';
+type Field = 'email' | 'password' | 'confirmPassword' | 'otp';
 type Errors = Partial<Record<Field, string>>;
 
 export function RegisterForm() {
@@ -25,11 +26,13 @@ export function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [consentChecked, setConsentChecked] = useState(false);
   const [consentError, setConsentError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
   const validate = (field: Field, value: string, refPassword?: string): string | undefined => {
@@ -46,7 +49,25 @@ export function RegisterForm() {
       if (!value) return v('confirmPasswordRequired');
       if (value !== (refPassword ?? password)) return v('passwordsDoNotMatch');
     }
+    if (field === 'otp') {
+      if (!value) return t('otpInvalid');
+      if (!OTP_RE.test(value)) return t('otpInvalid');
+    }
     return undefined;
+  };
+
+  const normalizeOtp = (value: string) => value.replace(/\D/g, '').slice(0, 6);
+
+  const getOtpErrorMessage = (error: ApiClientError) => {
+    if (error.status === 400) {
+      return error.message.toLowerCase().includes('expired') ? t('otpExpired') : t('otpInvalid');
+    }
+
+    if (error.status === 429) {
+      return t('tooManyRequests');
+    }
+
+    return t('error');
   };
 
   const touch = (field: Field, value: string) =>
@@ -118,12 +139,39 @@ export function RegisterForm() {
   const onResend = async () => {
     try {
       setIsResending(true);
-      await authApi.resendVerificationEmail(email);
+      await authApi.resendVerificationEmail(email.trim());
       toast.success(t('resendVerificationSuccess'));
     } catch {
       toast.error(t('error'));
     } finally {
       setIsResending(false);
+    }
+  };
+
+  const onVerify = async () => {
+    const otpError = validate('otp', otp);
+    setErrors((prev) => ({ ...prev, otp: otpError }));
+    if (otpError) return;
+
+    try {
+      setIsVerifying(true);
+      await authApi.verifyOtp(email.trim(), otp);
+      toast.success(t('emailVerified'));
+      window.location.href = '/login?verified=true';
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        const message = getOtpErrorMessage(error);
+        if (error.status === 400) {
+          setErrors((prev) => ({ ...prev, otp: message }));
+        } else {
+          toast.error(message);
+        }
+        return;
+      }
+
+      toast.error(t('error'));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -141,11 +189,36 @@ export function RegisterForm() {
           </div>
         }
       >
+        <FormField id="register-otp" label={t('otpLabel')} error={errors.otp}>
+          <Input
+            id="register-otp"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={otp}
+            onChange={(e) => change('otp', normalizeOtp(e.target.value), setOtp)}
+            onBlur={() => touch('otp', otp)}
+            placeholder={t('otpPlaceholder')}
+            disabled={isVerifying || isResending}
+            aria-invalid={Boolean(errors.otp)}
+            aria-describedby="register-otp-error"
+            className={inputClass('otp')}
+            maxLength={6}
+            required
+          />
+        </FormField>
+        <Button
+          className="w-full"
+          onClick={() => void onVerify()}
+          disabled={isVerifying || isResending}
+        >
+          {isVerifying ? t('verifying') : t('verifyButton')}
+        </Button>
         <Button
           className="w-full"
           variant="outline"
           onClick={() => void onResend()}
-          disabled={isResending}
+          disabled={isResending || isVerifying}
         >
           {isResending ? t('sending') : t('resendVerification')}
         </Button>
